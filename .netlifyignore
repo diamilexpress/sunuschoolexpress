@@ -1,0 +1,6 @@
+# Fichiers et dossiers exclus du déploiement Netlify
+backend/
+.env*
+*.bat
+.tmp_edge_parent/
+*.sql

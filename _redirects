@@ -1,0 +1,8 @@
+# Sécurité ISO 27001 : Bloquer l'accès public aux données sensibles
+/backend/*   /   404!
+/.env*       /   404!
+/*.bat       /   404!
+
+# Réécriture propre des URL
+/admin       /admin.html      200
+/dashboard   /dashboard.html  200

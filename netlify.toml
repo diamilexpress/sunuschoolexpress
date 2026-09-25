@@ -1,0 +1,59 @@
+# ==============================================================================
+# CONFIGURATION DE DÉPLOIEMENT NETLIFY - SUNUSCHOOL EXPRESS
+# Sécurité renforcée ISO/IEC 27001, Cache PWA & Protection des Secrets
+# ==============================================================================
+
+[build]
+  publish = "."
+
+# 1. Protection stricte des répertoires et secrets backend
+[[redirects]]
+  from = "/backend/*"
+  to = "/"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.env*"
+  to = "/"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/*.bat"
+  to = "/"
+  status = 404
+  force = true
+
+# 2. Réécriture propre des URL de navigation
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+# 3. En-têtes de sécurité HTTP (Conformité ISO 27001)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# 4. Gestion du cache du Service Worker PWA (Mise à jour immédiate)
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"

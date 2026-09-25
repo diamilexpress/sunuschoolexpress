@@ -1,0 +1,31 @@
+{
+  "name": "SunuSchoolExpress - Gestion Établissements & Daaras",
+  "short_name": "SunuSchool",
+  "description": "Plateforme SaaS Éducative et Daaras Modernes : gestion scolaire, suivi coranique Hizb, caisse SYSCOHADA et emplois du temps 100% hors-ligne.",
+  "start_url": "./dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#051329",
+  "theme_color": "#00D2B4",
+  "icons": [
+    {
+      "src": "assets/icons/app-download.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/logo-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

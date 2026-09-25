@@ -1,0 +1,26 @@
+{
+  "etablissements": [],
+  "classes": [],
+  "enseignants": [],
+  "eleves": [],
+  "transactions": [],
+  "bulletinSettings": {
+    "trimestreActif": "1er Semestre 2026-2027",
+    "datePublication": "2026-10-31",
+    "estVerrouille": false
+  },
+  "auditLogs": [],
+  "utilisateurs": [
+    {
+      "id": "usr-admin-001",
+      "nom": "Admin Plateforme",
+      "prenom": "SunuSchool Express",
+      "email": "sunushoolexpress@gmail.com",
+      "telephone": "+221 77 888 12 34",
+      "role": "SUPER_ADMIN",
+      "statut": "ACTIF",
+      "privileges": ["TOUS_LES_DROITS", "SUPERVISION_SAAS", "GESTION_ABONNEMENTS", "AUDIT_GLOBAL"],
+      "created_at": "2026-09-16T11:00:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "sunu-school-express-backend",
+  "version": "1.0.0",
+  "description": "API REST Backend & Stockage Persistant pour SunuSchool Express",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "education",
+    "senegal",
+    "daara",
+    "school-management",
+    "express"
+  ],
+  "author": "SunuSchool Express Team",
+  "license": "ISC"
+}

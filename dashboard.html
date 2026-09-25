@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SunuSchoolExpress - Espace de Gestion Établissement & Daara Moderne (SaaS Pro)</title>
+  <meta name="description"
+    content="Tableau de bord professionnel SunuSchoolExpress : gestion des Daaras Modernes, internats, suivi coranique Hizb, scolarités privées, bulletins officiels et caisse Wave SYSCOHADA.">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <script>
+    // Éviter l'erreur CORS bloquante du navigateur lors de l'ouverture directe en file:///
+    if (window.location.protocol.startsWith('http')) {
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = 'manifest.json';
+      document.head.appendChild(manifestLink);
+    }
+  </script>
+  <meta name="theme-color" content="#00D2B4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+
+<body>
+
+  <!-- ==================== VERROUILLAGE DE SÉCURITÉ & AUTH GUARD ==================== -->
+  <div id="dashboardAuthGuardOverlay" class="dashboard-auth-guard-overlay" style="display: none;">
+    <div class="auth-guard-card">
+      <div class="auth-guard-badge">
+        <span>🛡️ VERROUILLAGE DE SÉCURITÉ</span>
+      </div>
+
+      <div class="auth-guard-icon-box">
+        <span>🔒</span>
+      </div>
+
+      <h2 class="auth-guard-title">Espace Réservé aux Établissements Partenaires</h2>
+      <p class="auth-guard-subtitle">
+        L'accès à cette console de gestion (élèves, comptabilité SYSCOHADA, Daara &amp; Coran) est strictement réservé aux établissements disposant d'un abonnement actif SunuSchoolExpress.
+      </p>
+
+      <div id="dashboardAuthGuardForm" class="auth-guard-form">
+        <div class="form-group-guard">
+          <label for="guardEtabCode">Code Établissement ou E-mail officiel *</label>
+          <input type="text" id="guardEtabCode" placeholder="Ex: SSE-SN-8941 ou admin@mon-etablissement.sn" onkeydown="if(event.key === 'Enter') handleDashboardAuthUnlock(event)" required autocomplete="off">
+        </div>
+
+        <div class="form-group-guard">
+          <label for="guardSecretKey">Clé Secrète ou Mot de Passe Établissement *</label>
+          <input type="password" id="guardSecretKey" placeholder="Ex: ADM-8941 ou votre mot de passe" onkeydown="if(event.key === 'Enter') handleDashboardAuthUnlock(event)" required autocomplete="current-password">
+        </div>
+
+        <div id="guardErrorAlert" class="guard-error-alert" style="display: none;"></div>
+
+        <button type="button" onclick="handleDashboardAuthUnlock(event)" class="btn-guard-unlock">
+          <span>⚡ Déverrouiller l'Espace de Gestion</span>
+          <span>→</span>
+        </button>
+
+
+      </div>
+
+      <div class="auth-guard-separator">
+        <span>OU</span>
+      </div>
+
+      <div class="auth-guard-cta">
+        <div class="guard-cta-text">
+          Vous n'avez pas encore souscrit ou vous souhaitez ouvrir un espace pour votre école ou Daara ?
+        </div>
+        <div class="guard-cta-buttons">
+          <a href="index.html#tarifs" class="btn-guard-subscribe">
+            🚀 Choisir une Formule &amp; S'inscrire (Essai 30 Jours)
+          </a>
+          <a href="index.html" class="btn-guard-home">
+            ← Retour au Site Vitrine
+          </a>
+        </div>
+      </div>
+
+      <div class="auth-guard-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <span>🔐 Données chiffrées AES-256 • Conforme Normes MEN Sénégal &amp; SYSCOHADA</span>
+        <a href="admin.html" style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;" onmouseover="this.style.color='#F59E0B'" onmouseout="this.style.color='rgba(255,255,255,0.4)'" title="Console Direction &amp; Éditeur SunuSchool HQ">
+          <span>🔒</span> <span>Accès Direction HQ</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- ==================== 1. SIDEBAR NAVIGATION ==================== -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div>
+        <!-- En-tête Sidebar & Logo -->
+        <div class="sidebar-header">
+          <a href="index.html" class="brand-logo" title="Retour au site vitrine">
+            <div class="brand-icon">S</div>
+            <div>
+              <div class="brand-title">SunuSchool<span style="color: var(--primary);">Express</span></div>
+              <div style="font-size: 0.68rem; color: var(--text-secondary);">SaaS Éducation &amp; Daaras <span
+                  class="brand-badge">PRO</span></div>
+            </div>
+          </a>
+
+          <!-- Établissement actif affiché -->
+          <div class="establishment-pill" id="sidebarEtabPill">
+            <div class="etab-avatar" id="sidebarEtabAvatar">🏫</div>
+            <div class="etab-info">
+              <div class="etab-name" id="sidebarEtabName">Mon Ã‰tablissement</div>
+              <div class="etab-type" id="sidebarEtabType">🕌 Daara Moderne • Touba</div>
+              <div class="etab-plan-tag" id="sidebarEtabPlan" style="margin-top: 0.35rem; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 800; padding: 0.18rem 0.55rem; border-radius: 4px; background: rgba(245, 158, 11, 0.18); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.35); width: fit-content;" title="Formule d'abonnement active">
+                <span id="sidebarEtabPlanIcon">🏷️</span> <span id="sidebarEtabPlanText">Pack Promo Daara (20 000 F/mois)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liens de Navigation Métier (Rendu dynamiquement selon DAARA, ÉCOLE ou SUPER ADMIN) -->
+        <nav class="sidebar-nav" id="sidebarNav">
+          <div class="nav-section-title">PILOTAGE DU DAARA</div>
+          <a class="nav-link active" data-tab="overview" onclick="switchTab('overview')">
+            <span class="nav-link-icon">📊</span>
+            <span class="nav-text">Vue d'Ensemble Daara</span>
+          </a>
+          <a class="nav-link" data-tab="daara" onclick="switchTab('daara')">
+            <span class="nav-link-icon">📖</span>
+            <span class="nav-text">Daara &amp; Coran (Hifz)</span>
+            <span class="nav-counter" id="daaraBadgeCount">60 Hizb</span>
+          </a>
+          <a class="nav-link" data-tab="caisse" onclick="switchTab('caisse')">
+            <span class="nav-link-icon">💳</span>
+            <span class="nav-text">Caisse &amp; Pensions</span>
+            <span class="nav-counter" style="background: rgba(16,185,129,0.2); color: #10B981;">SYSCOHADA</span>
+          </a>
+          <a class="nav-link" data-tab="finconfig" onclick="switchTab('finconfig')">
+            <span class="nav-link-icon">⚙️</span>
+            <span class="nav-text">Comptes d'Encaissement</span>
+            <span class="nav-counter" style="background: rgba(0,210,180,0.15); color: #00D2B4;">Wave / OM</span>
+          </a>
+          <div class="nav-section-title">COMMUNICATION &amp; SÉCURITÉ</div>
+          <a class="nav-link" data-tab="comms" onclick="switchTab('comms')">
+            <span class="nav-link-icon">💬</span>
+            <span class="nav-text">WhatsApp &amp; Parents Tuteurs</span>
+          </a>
+          <a class="nav-link" data-tab="audit" onclick="switchTab('audit')">
+            <span class="nav-link-icon">🛡️</span>
+            <span class="nav-text">Journal d'Audit (Logs)</span>
+          </a>
+
+        </nav>
+      </div>
+
+      <!-- Bas de Sidebar : Profil Utilisateur & Retour Vitrine -->
+      <div class="sidebar-footer">
+        <div class="user-profile-badge" id="userProfileBadge">
+          <div class="user-avatar" id="userAvatar">D</div>
+          <div class="user-details">
+            <div class="user-name" id="userNameDisplay">Direction Générale</div>
+            <div class="user-role-badge" id="userRoleBadge">ADMIN DIRECTEUR</div>
+          </div>
+        </div>
+        <a href="index.html" class="btn-landing-back" title="Revenir sur la page d'accueil">
+          <span>←</span> <span>Retour au Portail Public</span>
+        </a>
+        <div style="margin-top: 0.6rem; text-align: center;">
+          <a href="admin.html" style="color: rgba(255,255,255,0.35); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem; padding: 2px 6px; border-radius: 4px;" onmouseover="this.style.color='#F59E0B'" onmouseout="this.style.color='rgba(255,255,255,0.35)'" title="Console Direction &amp; Éditeur SunuSchool HQ">
+            <span>🔒</span> <span>Accès Direction HQ</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== 2. CONTENU PRINCIPAL ==================== -->
+    <main class="app-main">
+
+      <!-- EN-TÊTE PRINCIPAL (Sticky Bar) -->
+      <header class="app-header">
+        <div class="header-left">
+          <button type="button" class="mobile-menu-toggle"
+            onclick="document.getElementById('appSidebar').classList.toggle('open')">☰</button>
+          <div class="header-title-box">
+            <h2 id="currentViewTitle">Tableau de Bord Général</h2>
+            <p id="currentViewDesc">Supervision en direct des effectifs, scolarités et encaissements</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Badge Rappel Formule Active pour la Direction -->
+          <span id="headerPlanBadge" class="badge-tag badge-gold" style="font-size: 0.74rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.65rem; border-radius: var(--radius-full); cursor: default;" title="Formule d'abonnement active de votre établissement">
+            <span id="headerPlanIcon">🏷️</span> <span id="headerPlanText">Formule Active</span>
+          </span>
+
+          <!-- Statut Moteur DB & Mode Autonome -->
+          <span id="apiStatusPill" class="badge-tag badge-blue" style="font-size: 0.72rem;">⚡ Stockage Local (ACID)</span>
+
+          <!-- Badge Statut Réseau & Persistance Hors-Ligne -->
+          <span id="networkStatusBadge" class="badge-tag badge-green" title="État de la connexion et synchronisation locale">🟢 En Ligne</span>
+
+          <!-- Bouton Installer PWA (Symbole seul sans nom) -->
+          <button type="button" class="btn-app-download-symbol" id="btnInstallPwa" onclick="installPWAApp()" style="display: none;" title="Télécharger et installer l'application" aria-label="Télécharger l'App">
+            <img src="assets/icons/app-download.png" alt="Télécharger l'App" class="app-download-symbol-img" style="width: 32px; height: 32px;">
+          </button>
+
+          <!-- Bouton Sauvegarde / Restauration Clé USB -->
+          <button type="button" class="btn btn-outline btn-sm" onclick="openBackupModal()" style="border-color: rgba(255,255,255,0.25); color: #cbd5e1; font-weight: 600;" title="Sauvegarde complète ou restauration sur clé USB">
+            💾 Sauvegarde Clé USB
+          </button>
+
+          <!-- Sélecteur d'Établissement (Masqué pour éviter toute répétition à droite) -->
+          <select id="establishmentSelect" class="select-styled" style="display: none !important;" title="Changer d'établissement" onchange="switchEstablishment(this.value)">
+            <option value="">Sélectionnez un établissement...</option>
+          </select>
+
+          <!-- Sélecteur de Rôle -->
+          <select id="roleSelect" class="select-styled" title="Changer de rôle" onchange="switchRole(this.value)">
+            <option value="ADMIN_DIRECTEUR">Directeur / Admin Établissement</option>
+            <option value="OUSTAZ">Oustaz (Maître Coranique)</option>
+            <option value="ENSEIGNANT">Enseignant (Professeur)</option>
+            <option value="COMPTABLE">Comptable SYSCOHADA</option>
+          </select>
+
+          <!-- Actions Rapides Dynamiques (Adaptées DAARA / ÉCOLE / SUPER ADMIN) -->
+          <button type="button" class="btn btn-primary" id="headerBtnNew" onclick="handleHeaderNewBtn()">
+            <span>+</span> <span id="headerBtnNewText">Nouvel Élève</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="headerBtnPay" onclick="handleHeaderPayBtn()"
+            style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700;"
+            title="Encaisser Wave, Orange Money, Free Money, Espèces ou Chèque">
+            <span id="headerBtnPayIcon">💳</span> <span id="headerBtnPayText">Encaisser</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- CORPS APPLICATIF (VUES EN ONGLETS) -->
+      <section class="app-content">
+
+        <!-- Bannière Dynamique de Rôle & Droits Actifs -->
+        <div id="roleWorkspaceBanner" class="role-workspace-banner">
+          <!-- Injecté dynamiquement par renderRoleBanner() dans dashboard.js -->
+        </div>
+
+        <!-- ==================== VUE 1 : VUE D'ENSEMBLE (OVERVIEW) ==================== -->
+        <div id="view-overview" class="tab-view active">
+          <!-- Bannière d'Accès Direct aux Comptes d'Encaissement Wave & OM -->
+          <div style="background: linear-gradient(135deg, rgba(0, 210, 180, 0.1), rgba(245, 158, 11, 0.08)); border: 1.5px solid rgba(0, 210, 180, 0.35); border-radius: var(--radius-sm); padding: 0.95rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(0, 210, 180, 0.2); color: #00D2B4; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                ⚙️
+              </div>
+              <div>
+                <div style="font-weight: 800; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+                  <span>Comptes d'Encaissement &amp; Réception des Scolarités</span>
+                  <span class="badge-tag badge-green" style="font-size: 0.65rem;">Wave 0% &amp; OM</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                  Renseignez votre numéro Wave Marchand, générez votre QR Code scannable et imprimez l'Affiche Guichet A4 pour les parents.
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('finconfig')" style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700; font-size: 0.82rem; padding: 0.45rem 1rem;">
+              <span>⚙️ Configurer mes Comptes Wave / OM</span> <span>→</span>
+            </button>
+          </div>
+
+          <!-- Grille des Métriques Clés -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-title" id="kpi1Title">Effectif Global Actif</span>
+                <div class="kpi-icon-box" style="background: rgba(0,210,180,0.15); color: var(--primary);">👥</div>
+              </div>
+              <div class="kpi-value" id="kpiTotalEleves">1 248</div>
+              <div class="kpi-meta" id="kpi1Meta">
+                <span class="badge-tag badge-green">100% Inscrits</span>
+                <span>Talibés &amp; Scolaires</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-title" id="kpi2Title">Recouvrement du Mois</span>
+                <div class="kpi-icon-box" style="background: rgba(16,185,129,0.15); color: #10B981;">💳</div>
+              </div>
+              <div class="kpi-value" id="kpiTotalEncaisse">24 850 000 F</div>
+              <div class="kpi-meta" id="kpi2Meta">
+                <span class="badge-tag badge-blue">Wave + OM</span>
+                <span>Zéro écart de caisse</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-title" id="kpi3Title">Taux de Règlements</span>
+                <div class="kpi-icon-box" style="background: rgba(255,184,0,0.15); color: var(--gold);">📊</div>
+              </div>
+              <div class="kpi-value" id="kpiTauxRecouvrement">96%</div>
+              <div class="kpi-meta" id="kpi3Meta">
+                <span class="badge-tag badge-gold">4% En attente</span>
+                <span>Rappels auto WhatsApp</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-title" id="kpi4Title">Avancement Coranique Moyen</span>
+                <div class="kpi-icon-box" id="kpi4Icon" style="background: rgba(239,68,68,0.15); color: #EF4444;">📖</div>
+              </div>
+              <div class="kpi-value" id="kpiHizbMoyen">42 / 60</div>
+              <div class="kpi-meta" id="kpi4Meta">
+                <span class="badge-tag badge-green">Tajwîd Certifié</span>
+                <span>Progression continue</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tableau d'Activité Récente -->
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>📋</span>
+                <span id="overviewTableTitle">Derniers Dossiers &amp; Mises à Jour Scolaires</span>
+              </div>
+              <div class="filter-bar">
+                <input type="text" class="search-input" placeholder="🔍 Rechercher un élève, matricule..."
+                  onkeyup="filterTable(this, 'overviewRecentTable')">
+                <button class="btn btn-outline btn-sm" onclick="renderOverviewKpis()">🔄 Actualiser</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th id="overviewThStudent">Élève / Talibé</th>
+                    <th id="overviewThClass">Classe / Niveau</th>
+                    <th id="overviewThLevel">Niveau Coran / Moyenne</th>
+                    <th id="overviewThPension">Statut Pension</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="overviewRecentTable">
+                  <!-- Injecté dynamiquement par dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 2 : DAARA MODERNE & CORAN (HIFZ) ==================== -->
+        <div id="view-daara" class="tab-view">
+          <!-- Carte d'en-tête Daara -->
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>📖</span>
+                <span>Suivi Coranique Individuel (Hizb 1 à 60 &amp; Tajwîd)</span>
+              </div>
+              <button id="daaraHeaderActionBtn" class="btn btn-primary btn-sm" onclick="openNewEleveModal()">+ Inscrire un Talibé</button>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+              Validation de la mémorisation sourate par sourate, notation officielle du Tajwîd et notification
+              instantanée aux parents par SMS/WhatsApp.
+            </p>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Talibé (Matricule &amp; Clé)</th>
+                    <th>Sourate &amp; Note Tajwîd</th>
+                    <th>Avancement Coran (Hizb)</th>
+                    <th>Chambre &amp; Dortoir (Lit)</th>
+                    <th>Pension</th>
+                    <th>Actions Rapides</th>
+                  </tr>
+                </thead>
+                <tbody id="daaraTalibesTable">
+                  <!-- Injecté dynamiquement par dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section Dortoirs & Internat -->
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>🛏️</span>
+                <span>Surveillance Dortoirs &amp; Lits d'Internat (Pavillon Khadimou Rassoul)</span>
+              </div>
+              <span class="badge-tag badge-green">Taux d'occupation : 92% (46/50 Lits)</span>
+            </div>
+
+            <div class="beds-grid">
+              <div class="bed-card occupied">
+                <div class="bed-icon">🛏️</div>
+                <div class="bed-number">LIT N°14</div>
+                <div class="bed-resident">Mouhamed Bachir Sow</div>
+                <span class="badge-tag badge-green">Pension Complète</span>
+              </div>
+              <div class="bed-card occupied">
+                <div class="bed-icon">🛏️</div>
+                <div class="bed-number">LIT N°15</div>
+                <div class="bed-resident">Cheikh Oumar Kane</div>
+                <span class="badge-tag badge-green">Pension Complète</span>
+              </div>
+              <div class="bed-card">
+                <div class="bed-icon">🛏️</div>
+                <div class="bed-number">LIT N°16</div>
+                <div class="bed-resident" style="color: var(--text-muted);">Lit Disponible</div>
+                <span class="badge-tag badge-blue">Libre</span>
+              </div>
+              <div class="bed-card occupied">
+                <div class="bed-icon">🛏️</div>
+                <div class="bed-number">LIT N°17</div>
+                <div class="bed-resident">Ibrahima Fall</div>
+                <span class="badge-tag badge-gold">Visite Médicale OK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 3 : SCOLARITÉ & CLASSES ==================== -->
+        <div id="view-school" class="tab-view">
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>🏫</span>
+                <span>Répertoire des Élèves &amp; Classes (CI à Terminale)</span>
+              </div>
+              <button id="schoolHeaderActionBtn" class="btn btn-primary btn-sm" onclick="openNewEleveModal()">+ Nouvel Élève</button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Élève (Nom &amp; Matricule)</th>
+                    <th>Classe Actuelle</th>
+                    <th>Moyenne &amp; Rang</th>
+                    <th>Parent Référent</th>
+                    <th>Statut Frais</th>
+                    <th>Dossier &amp; Bulletin</th>
+                  </tr>
+                </thead>
+                <tbody id="schoolStudentsTable">
+                  <!-- Injecté dynamiquement par dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 3.5 : CLASSES & NIVEAUX PÉDAGOGIQUES ==================== -->
+        <div id="view-classes" class="tab-view">
+          <div class="data-card" style="margin-bottom: 1.25rem;">
+            <div class="data-card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+              <div>
+                <div class="data-card-title">
+                  <span>🏫</span>
+                  <span>Gestion des Classes &amp; Niveaux Pédagogiques</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  Packs en 1 clic selon les cycles officiels sénégalais et Daaras, gestion des salles, effectifs et accès directs aux emplois du temps.
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <span class="badge-tag badge-blue" id="dashboardClassesTotalBadge">0 Classe Active</span>
+                <button class="btn btn-primary btn-sm" onclick="openNewClassModal()" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); color: #fff; font-weight: 700;">
+                  + Nouvelle Classe
+                </button>
+              </div>
+            </div>
+
+            <!-- Packs d'initialisation en 1 Clic -->
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-sm); padding: 1rem; margin: 1rem 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="font-size: 0.82rem; font-weight: 800; color: #FBBF24; display: flex; align-items: center; gap: 0.4rem;">
+                  <span>⚡</span> <span>Génération Rapide de Sections (Packs en 1 Clic)</span>
+                </div>
+                <small style="font-size: 0.75rem; color: var(--text-secondary);">Injecte instantanément les grilles officielles sans écraser les données existantes</small>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('maternelle')" style="border-color: #EC4899; color: #EC4899; font-weight: 600;">
+                  👶 Pack Maternelle (PS, MS, GS)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('primaire')" style="border-color: #38BDF8; color: #38BDF8; font-weight: 600;">
+                  📚 Pack Primaire (CI à CM2)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('college')" style="border-color: #00D2B4; color: #00D2B4; font-weight: 600;">
+                  🏫 Pack Collège (6ème à 3ème)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('lycee')" style="border-color: #A855F7; color: #A855F7; font-weight: 600;">
+                  🎓 Pack Lycée (2nde à Terminale)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('daara')" style="border-color: #F59E0B; color: #F59E0B; font-weight: 600;">
+                  🕌 Pack Daara Moderne (Hifz &amp; Fiqh)
+                </button>
+              </div>
+            </div>
+
+            <!-- Grille des Cartes Interactives de Classes -->
+            <div id="dashboardClassesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.25rem;">
+              <!-- Injecté dynamiquement par dashboard.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 3.6 : CORPS ENSEIGNANT & OUSTAZS (RH & AFFECTATIONS) ==================== -->
+        <div id="view-teachers" class="tab-view">
+          <div class="data-card" style="margin-bottom: 1.25rem;">
+            <div class="data-card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+              <div>
+                <div class="data-card-title">
+                  <span>👨‍🏫</span>
+                  <span>Corps Professoral &amp; Oustazs (RH, Contrats &amp; Affectations)</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  Gestion du personnel enseignant, affectations aux classes, volumes horaires cibles et salaires.
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-sm" onclick="openNewTeacherModal()" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); color: #fff; font-weight: 700;">
+                  + Nouveau Contrat Enseignant
+                </button>
+              </div>
+            </div>
+
+            <!-- KPIs RH & Masse Salariale -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem 0;">
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 1rem;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Effectif Enseignants</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-top: 0.25rem;" id="dashboardTeachersTotalCount">0 Enseignant</div>
+                <div style="font-size: 0.72rem; color: #38BDF8; margin-top: 0.2rem;">Équipe pédagogique active</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 1rem;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Volume Horaire Total</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #00D2B4; margin-top: 0.25rem;" id="dashboardTeachersTotalHours">0 h / sem</div>
+                <div style="font-size: 0.72rem; color: #00D2B4; margin-top: 0.2rem;">Heures de cours dispensées</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 1rem;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Masse Salariale Mensuelle</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #FBBF24; margin-top: 0.25rem;" id="dashboardTeachersTotalPayroll">0 FCFA</div>
+                <div style="font-size: 0.72rem; color: #FBBF24; margin-top: 0.2rem;">Prévue fin de mois</div>
+              </div>
+            </div>
+
+            <!-- Table des Enseignants & Oustazs -->
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Enseignant / Oustaz</th>
+                    <th>Matière Principale</th>
+                    <th>Classes Affectées</th>
+                    <th>Volume Hebdo</th>
+                    <th>Contrat</th>
+                    <th>Rémunération</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardTeachersTable">
+                  <!-- Injecté dynamiquement par dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 4 : NOTES & BULLETINS ==================== -->
+        <div id="view-grades" class="tab-view">
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>📑</span>
+                <span>Édition &amp; Publication des Bulletins Scolaires &amp; Évaluations Hifz</span>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="printAllBulletins()">🖨️ Imprimer Tous les
+                Bulletins</button>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+              Calcul automatique selon les coefficients du Ministère de l'Éducation Nationale du Sénégal (pour les
+              écoles) ou progression Tahfiz &amp; Tajwîd (pour les Daaras), rang dans la classe et cachet électronique
+              certifié.
+            </p>
+
+            <div
+              style="background: rgba(0, 210, 180, 0.05); border: 1px dashed rgba(0, 210, 180, 0.3); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+              <div>
+                <div style="font-weight: 800; color: #fff;" id="bulletinTermLabel">1er Semestre 2026-2027</div>
+                <div style="font-size: 0.78rem; color: var(--text-secondary);">Date de déblocage officiel : <strong
+                    id="bulletinReleaseDateText">31 Octobre 2026</strong> (Accès instantané pour la Direction)</div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-outline btn-sm" onclick="openConfigDateModal()">📅 Configurer Date</button>
+              </div>
+            </div>
+
+            <!-- Répertoire des élèves pour édition individuelle de bulletin -->
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Élève (Nom &amp; Matricule)</th>
+                    <th>Classe / Niveau</th>
+                    <th>Moyenne Générale / Coran</th>
+                    <th>Rang</th>
+                    <th>Mention &amp; Appréciation</th>
+                    <th>Action Bulletin</th>
+                  </tr>
+                </thead>
+                <tbody id="gradesTable">
+                  <!-- Injecté dynamiquement par dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 5 : CAISSE & SYSCOHADA ==================== -->
+        <div id="view-caisse" class="tab-view">
+
+          <!-- Cartes de Répartition par Canal de Trésorerie (SYSCOHADA) -->
+          <div class="caisse-channels-grid">
+            <div class="caisse-channel-card wave" onclick="filterCaisseByOp('WAVE')">
+              <div class="channel-card-top">
+                <span class="channel-name">🌊 Wave Sénégal</span>
+                <span class="channel-account-code">Cpt 5211</span>
+              </div>
+              <div class="channel-amount" id="totalWaveAmount">0 FCFA</div>
+              <div class="channel-tx-count" id="countWaveTx">0 opération</div>
+            </div>
+
+            <div class="caisse-channel-card om" onclick="filterCaisseByOp('ORANGE_MONEY')">
+              <div class="channel-card-top">
+                <span class="channel-name">🍊 Orange Money</span>
+                <span class="channel-account-code">Cpt 5212</span>
+              </div>
+              <div class="channel-amount" id="totalOmAmount">0 FCFA</div>
+              <div class="channel-tx-count" id="countOmTx">0 opération</div>
+            </div>
+
+            <div class="caisse-channel-card free" onclick="filterCaisseByOp('FREE_MONEY')">
+              <div class="channel-card-top">
+                <span class="channel-name">🔴 Free Money</span>
+                <span class="channel-account-code">Cpt 5213</span>
+              </div>
+              <div class="channel-amount" id="totalFreeAmount">0 FCFA</div>
+              <div class="channel-tx-count" id="countFreeTx">0 opération</div>
+            </div>
+
+            <div class="caisse-channel-card cash" onclick="filterCaisseByOp('ESPECES')">
+              <div class="channel-card-top">
+                <span class="channel-name">💵 Caisse Espèces</span>
+                <span class="channel-account-code">Cpt 5711</span>
+              </div>
+              <div class="channel-amount" id="totalCashAmount">0 FCFA</div>
+              <div class="channel-tx-count" id="countCashTx">0 règlement direct</div>
+            </div>
+
+            <div class="caisse-channel-card bank" onclick="filterCaisseByOp('CHEQUE_BANQUE')">
+              <div class="channel-card-top">
+                <span class="channel-name">🏦 Banques &amp; Chèques</span>
+                <span class="channel-account-code">Cpt 5210</span>
+              </div>
+              <div class="channel-amount" id="totalBankAmount">0 FCFA</div>
+              <div class="channel-tx-count" id="countBankTx">0 virement</div>
+            </div>
+          </div>
+
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>💳</span>
+                <span>Grand Livre de Caisse &amp; Trésorerie Multicanale (SYSCOHADA)</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-outline btn-sm" onclick="openGrandLivreModal()" style="border-color: rgba(56, 189, 248, 0.5); color: #38BDF8; font-weight: 700;">📖 Grand Livre SYSCOHADA</button>
+                <button class="btn btn-outline btn-sm" onclick="exportFECSYSCOHADA()" style="color: #F59E0B; border-color: rgba(245, 158, 11, 0.4);">📑 Exporter FEC (DGI)</button>
+                <button class="btn btn-outline btn-sm" onclick="exportGrandLivreCsv()" style="color: #A7F3D0; border-color: rgba(16, 185, 129, 0.4);">📥 Exporter Excel/CSV</button>
+                <button class="btn btn-primary btn-sm" onclick="openEncaissementMultiModal()">💳 + Nouvel Encaissement</button>
+              </div>
+            </div>
+
+            <!-- Barre de filtrage par canal -->
+            <div class="caisse-filters-bar">
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Filtrer par canal :</span>
+              <button class="filter-pill-btn active" data-filter-op="ALL" onclick="filterCaisseByOp('ALL')">Tous (<span
+                  id="totalTxCount">0</span>)</button>
+              <button class="filter-pill-btn" data-filter-op="WAVE" onclick="filterCaisseByOp('WAVE')">🌊 Wave
+                (5211)</button>
+              <button class="filter-pill-btn" data-filter-op="ORANGE_MONEY"
+                onclick="filterCaisseByOp('ORANGE_MONEY')">🍊 Orange Money (5212)</button>
+              <button class="filter-pill-btn" data-filter-op="FREE_MONEY" onclick="filterCaisseByOp('FREE_MONEY')">🔴
+                Free Money (5213)</button>
+              <button class="filter-pill-btn" data-filter-op="ESPECES" onclick="filterCaisseByOp('ESPECES')">💵 Espèces
+                Guichet (5711)</button>
+              <button class="filter-pill-btn" data-filter-op="CHEQUE_BANQUE"
+                onclick="filterCaisseByOp('CHEQUE_BANQUE')">🏦 Banques CBAO/BOA (5210)</button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Référence &amp; Date</th>
+                    <th>Canal de Règlement</th>
+                    <th>Élève &amp; Motif</th>
+                    <th>Montant Encaissé</th>
+                    <th>Imputation SYSCOHADA</th>
+                    <th>Statut</th>
+                    <th>Reçu Certifié</th>
+                  </tr>
+                </thead>
+                <tbody id="caisseTable">
+                  <!-- Injecté dynamiquement par dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 6 : WHATSAPP & CLÉS FAMILLE ==================== -->
+        <div id="view-comms" class="tab-view">
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>💬</span>
+                <span>Passerelle d'Envoi WhatsApp &amp; SMS (Clés d'Accès &amp; Avis)</span>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openBroadcastCommsModal()">📲 Envoyer Rappel
+                Groupé</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+              <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.25rem;">
+                <div style="font-size: 0.82rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">🔑 Distribution
+                  des Clés d'Accès</div>
+                <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 1rem;">Chaque parent reçoit
+                  sa clé unique par SMS. Ex: <code>PAR-89412</code>. Aucun mot de passe à créer.</p>
+                <button class="btn btn-outline btn-sm" onclick="openParentKeysModal()">💬 Renvoyer Clés Parents</button>
+              </div>
+
+              <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.25rem;">
+                <div style="font-size: 0.82rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">🚨 Alertes
+                  Absences &amp; Retards</div>
+                <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 1rem;">Notification
+                  automatique dès qu'un talibé ou élève n'est pas pointé à l'appel du matin.</p>
+                <button class="btn btn-outline btn-sm" onclick="openAttendanceModal()">⚡ Voir Journal des
+                  Présences</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 7 : JOURNAL D'AUDIT ==================== -->
+        <div id="view-audit" class="tab-view">
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>🛡️</span>
+                <span>Journal d'Audit &amp; Traçabilité Immuable des Opérations</span>
+              </div>
+              <span class="badge-tag badge-blue">Audit Conforme Normes Éducatives</span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Horodatage</th>
+                    <th>Utilisateur</th>
+                    <th>Action Réalisée</th>
+                    <th>Détails de l'Opération</th>
+                  </tr>
+                </thead>
+                <tbody id="auditTable">
+                  <!-- Injecté dynamiquement par dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 7.5 : EMPLOI DU TEMPS HEBDOMADAIRE (ÉCOLES & DAARAS) ==================== -->
+        <div id="view-timetable" class="tab-view">
+          <div class="timetable-container">
+            <div class="timetable-toolbar">
+              <div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>📅</span> <span id="timetableHeaderTitle">Emploi du Temps Hebdomadaire Officiel</span>
+                  <span id="timetableActiveClassName" style="color: var(--primary); font-size: 1.05rem;"></span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem;" id="timetableHeaderSubtitle">
+                  Affectation des matières, salles de cours, enseignants et oustazs pour l'établissement actif.
+                  <span id="timetableActiveCycle" style="display:none;"></span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-sm" onclick="triggerAutoGenerateTimetable()" style="background: linear-gradient(135deg, #10B981, #00D2B4); color:#fff; font-weight: 800; box-shadow: 0 2px 10px rgba(16,185,129,0.35);" title="Générer automatiquement un emploi du temps équilibré et anti-collision pour cette classe">
+                  ⚡ Générer Auto
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openCreateTimetableModal()" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); color:#fff; font-weight: 700;">
+                  + Ajouter Emploi du Temps
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="printTimetableA4()" style="border-color: #38BDF8; color: #38BDF8; font-weight: 700;">
+                  🖨️ Imprimer Format A4
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="resetTimetableToDefault()" title="Rétablir le planning par défaut">
+                  🔄 Réinitialiser
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="openEditTimetableSlotModal()" style="font-weight: 700;">
+                  ✏️ Modifier un Créneau
+                </button>
+              </div>
+            </div>
+
+            <!-- Sélecteur de classe pour l'Emploi du Temps -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+              <div class="timetable-class-pills" id="timetableClassPills">
+                <!-- Injecté dynamiquement par renderTimetableClassPills() -->
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="badge-tag badge-blue" id="timetableActiveBadgeInfo">3ème B • 38 Élèves</span>
+                <span class="badge-tag badge-green" id="timetableCycleBadge">Cycle Moyen</span>
+              </div>
+            </div>
+
+            <!-- Grille du Planning -->
+            <div class="timetable-grid-wrapper">
+              <table class="timetable-table" id="timetableMainTable">
+                <thead>
+                  <tr>
+                    <th class="timetable-time-th">Créneau</th>
+                    <th class="timetable-day-th">Lundi</th>
+                    <th class="timetable-day-th">Mardi</th>
+                    <th class="timetable-day-th">Mercredi</th>
+                    <th class="timetable-day-th">Jeudi</th>
+                    <th class="timetable-day-th">Vendredi</th>
+                    <th class="timetable-day-th">Samedi</th>
+                  </tr>
+                </thead>
+                <tbody id="timetableTableBody">
+                  <!-- Injecté dynamiquement par renderTimetableGrid() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ==================== VUE 10 : CONFIGURATION PAIEMENT & ENCAISSEMENT ==================== -->
+        <div id="view-finconfig" class="tab-view">
+
+          <!-- En-tête Guide & Statut Passerelle -->
+          <div class="finconfig-banner">
+            <div class="finconfig-banner-content">
+              <div class="finconfig-banner-badge" id="finconfigStatusBadge">
+                <span class="pulse-dot"></span>
+                <span id="finconfigStatusText">Comptes d'Encaissement Direct Actifs</span>
+              </div>
+              <h2 class="finconfig-banner-title">Comptes d'Encaissement &amp; Réception des Scolarités</h2>
+              <p class="finconfig-banner-desc">
+                Configurez les comptes sur lesquels les parents d'élèves et tuteurs versent <strong>directement</strong> les frais de scolarité, pensions et inscriptions. Les paiements Wave, Orange Money et virements bancaires arrivent directement sur les comptes de votre établissement, <strong>sans aucun intermédiaire ni commission prélevée par la plateforme</strong>.
+              </p>
+            </div>
+            <div class="finconfig-banner-actions">
+              <button type="button" class="btn btn-outline" onclick="openPrintGuichetModal()" style="border-color: #00D2B4; color: #00D2B4; font-weight: 700; gap: 0.4rem;">
+                <span>🖨️</span> <span>Affiche Guichet Wave/OM (A4)</span>
+              </button>
+              <button type="button" class="btn btn-primary" onclick="openEncaissementMultiModal()" style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700; gap: 0.4rem;">
+                <span>💳</span> <span>Nouvel Encaissement Caisse</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grille des 3 Canaux : Wave, Orange Money, Banque -->
+          <div class="finconfig-cards-grid">
+
+            <!-- 1. COMPTE WAVE MARCHAND BUSINESS -->
+            <div class="finconfig-channel-card wave-card" id="cardCfgWave">
+              <div class="channel-card-header">
+                <div class="channel-header-left">
+                  <div class="channel-avatar wave-bg">🌊</div>
+                  <div>
+                    <h3 class="channel-title">Wave Mobile Money</h3>
+                    <span class="channel-subtitle">Compte Marchand &amp; QR Code Instantané</span>
+                  </div>
+                </div>
+                <label class="toggle-switch" title="Activer ou désactiver l'encaissement Wave">
+                  <input type="checkbox" id="cfgWaveActif" checked onchange="onFinConfigToggled()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="channel-card-body">
+                <div class="form-group">
+                  <label class="form-label">Numéro Téléphone Wave Marchand</label>
+                  <input type="text" id="cfgWaveNumero" class="form-control" placeholder="Ex: +221 77 106 48 77" value="+221 77 106 48 77">
+                  <span class="form-hint">Numéro relié à votre compte Wave Marchand ou compte habilité.</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Nom Marchand Wave (Apparaît sur le smartphone du parent)</label>
+                  <input type="text" id="cfgWaveNomMarchand" class="form-control" placeholder="Nom du compte Wave Marchand" value="">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    Lien Direct de Paiement Wave (URL du QR Code)
+                    <span class="badge-tag badge-green" style="font-size: 0.65rem; margin-left: 0.35rem;">100% Scannable</span>
+                  </label>
+                  <div class="input-with-action" style="display: flex; gap: 0.4rem;">
+                    <input type="url" id="cfgWaveUrlPaiement" class="form-control" 
+                      placeholder="https://pay.wave.com/m/M_sn_.../c/sn/" 
+                      value="https://pay.wave.com/m/M_sn_FEQdl8TlbLnA/c/sn/"
+                      oninput="onWaveUrlInputChanged(this.value)">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="testWaveLinkDirect()" title="Ouvrir le lien Wave Marchand">
+                      🔗 Ouvrir
+                    </button>
+                  </div>
+                  <span class="form-hint">Lien officiel issu de l'appli Wave Marchand (« Partager le QR Code »).</span>
+                </div>
+
+                <!-- Aperçu dynamique du QR Code Wave -->
+                <div class="wave-qr-preview-box">
+                  <div class="qr-box-img-wrapper">
+                    <img id="cfgWaveQrPreviewImg" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Fpay.wave.com%2Fm%2FM_sn_FEQdl8TlbLnA%2Fc%2Fsn%2F" alt="QR Code Wave Établissement" onerror="handleWaveQrError(this)">
+                    <div class="qr-wave-badge">🌊 Wave 0%</div>
+                  </div>
+                  <div class="qr-box-details">
+                    <div class="qr-box-status">
+                      <span class="badge-tag badge-green" id="cfgWaveScanBadge">✓ QR Code Prêt &amp; Scannable</span>
+                    </div>
+                    <div class="qr-box-subtext" id="cfgWaveQrSubtext">
+                      Scannez ce QR Code avec l'application mobile Wave pour créditer instantanément le compte de l'école.
+                    </div>
+                    <div style="display: flex; gap: 0.4rem; margin-top: 0.6rem; flex-wrap: wrap;">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="downloadWaveQrCode()">
+                        📥 Enregistrer le QR (PNG)
+                      </button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="openPrintGuichetModal()" style="border-color: #00D2B4; color: #00D2B4;">
+                        🖨️ Imprimer Affiche
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. COMPTE ORANGE MONEY MARCHAND -->
+            <div class="finconfig-channel-card om-card" id="cardCfgOm">
+              <div class="channel-card-header">
+                <div class="channel-header-left">
+                  <div class="channel-avatar om-bg">🍊</div>
+                  <div>
+                    <h3 class="channel-title">Orange Money</h3>
+                    <span class="channel-subtitle">Sonatel / Code Marchand &amp; USSD #144#</span>
+                  </div>
+                </div>
+                <label class="toggle-switch" title="Activer ou désactiver l'encaissement Orange Money">
+                  <input type="checkbox" id="cfgOmActif" checked onchange="onFinConfigToggled()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="channel-card-body">
+                <div class="form-group">
+                  <label class="form-label">Code Marchand Sonatel (6 chiffres)</label>
+                  <input type="text" id="cfgOmCodeMarchand" class="form-control" placeholder="Ex: 178601" value="178601" oninput="updateOmUssdPreview(this.value)">
+                  <span class="form-hint">Code à 6 chiffres attribué par Orange Money Sénégal (Sonatel).</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Numéro de Téléphone OM Associé</label>
+                  <input type="text" id="cfgOmNumero" class="form-control" placeholder="Ex: +221 77 123 45 67" value="+221 77 123 45 67">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Raison Sociale / Nom Marchand OM</label>
+                  <input type="text" id="cfgOmNomMarchand" class="form-control" placeholder="Nom du compte Orange Money" value="">
+                </div>
+
+                <!-- Encadré Syntaxe USSD Orange Money -->
+                <div class="om-ussd-preview-box">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <strong style="color: #FF8A00; font-size: 0.78rem;">📲 Syntaxe USSD Téléphone pour les Parents :</strong>
+                    <span class="badge-tag badge-gold" style="font-size: 0.65rem;">#144#391#</span>
+                  </div>
+                  <div class="om-ussd-code" id="cfgOmUssdSyntax">
+                    #144#391*178601*MONTANT#
+                  </div>
+                  <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 0.35rem;">
+                    Le parent tape ce code sur son mobile et valide instantanément avec son code secret Orange Money.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. COMPTE BANCAIRE SYSCOHADA (Cpt 5210) -->
+            <div class="finconfig-channel-card bank-card" id="cardCfgBanque">
+              <div class="channel-card-header">
+                <div class="channel-header-left">
+                  <div class="channel-avatar bank-bg">🏦</div>
+                  <div>
+                    <h3 class="channel-title">Virement Bancaire &amp; Chèque</h3>
+                    <span class="channel-subtitle">SYSCOHADA Cpt 5210 / Banques UEMOA</span>
+                  </div>
+                </div>
+                <label class="toggle-switch" title="Activer ou désactiver les virements bancaires">
+                  <input type="checkbox" id="cfgBanqueActif" checked onchange="onFinConfigToggled()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="channel-card-body">
+                <div class="form-group">
+                  <label class="form-label">Établissement Bancaire</label>
+                  <select id="cfgBanqueNom" class="form-control">
+                    <option value="CBAO Groupe Attijariwafa Bank">CBAO Groupe Attijariwafa Bank</option>
+                    <option value="Banque Islamique du Sénégal (BIS)">Banque Islamique du Sénégal (BIS)</option>
+                    <option value="Bank of Africa (BOA Sénégal)">Bank of Africa (BOA Sénégal)</option>
+                    <option value="Ecobank Sénégal">Ecobank Sénégal</option>
+                    <option value="Coris Bank International Sénégal">Coris Bank International Sénégal</option>
+                    <option value="Banque de l'Habitat du Sénégal (BHS)">Banque de l'Habitat du Sénégal (BHS)</option>
+                    <option value="Société Générale Sénégal (SGBS)">Société Générale Sénégal (SGBS)</option>
+                    <option value="BNDE Sénégal">BNDE Sénégal</option>
+                    <option value="Orabank Sénégal">Orabank Sénégal</option>
+                    <option value="UBA Sénégal">UBA Sénégal</option>
+                    <option value="Autre Banque UEMOA">Autre Banque UEMOA</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Titulaire du Compte (Raison Sociale Officielle)</label>
+                  <input type="text" id="cfgBanqueTitulaire" class="form-control" placeholder="Titulaire du compte bancaire" value="">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Relevé d'Identité Bancaire (RIB 24 caractères UEMOA)</label>
+                  <input type="text" id="cfgBanqueRib" class="form-control" placeholder="SN012 01345 00123456789 22" value="SN012 01345 00123456789 22">
+                  <span class="form-hint">Format standard : Code Banque (5) Code Guichet (5) N° Compte (11) Clé (2).</span>
+                </div>
+
+                <div class="bank-info-box">
+                  <div style="color: #818CF8; font-size: 0.76rem; font-weight: 700; margin-bottom: 0.25rem;">
+                    ℹ️ Rapprochement Bancaire Automatisé
+                  </div>
+                  <div style="font-size: 0.72rem; color: #94A3B8;">
+                    Les règlements par virement et chèque sont imputés directement au compte SYSCOHADA 5210 dès notification de réception des fonds.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Section Personnalisation des Consignes aux Familles & WhatsApp -->
+          <div class="data-card" style="margin-top: 1.5rem;">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <span>💬</span>
+                <span>Consignes de Paiement aux Familles &amp; Contact Trésorerie</span>
+              </div>
+              <span class="badge-tag badge-blue">Reçus &amp; Notifications</span>
+            </div>
+            <div class="data-card-body" style="padding: 1.25rem;">
+              <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                  <label class="form-label">Message / Consigne de Règlement (Affiché sur les reçus, avis de paiement et WhatsApp)</label>
+                  <textarea id="cfgConsignePaiement" class="form-control" rows="3" placeholder="Ex: Préciser impérativement le prénom, nom et matricule de l'élève en motif du transfert Wave ou Orange Money.">Préciser impérativement le prénom, nom et matricule de l'élève en motif du transfert Wave ou Orange Money pour validation immédiate.</textarea>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Numéro WhatsApp Trésorerie / Comptabilité</label>
+                  <input type="text" id="cfgWhatsappComptable" class="form-control" placeholder="+221 77 106 48 77" value="+221 77 106 48 77">
+                  <span class="form-hint">Numéro sur lequel les familles envoient la preuve de transfert.</span>
+                </div>
+              </div>
+
+              <!-- Barre d'Action d'Enregistrement -->
+              <div class="finconfig-save-bar">
+                <div class="finconfig-save-hint">
+                  <span>🔒</span>
+                  <span>Modifications sauvegardées localement (ACID) et synchronisées avec le serveur.</span>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                  <button type="button" class="btn btn-outline" onclick="renderFinConfig()">
+                    🔄 Rétablir
+                  </button>
+                  <button type="button" class="btn btn-primary" id="btnSaveFinConfig" onclick="saveEstablishmentFinConfig()" style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700; font-size: 0.95rem; padding: 0.65rem 1.75rem;">
+                    💾 Enregistrer mes Coordonnées d'Encaissement
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+    </main>
+
+  </div>
+
+  <!-- ==================== MODALES POPUP ==================== -->
+
+  <!-- 1. Modal Évaluation Hizb Daara -->
+  <div class="modal-backdrop" id="modalHizbEval">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">📖 Validation de Hizb Coranique</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Validation pour : <strong style="color: #fff;" id="evalTalibeName">Mouhamed Bachir Sow</strong>
+        </p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nouveau Hizb Validé (1 à 60)</label>
+            <input type="number" id="evalHizbInput" class="form-control" min="1" max="60" value="49">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Note Tajwîd (sur 20)</label>
+            <input type="number" step="0.5" id="evalTajwidInput" class="form-control" min="0" max="20" value="19.5">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sourate &amp; Versets</label>
+          <input type="text" id="evalSourateInput" class="form-control" value="Sourate Yâ-Sîn (يس)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Appréciation de l'Oustaz</label>
+          <textarea class="form-control" rows="2"
+            placeholder="Récitation fluide, parfait respect des règles de Tajwîd.">Excellente récitation fluide avec respect rigoureux des règles de Tajwîd.</textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="submitHizbEval()">✓ Valider &amp; Alerter la
+          Famille</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Modal Badge PVC Talibé -->
+  <div class="modal-backdrop" id="modalPvcBadge">
+    <div class="modal-window" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">🪪 Carte Numérique Talibé (Format PVC CR-80)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body" id="pvcBadgeRenderArea" style="text-align: center;">
+        <!-- Généré par dashboard.js -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimer Carte PVC</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Modal Bulletin Officiel -->
+  <div class="modal-backdrop" id="modalOfficialBulletin">
+    <div class="modal-window" style="max-width: 780px;">
+      <div class="modal-header">
+        <div class="modal-title">📑 Bulletin Scolaire Officiel (Ministère de l'Éducation)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body" id="bulletinRenderArea">
+        <!-- Généré par dashboard.js -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+        <button type="button" class="btn btn-outline" id="btnShareBulletinWhatsApp" onclick="sendActiveBulletinWhatsApp()" style="background: rgba(37, 211, 102, 0.15); border-color: #25D366; color: #25D366; font-weight: 700;">
+          📲 Envoyer WhatsApp Parent
+        </button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimer Format A4 Officiel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Modal Nouvel Élève / Talibé -->
+  <div class="modal-backdrop" id="modalNewEleve">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">➕ Nouvelle Inscription (Élève / Talibé)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Prénom de l'enfant</label>
+            <input type="text" id="newPrenom" class="form-control" placeholder="Ex: Ousmane">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom de famille</label>
+            <input type="text" id="newNom" class="form-control" placeholder="Ex: Ndiaye">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Type d'Élève</label>
+            <select id="newType" class="form-control">
+              <option value="TALIBE">🕌 Talibé Daara Moderne (Internat / Hifz)</option>
+              <option value="SCOLAIRE">🏫 Élève École Privée (CI à Terminale)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone Parent (WhatsApp)</label>
+            <input type="text" id="newParentTel" class="form-control" value="+221 77 ">
+          </div>
+        </div>
+
+        <div class="form-row" id="newDaaraDormGroup">
+          <div class="form-group">
+            <label class="form-label">Numéro de Chambre &amp; Dortoir (Daara Internat)</label>
+            <input type="text" id="newChambre" class="form-control" placeholder="Ex: Chambre 03 (Pavillon Al-Madina)" value="Chambre 03 (Pavillon Al-Madina)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Numéro de Lit</label>
+            <input type="number" id="newLit" class="form-control" placeholder="Ex: 2" min="1" max="50" value="2">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nom complet du Parent / Tuteur</label>
+          <input type="text" id="newParentNom" class="form-control" placeholder="Ex: M. Cheikh Ndiaye">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="submitNewEleve()">✓ Confirmer l'Inscription</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 bis. Modal Modification / Changement de Chambre Talibé -->
+  <div class="modal-backdrop" id="modalChangeChambre">
+    <div class="modal-window" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title">🛏️ Changement de Chambre &amp; Lit (Internat)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 1rem;">
+          <div style="font-weight: 700; color: #fff; font-size: 1rem;" id="modalChambreTalibeName">Mouhamed Bachir Sow</div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;" id="modalChambreCurrentInfo">Emplacement actuel : Chambre 03 • Lit N°14</div>
+        </div>
+
+        <input type="hidden" id="changeChambreEleveId">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Nouvelle Chambre / Dortoir *</label>
+          <input type="text" id="changeChambreInput" class="form-control" placeholder="Ex: Chambre 02 (Pavillon Al-Madina)">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Nouveau Numéro de Lit *</label>
+          <input type="number" id="changeLitInputDsb" class="form-control" placeholder="Ex: 5" min="1" max="50">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Motif du transfert</label>
+          <select id="changeChambreReasonDsb" class="form-control">
+            <option value="Changement de niveau coranique">Changement de niveau coranique</option>
+            <option value="Demande de la famille / tuteur">Demande de la famille / tuteur</option>
+            <option value="Raison médicale / Confort">Raison médicale / Confort</option>
+            <option value="Réorganisation générale du dortoir" selected>Réorganisation du dortoir</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="submitChangeChambre()">✓ Valider le Changement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Modal Encaissement Multicanal SYSCOHADA -->
+  <div class="modal-backdrop" id="modalEncaissementMulti">
+    <div class="modal-window" style="max-width: 540px;">
+      <div class="modal-header">
+        <div class="modal-title">💳 Encaissement &amp; Trésorerie SYSCOHADA</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Sélecteur d'Opérateur / Mode de Règlement -->
+        <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Canal de Règlement :</label>
+        <div class="operator-picker-grid">
+          <div class="op-pill active" data-op="WAVE" onclick="setEncaissementOp('WAVE')">
+            <div class="op-pill-icon">🌊</div>
+            <div class="op-pill-name">Wave</div>
+            <div class="op-pill-acct">5211</div>
+          </div>
+          <div class="op-pill" data-op="ORANGE_MONEY" onclick="setEncaissementOp('ORANGE_MONEY')">
+            <div class="op-pill-icon">🍊</div>
+            <div class="op-pill-name">Orange</div>
+            <div class="op-pill-acct">5212</div>
+          </div>
+          <div class="op-pill" data-op="FREE_MONEY" onclick="setEncaissementOp('FREE_MONEY')">
+            <div class="op-pill-icon">🔴</div>
+            <div class="op-pill-name">Free</div>
+            <div class="op-pill-acct">5213</div>
+          </div>
+          <div class="op-pill" data-op="ESPECES" onclick="setEncaissementOp('ESPECES')">
+            <div class="op-pill-icon">💵</div>
+            <div class="op-pill-name">Espèces</div>
+            <div class="op-pill-acct">5711</div>
+          </div>
+          <div class="op-pill" data-op="CHEQUE_BANQUE" onclick="setEncaissementOp('CHEQUE_BANQUE')">
+            <div class="op-pill-icon">🏦</div>
+            <div class="op-pill-name">Banque</div>
+            <div class="op-pill-acct">5210</div>
+          </div>
+        </div>
+
+        <!-- Encadré Imputation Comptable SYSCOHADA Dynamique -->
+        <div id="caisseSyscohadaNotice"
+          style="background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.35); border-radius: var(--radius-sm); padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.78rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <strong style="color: #34D399;" id="noticeAccountTitle">Compte Trésorerie Débit : 5211 - Banque / Wave
+              Sénégal</strong>
+            <span class="badge-tag badge-green" id="noticeAccountBadge">Mobile Money</span>
+          </div>
+          <div style="color: #94A3B8;" id="noticeAccountDesc">
+            Écriture automatique au Grand Livre : Débit Cpt 5211 / Crédit Cpt 706 (Prestations de scolarité &amp;
+            pensions).
+          </div>
+        </div>
+
+        <!-- Élève / Talibé concerné -->
+        <div class="form-group">
+          <label class="form-label">Élève ou Talibé concerné</label>
+          <select id="payEleveSelect" class="form-control" onchange="onEncaissementStudentChanged()">
+            <!-- Rempli dynamiquement -->
+          </select>
+        </div>
+
+        <!-- Motif & Montant -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Motif du Règlement</label>
+            <select id="payMotifSelect" class="form-control" onchange="onEncaissementMotifChanged()">
+              <option value="PENSION_INTERNAT">Pension &amp; Internat Daara</option>
+              <option value="SCOLARITE_MENSUELLE" selected>Scolarité Mensuelle</option>
+              <option value="INSCRIPTION">Frais d'Inscription &amp; Dossier</option>
+              <option value="CANTINE">Cantine &amp; Restauration</option>
+              <option value="FOURNITURES">Tenue &amp; Fournitures Scolaires</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Montant (FCFA)</label>
+            <input type="number" id="payMontantInput" class="form-control" value="25000" step="500">
+          </div>
+        </div>
+
+        <!-- Coordonnées Payeur -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom du Parent / Payeur</label>
+            <input type="text" id="payPayeurNom" class="form-control" value="M. Ibrahima Sow">
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="labelPayContact">Téléphone Mobile Money</label>
+            <input type="text" id="payPayeurContact" class="form-control" value="+221 77 645 88 12">
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" id="btnSubmitEncaissement" onclick="submitEncaissementMulti()"
+          style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700;">
+          ✓ Valider &amp; Émettre Reçu SYSCOHADA
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Modal Reçu Officiel Imprimable SYSCOHADA -->
+  <div class="modal-backdrop" id="modalReceiptSyscohada">
+    <div class="modal-window"
+      style="max-width: 600px; padding: 0; background: transparent; border: none; box-shadow: none;">
+      <div id="receiptRenderArea">
+        <!-- Reçu injecté dynamiquement par dashboard.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Modal Nouvel Établissement Client (Super Admin SaaS) -->
+  <div class="modal-backdrop" id="modalNewClientSaaS">
+    <div class="modal-window" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="modal-title">👑 Inscription d'un Nouvel Établissement (SaaS)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom de l'Établissement</label>
+            <input type="text" id="newClientName" class="form-control" placeholder="Ex: Daara Serigne Saliou Mbacké">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type d'Établissement</label>
+            <select id="newClientType" class="form-control">
+              <option value="DAARA">🕌 Daara Moderne (Tahfiz &amp; Internat)</option>
+              <option value="ECOLE">🏫 École Privée Franco-Arabe / Laïque</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Ville / Région</label>
+            <input type="text" id="newClientCity" class="form-control" placeholder="Ex: Touba / Mbacké">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Formule d'Abonnement SaaS</label>
+            <select id="newClientPlan" class="form-control">
+              <option value="Pack Internat Promo Daara" data-price="35000">Pack Internat Daara - 35 000 F / mois
+              </option>
+              <option value="Formule École Pro" data-price="45000">Formule École Pro - 45 000 F / mois</option>
+              <option value="Formule Premium Établissement" data-price="75000">Formule Premium - 75 000 F / mois
+              </option>
+              <option value="Essai Gratuit 30 Jours" data-price="0">Essai Gratuit Découverte (0 F - 30 jours)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom du Directeur / Oustaz Référent</label>
+            <input type="text" id="newClientDirector" class="form-control" placeholder="Ex: Oustaz Cheikh Amar">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone WhatsApp Directeur</label>
+            <input type="text" id="newClientPhone" class="form-control" value="+221 77 000 00 00">
+          </div>
+        </div>
+
+        <div
+          style="background: rgba(0, 210, 180, 0.08); border: 1px dashed rgba(0, 210, 180, 0.3); border-radius: var(--radius-sm); padding: 0.8rem 1rem; margin-top: 0.5rem; font-size: 0.78rem; color: #94a3b8;">
+          💡 <strong>Activation instantanée :</strong> Un identifiant unique (ex: <code>SSE-SN-XXXX</code>) sera généré,
+          les KPIs MRR seront recalculés et l'établissement sera immédiatement opérationnel dans le sélecteur.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="submitNewClientSaaS()">✓ Inscrire Établissement &amp; Activer Licence SaaS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Modal Broadcast Global Super Admin aux Directeurs -->
+  <div class="modal-backdrop" id="modalBroadcastSaaS">
+    <div class="modal-window" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">📢 Message Global aux Directeurs d'Établissements</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Type de Notification</label>
+          <select id="saasBroadcastType" class="form-control" onchange="onSaasBroadcastTypeChange()">
+            <option value="UPDATE">🚀 Déploiement de Nouvelles Fonctionnalités &amp; Mises à jour</option>
+            <option value="MAINTENANCE">⚡ Avis de Maintenance Technique Nocturne</option>
+            <option value="FACTURATION">💳 Rappel Échéance d'Abonnement SaaS Mensuel</option>
+            <option value="CUSTOM">✍️ Message Personnalisé de la Direction</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Objet de la Communication</label>
+          <input type="text" id="saasBroadcastSubject" class="form-control"
+            value="Mise à jour majeure : Gestion de Caisse SYSCOHADA & Emplois du temps">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contenu du Message (Expédié via WhatsApp &amp; Dashboard)</label>
+          <textarea id="saasBroadcastContent" class="form-control"
+            rows="4">Chers Directeurs et Oustazs, l'équipe SunuSchoolExpress vous informe du bon fonctionnement de vos plateformes. Vos données sont synchronisées en temps réel et sécurisées selon les normes éducatives.</textarea>
+        </div>
+
+        <div
+          style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.78rem;">
+          <span style="color: var(--text-muted);">Destinataires ciblés : </span>
+          <strong style="color: #fff;" id="saasBroadcastRecipientsText">Tous les directeurs d'établissements
+            abonnés</strong>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="sendBroadcastSaaS()">📢 Expédier l'Annonce aux
+          Directeurs</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. Modal Configuration Date des Bulletins -->
+  <div class="modal-backdrop" id="modalConfigDate">
+    <div class="modal-window" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">📅 Configuration Période &amp; Date des Bulletins</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Intitulé de la Période Évaluée</label>
+          <input type="text" id="configDateTermInput" class="form-control" value="1er Semestre 2026-2027">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Officielle de Déblocage des Bulletins</label>
+          <input type="date" id="configDateInput" class="form-control" value="2026-10-31">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut d'Accès Parents</label>
+          <select id="configDateStatusSelect" class="form-control">
+            <option value="LOCKED">🔒 Verrouillé jusqu'à la date (Consultable par la Direction seule)</option>
+            <option value="UNLOCKED">🔓 Débloqué immédiatement pour les Familles</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="saveConfigDate()">✓ Enregistrer &amp; Appliquer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. Modal Envoi Rappel Groupé Familles WhatsApp -->
+  <div class="modal-backdrop" id="modalBroadcastComms">
+    <div class="modal-window" style="max-width: 540px;">
+      <div class="modal-header">
+        <div class="modal-title">📲 Passerelle WhatsApp - Rappel Groupé aux Familles</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Motif du Rappel WhatsApp</label>
+          <select id="commsReminderMotif" class="form-control" onchange="onCommsReminderMotifChange()">
+            <option value="SCOLARITE">💳 Rappel Échéance Mensualités &amp; Pensions Internat</option>
+            <option value="BULLETINS">📑 Avis de Disponibilité des Bulletins de Notes</option>
+            <option value="REUNION">👨‍👩‍👧 Convocation Réunion Générale des Parents d'Élèves</option>
+            <option value="CUSTOM">✍️ Message d'Information Général</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cible des Familles</label>
+          <select id="commsReminderTarget" class="form-control" onchange="onCommsReminderMotifChange()">
+            <option value="ALL">Tous les parents de l'établissement actif</option>
+            <option value="RETARD">Parents en retard de paiement uniquement</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message WhatsApp Préformaté</label>
+          <textarea id="commsReminderText" class="form-control"
+            rows="4">Chers parents, nous vous informons que les scolarités du mois en cours sont exigibles. Merci de régler via Wave ou Orange Money en utilisant votre clé d'accès famille. SunuSchoolExpress.</textarea>
+        </div>
+        <div id="commsTargetCountInfo" style="font-size: 0.78rem; color: #34D399; margin-top: 0.35rem;">
+          Destinataires estimés pour cet établissement.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="sendBroadcastComms()"
+          style="background: #25D366; border: none; font-weight: 700;">
+          📲 Déclencher l'Envoi WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Modal Répertoire & Renvoi Clés Parents WhatsApp -->
+  <div class="modal-backdrop" id="modalParentKeys">
+    <div class="modal-window" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title">🔑 Répertoire des Clés d'Accès Familles &amp; Envoi Direct</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Chaque famille dispose d'une clé sécurisée pour
+            consulter les notes, progression Hizb et reçus sans mot de passe.</span>
+          <button class="btn btn-primary btn-sm" onclick="sendAllParentKeysWhatsApp()"
+            style="background: #25D366; border: none; font-weight: 700;">
+            📲 Renvoyer à Tous par WhatsApp
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Parent Référent</th>
+                <th>Élève / Talibé</th>
+                <th>Clé d'Accès Unique</th>
+                <th>Action Immédiate</th>
+              </tr>
+            </thead>
+            <tbody id="parentKeysTable">
+              <!-- Injecté dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. Modal Pointage Journalier & Absences / Retards -->
+  <div class="modal-backdrop" id="modalAttendance">
+    <div class="modal-window" style="max-width: 750px;">
+      <div class="modal-header">
+        <div class="modal-title">⚡ Journal d'Appel Matinal &amp; Alertes Présences</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <strong style="color: #fff;" id="attendanceDateLabel">Appel du Jour</strong>
+            <div style="font-size: 0.78rem; color: var(--text-secondary);">Cliquer sur un statut pour pointer l'élève.
+              En cas d'absence, le bouton d'alerte WhatsApp parent s'active.</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="markAllPresent()">✓ Marquer Tous Présents</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Élève / Talibé</th>
+                <th>Classe</th>
+                <th>Statut Présence</th>
+                <th>Alerte Immédiate Parent</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTable">
+              <!-- Injecté dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+        <button type="button" class="btn btn-primary" onclick="saveAttendance()">✓ Enregistrer la Feuille
+          d'Appel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13. Modal Saisie des Notes & Évaluations Continues (Enseignant / Directeur) -->
+  <div class="modal-backdrop" id="modalGradesEntry">
+    <div class="modal-window" style="max-width: 960px; width: 95%;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>📑</span>
+            <span>Carnet de Saisie des Notes &amp; Évaluations Continues</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem;">
+            Saisie des devoirs, compositions et calcul automatique des moyennes pondérées officielles (Sénégal).
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Barre de Sélection de l'Élève & Période -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.25rem; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <label class="form-label" style="margin: 0; white-space: nowrap; font-weight: 700;">👤 Élève à évaluer :</label>
+            <select id="gradesEntryStudentSelect" class="form-control" style="min-width: 260px;" onchange="onGradesStudentSelected(this.value)">
+              <!-- Options dynamiques des élèves scolaires -->
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="badge-tag badge-blue" id="gradesEntryClassBadge">Troisième B</span>
+            <span class="badge-tag badge-gold" id="gradesEntryTermBadge">1er Semestre 2026-2027</span>
+          </div>
+        </div>
+
+        <!-- Tableau Interactif de Saisie des Matières -->
+        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+          <table class="data-table" style="font-size: 0.82rem;">
+            <thead>
+              <tr>
+                <th style="min-width: 170px;">Matière Enseignée</th>
+                <th style="width: 60px; text-align: center;">Coef</th>
+                <th style="width: 95px; text-align: center;">Devoir 1 (/20)</th>
+                <th style="width: 95px; text-align: center;">Devoir 2 (/20)</th>
+                <th style="width: 95px; text-align: center;">Compo (/20)</th>
+                <th style="width: 95px; text-align: center;">Moyenne</th>
+                <th style="width: 85px; text-align: center;">Points</th>
+                <th style="min-width: 180px;">Appréciation de l'Enseignant</th>
+              </tr>
+            </thead>
+            <tbody id="gradesEntryTableBody">
+              <!-- Injecté dynamiquement par buildGradesEntryRows() -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bilan Récapitulatif Direct & Moyenne Générale -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.25rem; background: rgba(0,210,180,0.06); border: 1px solid rgba(0,210,180,0.25); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-size: 2rem;">🎓</div>
+            <div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Moyenne Générale</div>
+              <div id="gradesModalMoyenneDisplay" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">-- / 20</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-size: 2rem;">📊</div>
+            <div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Coef &amp; Points</div>
+              <div id="gradesModalPointsDisplay" style="font-size: 1rem; font-weight: 700; color: #fff;">-- Coef • -- Pts</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-size: 2rem;">🌟</div>
+            <div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Mention &amp; Décision</div>
+              <div id="gradesModalMentionDisplay" style="font-size: 0.85rem; font-weight: 800; color: #34D399;">Félicitations</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Avis du Conseil des Professeurs -->
+        <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 700;">Avis Officiel du Conseil des Professeurs</label>
+          <input type="text" id="gradesModalCouncilInput" class="form-control" value="Félicitations du conseil pour son travail remarquable et assidu.">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="saveGradesEntry()">
+          ✓ Enregistrer les Notes &amp; Mettre à Jour le Bulletin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14. Modal Grand Livre Comptable SYSCOHADA (Caisse & Trésorerie) -->
+  <div class="modal-backdrop" id="modalGrandLivre">
+    <div class="modal-window" style="max-width: 1050px; width: 95%;">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+        <div>
+          <div class="modal-title" style="display: flex; align-items: center; gap: 0.6rem;">
+            <span style="font-size: 1.5rem;">📖</span>
+            <span>Grand Livre Général de Caisse &amp; Trésorerie (SYSCOHADA Révisé)</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem;">
+            Journal officiel à double partie des encaissements Wave, Orange Money, Espèces et Banques conformes aux normes OHADA.
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Bandeau Récapitulatif Trésorerie & Équilibre -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.85rem; margin-bottom: 1.25rem;">
+          <div class="mini-stat-card" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Débits (Trésorerie Entrante)</div>
+            <div id="glTotalDebit" style="font-size: 1.35rem; font-weight: 800; color: #10B981;">0 FCFA</div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary);">Comptes 5211 / 5212 / 5711</div>
+          </div>
+          <div class="mini-stat-card" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Crédits (Produits Constatés)</div>
+            <div id="glTotalCredit" style="font-size: 1.35rem; font-weight: 800; color: var(--gold);">0 FCFA</div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary);">Compte 706 (Pensions/Scolarités)</div>
+          </div>
+          <div class="mini-stat-card" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Solde Net en Caisse</div>
+            <div id="glSoldeNet" style="font-size: 1.35rem; font-weight: 800; color: #38BDF8;">0 FCFA</div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary);">Disponibilités réelles certifiées</div>
+          </div>
+          <div class="mini-stat-card" style="background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Équilibre Comptable OHADA</div>
+            <div style="display: flex; align-items: center; gap: 0.4rem; margin-top: 0.2rem;">
+              <span class="badge-tag badge-green" style="font-weight: 800; font-size: 0.78rem;">✓ Équilibré (Écart 0 F)</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem;">Conformité SYSCOHADA certifiée</div>
+          </div>
+        </div>
+
+        <!-- Répartition par Compte SYSCOHADA -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; background: rgba(255,255,255,0.02); padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Comptes du Grand Livre :</span>
+          <span class="badge-tag badge-blue" id="glAccountWave">5211 Wave : -- F</span>
+          <span class="badge-tag badge-gold" id="glAccountOm">5212 Orange Money : -- F</span>
+          <span class="badge-tag badge-green" id="glAccountCash">5711 Espèces Caisse : -- F</span>
+          <span class="badge-tag badge-primary" id="glAccountBank">5210 Banques : -- F</span>
+          <span class="badge-tag" style="background: rgba(255,255,255,0.08); color: #fff;" id="glAccountRevenue">706 Scolarités &amp; Pensions</span>
+        </div>
+
+        <!-- Tableau des Écritures du Grand Livre -->
+        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+          <table class="data-table" style="font-size: 0.8rem;">
+            <thead>
+              <tr>
+                <th>Date &amp; Heure</th>
+                <th>N° Pièce</th>
+                <th>Compte Débit (Emploi)</th>
+                <th>Compte Crédit (Ressource)</th>
+                <th>Tiers &amp; Libellé Écriture</th>
+                <th style="text-align: right;">Débit (FCFA)</th>
+                <th style="text-align: right;">Crédit (FCFA)</th>
+                <th style="text-align: right;">Solde Cumulé</th>
+                <th style="text-align: center;">Pièce Justificative</th>
+              </tr>
+            </thead>
+            <tbody id="grandLivreTableBody">
+              <!-- Injecté dynamiquement par renderGrandLivreRows() -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.75rem; color: var(--text-muted);">
+          Livre côté et paraphé selon le droit commercial sénégalais &amp; système SYSCOHADA.
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+          <button type="button" class="btn btn-outline" onclick="exportFECSYSCOHADA()" style="color: #F59E0B; border-color: rgba(245,158,11,0.4);">
+            📑 Exporter FEC (DGI)
+          </button>
+          <button type="button" class="btn btn-outline" onclick="exportGrandLivreCsv()" style="color: #38BDF8; border-color: rgba(56,189,248,0.4);">
+            📥 Exporter CSV / Excel
+          </button>
+          <button type="button" class="btn btn-primary" onclick="printGrandLivreA4()" style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700;">
+            🖨️ Imprimer Grand Livre Format A4
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15. Modal Édition de Créneau d'Emploi du Temps -->
+  <div class="modal-backdrop" id="modalEditTimetableSlot">
+    <div class="modal-window" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title">✏️ Personnaliser le Créneau de Cours</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editSlotDay">
+        <input type="hidden" id="editSlotTimeKey">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jour de la Semaine</label>
+            <select id="editSlotDaySelect" class="form-control" onchange="onEditSlotDayChange()">
+              <option value="lundi">Lundi</option>
+              <option value="mardi">Mardi</option>
+              <option value="mercredi">Mercredi</option>
+              <option value="jeudi">Jeudi</option>
+              <option value="vendredi">Vendredi</option>
+              <option value="samedi">Samedi</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plage Horaire</label>
+            <select id="editSlotTimeSelect" class="form-control">
+              <!-- Dynamique -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Matière / Séance Pédagogique</label>
+          <input type="text" id="editSlotSubject" class="form-control" placeholder="Ex: Mathématiques ou Hifz &amp; Tajwîd">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Enseignant ou Oustaz</label>
+            <input type="text" id="editSlotTeacher" class="form-control" placeholder="Ex: M. Ba ou Oustaz Ndiaye">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Salle / Pavillon</label>
+            <input type="text" id="editSlotRoom" class="form-control" placeholder="Ex: Salle B12 ou Salle Coran A">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="saveTimetableSlot()">✓ Enregistrer le Créneau</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 16. MODALE AJOUT / CONFIGURATION EMPLOI DU TEMPS PAR CLASSE ==================== -->
+  <div class="modal-backdrop" id="modalCreateTimetableClass">
+    <div class="modal-window" style="max-width: 540px;">
+      <div class="modal-header">
+        <div class="modal-title">📅 Ajouter un Emploi du Temps pour une Classe</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Configurez un nouvel emploi du temps hebdomadaire pour une classe existante de votre établissement ou créez une nouvelle section pédagogique.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Sélectionner ou Créer une Classe</label>
+          <select id="createTimetableClassSelect" class="form-control" onchange="onCreateTimetableClassSelectChange()">
+            <!-- Rempli dynamiquement avec les classes de l'établissement + option 'Nouvelle classe' -->
+          </select>
+        </div>
+
+        <div id="newClassCustomFields" style="display: none; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Nom de la Nouvelle Classe</label>
+            <input type="text" id="createTimetableNewClassName" class="form-control" placeholder="Ex: Seconde L2 ou Classe Hifz Débutant B">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Cycle Pédagogique</label>
+              <select id="createTimetableNewClassCycle" class="form-control">
+                <option value="Primaire">Primaire (CI - CM2)</option>
+                <option value="Moyen">Moyen (6ème - 3ème)</option>
+                <option value="Secondaire">Secondaire (2nde - Tle)</option>
+                <option value="Daara">Daara Coranique</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Effectif Apprenants</label>
+              <input type="number" id="createTimetableNewClassEffectif" class="form-control" value="30" min="1" max="100">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Modèle Pédagogique de Départ (Template)</label>
+          <select id="createTimetableTemplateSelect" class="form-control">
+            <option value="auto">✨ Modèle Adapté Automatique (Recommandé)</option>
+            <option value="college">📚 Collège Sénégalais (Maths, Français, PC, SVT, Anglais, HG, EPS)</option>
+            <option value="lycee">🎓 Lycée Général (Philosophie, Maths, PC, SVT, Littérature)</option>
+            <option value="primaire">✏️ Primaire (Calcul, Lecture, Éveil, Récitation, Dictée)</option>
+            <option value="daara">🕌 Daara Mémorisation (Tahfîz, Allouwa, Tajwîd, Murâja'ah, Fiqh)</option>
+            <option value="empty">📋 Grille Vierge (Composer manuellement créneau par créneau)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="submitCreateTimetableClass()">✓ Créer &amp; Activer l'Emploi du Temps</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 16.5. MODALE AJOUT / MODIFICATION DE CLASSE ==================== -->
+  <div class="modal-backdrop" id="modalDashboardClass">
+    <div class="modal-window" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title" id="modalDashboardClassTitle">🏫 Ajouter une Nouvelle Classe</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <form id="dashboardClassForm" onsubmit="submitNewClassModal(event)">
+        <input type="hidden" id="editDashboardClassId" value="">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Nom de la Classe / Section *</label>
+            <input type="text" id="dashboardClassNameInput" class="form-control" placeholder="Ex: CM2 A, 6ème B, Hifz Niveau 1" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Cycle Pédagogique *</label>
+              <select id="dashboardClassCycleSelect" class="form-control">
+                <option value="Maternelle">👶 Maternelle / Préscolaire</option>
+                <option value="Élémentaire" selected>📚 Élémentaire / Primaire</option>
+                <option value="Collège">🏫 Collège (Moyen)</option>
+                <option value="Lycée">🎓 Lycée (Secondaire)</option>
+                <option value="Daara">🕌 Daara Moderne Coranique</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Capacité Maximale</label>
+              <input type="number" id="dashboardClassCapacityInput" class="form-control" value="45" min="10" max="100">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Salle / Bâtiment</label>
+              <input type="text" id="dashboardClassRoomInput" class="form-control" placeholder="Ex: Salle 12, Pavillon B">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Professeur Principal / Référent</label>
+              <input type="text" id="dashboardClassTeacherInput" class="form-control" placeholder="Ex: M. Abdoulaye Diallo">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+          <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); font-weight: 700;">✓ Enregistrer la Classe</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 16.6. MODALE NOUVEAU CONTRAT ENSEIGNANT / OUSTAZ ==================== -->
+  <div class="modal-backdrop" id="modalDashboardTeacher">
+    <div class="modal-window" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="modal-title" id="modalDashboardTeacherTitle">👨‍🏫 Nouveau Contrat Enseignant / Oustaz</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <form id="dashboardTeacherForm" onsubmit="submitNewTeacherModal(event)">
+        <input type="hidden" id="editDashboardTeacherId" value="">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nom Complet *</label>
+              <input type="text" id="dashboardTeacherNom" class="form-control" placeholder="Ex: M. Abdoulaye Diallo ou Oustaz Modou" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Téléphone WhatsApp *</label>
+              <input type="text" id="dashboardTeacherTel" class="form-control" placeholder="+221 77 000 00 00" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Matière Principale Enseignée *</label>
+              <input type="text" id="dashboardTeacherMatiere" class="form-control" placeholder="Ex: Mathématiques, Français, Coran & Hifz" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type de Contrat</label>
+              <select id="dashboardTeacherContrat" class="form-control">
+                <option value="CDI Titulaire">CDI Titulaire</option>
+                <option value="Vacataire">Vacataire (Rémunération horaire)</option>
+                <option value="Titulaire Daara">Titulaire Daara Moderne</option>
+                <option value="Bénévolat / Soutien">Bénévolat / Soutien</option>
+                <option value="Stagiaire">Stage Pédagogique</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Volume Horaire Hebdo</label>
+              <input type="text" id="dashboardTeacherVolume" class="form-control" placeholder="Ex: 20h / semaine" value="20h / semaine">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Salaire Mensuel Net (FCFA)</label>
+              <input type="number" id="dashboardTeacherSalaire" class="form-control" placeholder="220000" value="220000">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>Classes Affectées (Cliquer pour assigner / retirer) :</span>
+              <small style="color: var(--primary); font-size: 0.72rem;">Multi-sélection active</small>
+            </label>
+            <div id="dashboardTeacherClassesPills" style="display: flex; gap: 0.4rem; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.12); padding: 0.75rem; border-radius: var(--radius-sm); min-height: 48px;">
+              <!-- Injecté dynamiquement par renderTeacherClassesPills() -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+          <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); font-weight: 700;">✓ Valider le Contrat Enseignant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 16.7. MODALE FICHE DE PAIE / ATTESTATION ENSEIGNANT ==================== -->
+  <div class="modal-backdrop" id="modalDashboardPayslip">
+    <div class="modal-window" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">📄 Bulletin de Rémunération &amp; Fiche Enseignant</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body" id="dashboardPayslipContent">
+        <!-- Rendu dynamique du bulletin de salaire standardisé -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()" style="background: linear-gradient(135deg, #10B981, #00D2B4); font-weight: 700;">🖨️ Imprimer la Fiche de Paie</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 17. MODALE SAUVEGARDE & RESTAURATION HORS-LIGNE (CLÉ USB) ==================== -->
+  <div class="modal-backdrop" id="modalBackupRestore">
+    <div class="modal-window" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">💾 Sauvegarde &amp; Restauration Hors-Ligne (Clé USB)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.25rem;">
+          <div style="font-weight: 700; color: var(--primary); font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+            <span>🛡️</span> <span>Sécurité &amp; Autonomie 100% Hors-Ligne</span>
+          </div>
+          <div style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 0.25rem;">
+            Vos données sont hébergées en local sur cet ordinateur. Vous pouvez exporter un fichier de sauvegarde à tout moment sur une clé USB ou restaurer vos données sur un autre poste sans connexion Internet.
+          </div>
+        </div>
+
+        <!-- 1. Exportation Sauvegarde -->
+        <div style="margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border);">
+          <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 0.35rem;">
+            1. Exporter la Sauvegarde Complète
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Télécharge un fichier <code>.json</code> complet contenant les élèves, talibés, notes, écritures de caisse, Grand Livre SYSCOHADA et tous les emplois du temps.
+          </p>
+          <button type="button" class="btn btn-primary" onclick="exportDatabaseBackup()" style="width: 100%; display: flex; justify-content: center; gap: 0.5rem; font-weight: 700;">
+            <span>💾</span> <span>Télécharger le Fichier de Sauvegarde (.json)</span>
+          </button>
+        </div>
+
+        <!-- 2. Restauration Sauvegarde -->
+        <div>
+          <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 0.35rem;">
+            2. Restaurer une Sauvegarde Précédente
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Sélectionnez un fichier de sauvegarde <code>.json</code> préalablement enregistré sur votre clé USB ou disque dur.
+          </p>
+
+          <input type="file" id="backupFileInput" accept=".json" class="form-control" onchange="onBackupFileSelected(event)" style="padding: 0.45rem;">
+
+          <div id="backupPreviewCard" style="display: none; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); border-radius: 6px; padding: 0.85rem; margin-top: 0.85rem;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #fff;" id="backupPreviewTitle">Contenu de la Sauvegarde :</div>
+            <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.35rem;" id="backupPreviewDetails">--</div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="confirmRestoreBackup()" style="margin-top: 0.75rem; width: 100%; background: linear-gradient(135deg, #F59E0B, #D97706); border: none; font-weight: 700;">
+              ⚠️ Confirmer la Restauration Locale
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Affiche Guichet Wave/OM Format A4 -->
+  <div class="modal-backdrop" id="modalPrintGuichet">
+    <div class="modal-window" style="max-width: 680px;">
+      <div class="modal-header">
+        <div class="modal-title">🖨️ Affiche Guichet Wave &amp; Orange Money (Format A4)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body" id="guichetFlyerRenderArea" style="text-align: center; max-height: 75vh; overflow-y: auto;">
+        <!-- Injecté dynamiquement par renderGuichetFlyer() -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+        <button type="button" class="btn btn-primary" onclick="printGuichetFlyerNow()" style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700;">
+          🖨️ Imprimer l'Affiche Guichet (A4)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Flottant -->
+  <div id="appToast">
+    <span>✅</span>
+    <div id="toastMessage">Opération réussie</div>
+  </div>
+
+  <script src="dashboard.js?v=3.5.6"></script>
+</body>
+
+</html>

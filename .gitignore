@@ -1,0 +1,24 @@
+# Dépendances Node.js
+node_modules/
+backend/node_modules/
+
+# Secrets et variables d'environnement (Sécurité ISO 27001)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Logs et rapports d'erreurs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Fichiers temporaires système et éditeur
+.DS_Store
+Thumbs.db
+.tmp_edge_parent/
+.vscode/
+.idea/
