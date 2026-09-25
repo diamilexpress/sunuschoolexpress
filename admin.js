@@ -75,14 +75,17 @@ let lastBackendCheckTime = 0;
 function updateCloudBadgeUI(isOnline) {
   const badge = document.getElementById('cloudStatusBadge');
   const txt = document.getElementById('cloudStatusText');
+  const txtMob = document.getElementById('cloudStatusTextMobile');
   if (!badge) return;
   if (isOnline) {
     badge.className = 'admin-cloud-badge online';
     if (txt) txt.textContent = '☁️ Cloud Render Connecté';
+    if (txtMob) txtMob.textContent = '☁️ En Ligne';
     badge.title = 'Liaison API Cloud active et opérationnelle. Cliquer pour actualiser.';
   } else {
     badge.className = 'admin-cloud-badge offline';
     if (txt) txt.textContent = '💻 Mode Local / Hors-Ligne';
+    if (txtMob) txtMob.textContent = '💻 Local';
     badge.title = 'Serveur distant inaccessible. Données sauvegardées localement. Cliquer pour reconnecter.';
   }
 }
