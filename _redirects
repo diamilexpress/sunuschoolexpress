@@ -3,6 +3,9 @@
 /.env*       /   404!
 /*.bat       /   404!
 
+# Proxy API vers Render.com (Synchronisation temps réel Mobile & PC)
+/api/*          https://sunuschoolexpress.onrender.com/api/:splat  200!
+
 # Réécriture propre des URL
 /admin       /admin.html      200
 /dashboard   /dashboard.html  200
