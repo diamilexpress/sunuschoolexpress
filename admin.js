@@ -22,14 +22,49 @@ let adminState = {
   quotes: []
 };
 
+let filterState = {
+  searchPending: '',
+  searchQuotes: '',
+  searchEtabs: '',
+  filterPlan: 'ALL',
+  filterStatus: 'ALL'
+};
+
+function handleSearchPending(val) {
+  filterState.searchPending = (val || '').toLowerCase().trim();
+  renderPendingTable();
+}
+
+function handleSearchQuotes(val) {
+  filterState.searchQuotes = (val || '').toLowerCase().trim();
+  renderQuotesTable();
+}
+
+function handleSearchEtabs(val) {
+  filterState.searchEtabs = (val || '').toLowerCase().trim();
+  renderAllEtabsTable();
+}
+
+function handleFilterEtabsPlan(val) {
+  filterState.filterPlan = val || 'ALL';
+  renderAllEtabsTable();
+}
+
+function handleFilterEtabsStatus(val) {
+  filterState.filterStatus = val || 'ALL';
+  renderAllEtabsTable();
+}
+
 function getBackendBaseUrl() {
   if (typeof window !== 'undefined') {
     if (window.location.port === '5000') return window.location.origin;
-    if (window.location.protocol.startsWith('http') && 
-        !['localhost', '127.0.0.1'].includes(window.location.hostname) && 
-        !/^192\.168\.|^10\.|^172\./.test(window.location.hostname)) {
-      return window.location.origin;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
+      return 'http://localhost:5000';
     }
+    if (/^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname)) {
+      return `${window.location.protocol}//${window.location.hostname}:5000`;
+    }
+    return window.location.origin;
   }
   return null;
 }
@@ -37,38 +72,54 @@ function getBackendBaseUrl() {
 let isBackendActive = false;
 let lastBackendCheckTime = 0;
 
+function updateCloudBadgeUI(isOnline) {
+  const badge = document.getElementById('cloudStatusBadge');
+  const txt = document.getElementById('cloudStatusText');
+  if (!badge) return;
+  if (isOnline) {
+    badge.className = 'admin-cloud-badge online';
+    if (txt) txt.textContent = '☁️ Cloud Render Connecté';
+    badge.title = 'Liaison API Cloud active et opérationnelle. Cliquer pour actualiser.';
+  } else {
+    badge.className = 'admin-cloud-badge offline';
+    if (txt) txt.textContent = '💻 Mode Local / Hors-Ligne';
+    badge.title = 'Serveur distant inaccessible. Données sauvegardées localement. Cliquer pour reconnecter.';
+  }
+}
+
 function checkBackendOnline(callback) {
   const baseUrl = getBackendBaseUrl();
   if (!baseUrl) {
     isBackendActive = false;
+    updateCloudBadgeUI(false);
     if (callback) callback(false);
     return;
   }
   const now = Date.now();
-  if (now - lastBackendCheckTime < 60000 && !isBackendActive) {
-    if (callback) callback(false);
-    return;
-  }
   lastBackendCheckTime = now;
   try {
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 600);
+    const tid = setTimeout(() => ctrl.abort(), 1800);
     fetch(`${baseUrl}/api/saas/monitoring/stats`, { method: 'GET', signal: ctrl.signal })
       .then(r => {
         clearTimeout(tid);
         isBackendActive = Boolean(r && r.ok);
+        updateCloudBadgeUI(isBackendActive);
         if (callback) callback(isBackendActive);
       })
       .catch(() => {
         isBackendActive = false;
+        updateCloudBadgeUI(false);
         if (callback) callback(false);
       });
   } catch(e) {
     isBackendActive = false;
+    updateCloudBadgeUI(false);
     if (callback) callback(false);
   }
 }
 checkBackendOnline();
+
 
 // --- AUTHENTIFICATION MAÎTRE SÉCURISÉE (SERVEUR / BAC A SABLE) ---
 function checkAdminSession() {
@@ -625,15 +676,27 @@ function renderPendingTable() {
   const tbody = document.getElementById('pendingEtabsTbody');
   if (!tbody) return;
 
-  const pending = adminState.etablissements.filter(isPendingEtab);
+  let pending = adminState.etablissements.filter(isPendingEtab);
+
+  if (filterState.searchPending) {
+    const q = filterState.searchPending;
+    pending = pending.filter(e => 
+      (e.name && e.name.toLowerCase().includes(q)) ||
+      (e.code && e.code.toLowerCase().includes(q)) ||
+      (e.directeurNom && e.directeurNom.toLowerCase().includes(q)) ||
+      (e.phone && e.phone.includes(q)) ||
+      (e.city && e.city.toLowerCase().includes(q)) ||
+      (e.waveTransactionRef && e.waveTransactionRef.toLowerCase().includes(q))
+    );
+  }
 
   if (pending.length === 0) {
     tbody.innerHTML = `
       <tr>
         <td colspan="6" style="text-align: center; padding: 2.5rem; color: #64748B;">
           <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎉</div>
-          <strong>Aucune demande d'adhésion en attente.</strong><br>
-          Tous les virements Wave ont été validés et les accès sont débloqués.
+          <strong>${filterState.searchPending ? 'Aucun établissement ne correspond à votre recherche.' : "Aucune demande d'adhésion en attente."}</strong><br>
+          ${filterState.searchPending ? 'Essayez avec un autre mot-clé ou réinitialisez le champ de recherche.' : 'Tous les virements Wave ont été validés et les accès sont débloqués.'}
         </td>
       </tr>
     `;
@@ -667,8 +730,8 @@ function renderPendingTable() {
       </td>
       <td>
         <div style="background: rgba(0, 210, 180, 0.1); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: 6px; padding: 0.35rem 0.6rem; display: inline-block;">
-          <div style="font-size: 0.72rem; color: #00D2B4; font-weight: 800;">WAVE CONFIRMÉ</div>
-          <div style="font-size: 0.8rem; font-weight: 700; color: #FFF;">${e.waveTransactionRef || 'Virement en attente'}</div>
+          <div style="font-size: 0.72rem; color: #00D2B4; font-weight: 800;">WAVE EN ATTENTE</div>
+          <div style="font-size: 0.8rem; font-weight: 700; color: #FFF;">${e.waveTransactionRef || '10 000 FCFA'}</div>
         </div>
       </td>
       <td>
@@ -681,11 +744,14 @@ function renderPendingTable() {
           <button class="btn-action-validate" onclick="validateEstablishmentHQ('${e.id || e.code}')" title="Vérifier la réception des 10 000 FCFA sur Wave et débloquer immédiatement l'établissement">
             <span>✓</span> <span>Valider &amp; Débloquer</span>
           </button>
+          <button class="btn-action-edit" onclick="openEditModalHQ('${e.id || e.code}')" title="Modifier la fiche ou corriger une information">
+            ✏️ Fiche
+          </button>
           <a class="btn-action-whatsapp" href="https://wa.me/${cleanTel}?text=${encodeURIComponent(`Bonjour, nous traitons actuellement l'activation de votre établissement « ${e.name} » sur SunuSchool-Express.`)}" target="_blank" rel="noopener noreferrer" title="Contacter par WhatsApp">
             <span>💬</span> <span>WhatsApp</span>
           </a>
           <button class="btn-action-delete" onclick="deleteEstablishmentHQ('${e.id || e.code}')" title="Supprimer définitivement cette demande">
-            <span>🗑️</span> <span>Supprimer</span>
+            <span>🗑️</span>
           </button>
         </div>
       </td>
@@ -698,13 +764,59 @@ function renderAllEtabsTable() {
   const tbody = document.getElementById('allEtabsTbody');
   if (!tbody) return;
 
-  if (adminState.etablissements.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748B; padding: 2rem;">Aucun établissement enregistré.</td></tr>`;
+  let list = [...adminState.etablissements];
+
+  // 1. Filtrage par mot-clé de recherche
+  if (filterState.searchEtabs) {
+    const q = filterState.searchEtabs;
+    list = list.filter(e => 
+      (e.name && e.name.toLowerCase().includes(q)) ||
+      (e.code && e.code.toLowerCase().includes(q)) ||
+      (e.directeurNom && e.directeurNom.toLowerCase().includes(q)) ||
+      (e.phone && e.phone.includes(q)) ||
+      (e.email && e.email.toLowerCase().includes(q)) ||
+      (e.city && e.city.toLowerCase().includes(q))
+    );
+  }
+
+  // 2. Filtrage par Formule d'abonnement
+  if (filterState.filterPlan !== 'ALL') {
+    list = list.filter(e => {
+      const p = (e.plan || '').toUpperCase();
+      if (filterState.filterPlan === 'ESSAI') return p.includes('ESSAI');
+      if (filterState.filterPlan === 'STARTER') return p.includes('STARTER');
+      if (filterState.filterPlan === 'PRO') return p.includes('PRO');
+      if (filterState.filterPlan === 'DAARA') return p.includes('DAARA') || e.type === 'DAARA';
+      if (filterState.filterPlan === 'ENTERPRISE') return p.includes('ENTERPRISE') || p.includes('CAMPUS');
+      return true;
+    });
+  }
+
+  // 3. Filtrage par Statut
+  if (filterState.filterStatus !== 'ALL') {
+    list = list.filter(e => {
+      const isApproved = (e.statut === 'ACTIF' || e.statutAbonnement === 'ACTIF' || e.statutAbonnement === 'ESSAI_GRATUIT') && e.fraisAdhesionPayes !== false;
+      if (filterState.filterStatus === 'ACTIF') return isApproved;
+      if (filterState.filterStatus === 'PENDING') return !isApproved && isPendingEtab(e);
+      if (filterState.filterStatus === 'UPGRADE') return !!e.requestedPlan;
+      return true;
+    });
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; color: #64748B; padding: 2rem;">
+          ${(filterState.searchEtabs || filterState.filterPlan !== 'ALL' || filterState.filterStatus !== 'ALL') ? 
+            '🔍 Aucun établissement ne correspond aux filtres appliqués.' : 'Aucun établissement enregistré.'}
+        </td>
+      </tr>
+    `;
     return;
   }
 
   tbody.innerHTML = '';
-  adminState.etablissements.forEach(e => {
+  list.forEach(e => {
     const tr = document.createElement('tr');
     const isApproved = (e.statut === 'ACTIF' || e.statutAbonnement === 'ACTIF' || e.statutAbonnement === 'ESSAI_GRATUIT') && e.fraisAdhesionPayes !== false;
     const isDaara = e.type === 'DAARA' || (e.plan && e.plan.toLowerCase().includes('daara'));
@@ -754,6 +866,14 @@ function renderAllEtabsTable() {
       </td>
       <td style="text-align: right;">
         <div style="display: flex; gap: 0.4rem; justify-content: flex-end; flex-wrap: wrap;">
+          ${isApproved ? `
+            <button class="btn-action-receipt" onclick="generateReceiptHQ('${e.id || e.code}')" title="Générer le reçu officiel d'adhésion Wave SYSCOHADA (10 000 FCFA)">
+              🧾 Reçu
+            </button>
+          ` : ''}
+          <button class="btn-action-edit" onclick="openEditModalHQ('${e.id || e.code}')" title="Modifier la fiche, l'échéance ou la formule de l'établissement">
+            ✏️ Modifier
+          </button>
           ${e.requestedPlan ? `
             <button class="btn-action-validate" style="background: #8B5CF6; border-color: #A855F7; color: #FFF;" onclick="validatePlanUpgradeHQ('${e.id || e.code}')" title="Valider le surclassement vers la ${e.requestedPlan}">
               ✓ Valider Surclassement
@@ -766,7 +886,7 @@ function renderAllEtabsTable() {
             👁️ Inspecter
           </button>
           <button class="btn-action-delete" onclick="deleteEstablishmentHQ('${e.id || e.code}')" title="Supprimer définitivement cet établissement (non payé ou test)">
-            <span>🗑️</span> <span>Supprimer</span>
+            <span>🗑️</span>
           </button>
         </div>
       </td>
@@ -774,6 +894,7 @@ function renderAllEtabsTable() {
     tbody.appendChild(tr);
   });
 }
+
 
 function renderFinanceTable() {
   const tbody = document.getElementById('financeTbody');
@@ -1265,13 +1386,27 @@ function renderQuotesTable() {
   const tbody = document.getElementById('quotesTbody');
   if (!tbody) return;
 
-  if (!Array.isArray(adminState.quotes) || adminState.quotes.length === 0) {
+  let quotes = Array.isArray(adminState.quotes) ? adminState.quotes : [];
+
+  if (filterState.searchQuotes) {
+    const q = filterState.searchQuotes;
+    quotes = quotes.filter(item => 
+      (item.orgName && item.orgName.toLowerCase().includes(q)) ||
+      (item.contactName && item.contactName.toLowerCase().includes(q)) ||
+      (item.phone && item.phone.includes(q)) ||
+      (item.email && item.email.toLowerCase().includes(q)) ||
+      (item.cities && item.cities.toLowerCase().includes(q)) ||
+      (item.ref && item.ref.toLowerCase().includes(q))
+    );
+  }
+
+  if (quotes.length === 0) {
     tbody.innerHTML = `
       <tr>
         <td colspan="6" style="text-align: center; padding: 2.5rem; color: #64748B;">
           <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
-          <strong>Aucune demande de devis enterprise en attente.</strong><br>
-          Toutes les demandes de devis réseaux scolaires et multi-campus ont été traitées.
+          <strong>${filterState.searchQuotes ? 'Aucun devis ne correspond à votre recherche.' : 'Aucune demande de devis enterprise en attente.'}</strong><br>
+          ${filterState.searchQuotes ? 'Vérifiez votre saisie ou réinitialisez le champ.' : 'Toutes les demandes de devis réseaux scolaires et multi-campus ont été traitées.'}
         </td>
       </tr>
     `;
@@ -1279,7 +1414,7 @@ function renderQuotesTable() {
   }
 
   tbody.innerHTML = '';
-  adminState.quotes.forEach(q => {
+  quotes.forEach(q => {
     const tr = document.createElement('tr');
     const cleanTel = (q.phone || '').replace(/[^0-9]/g, '');
     const dateStr = q.date ? new Date(q.date).toLocaleDateString('fr-FR') : 'Récemment';
@@ -1328,6 +1463,400 @@ function deleteQuote(refOrId) {
   renderQuotesTable();
   updateKpis();
 }
+
+// --- GESTION DE LA MODALE D'ÉDITION D'ÉTABLISSEMENT ---
+function openEditModalHQ(idOrCode) {
+  const etab = adminState.etablissements.find(e => e.id === idOrCode || e.code === idOrCode);
+  if (!etab) return alert("Établissement introuvable.");
+
+  document.getElementById('editEtabId').value = etab.id || etab.code;
+  document.getElementById('editEtabName').value = etab.name || '';
+  document.getElementById('editEtabCode').value = etab.code || '';
+  document.getElementById('editEtabType').value = etab.type || (etab.name.toLowerCase().includes('daara') ? 'DAARA' : 'ECOLE');
+  document.getElementById('editEtabCity').value = etab.city || 'Dakar';
+  document.getElementById('editEtabDirecteur').value = etab.directeurNom || '';
+  document.getElementById('editEtabPhone').value = etab.phone || '';
+  document.getElementById('editEtabEmail').value = etab.email || '';
+  document.getElementById('editEtabPlan').value = etab.plan || 'Formule Pro';
+  document.getElementById('editEtabPrix').value = etab.prixMensuel || getMonthlyPriceForPlan(etab.plan);
+  document.getElementById('editEtabStatut').value = etab.statut || (etab.statutAbonnement === 'ACTIF' ? 'ACTIF' : 'EN_ATTENTE');
+  document.getElementById('editEtabFraisAdhesion').value = String(etab.fraisAdhesionPayes !== false);
+  document.getElementById('editEtabWaveRef').value = etab.waveTransactionRef || '';
+  
+  if (etab.echeanceAbonnement) {
+    try {
+      const d = new Date(etab.echeanceAbonnement);
+      document.getElementById('editEtabEcheance').value = d.toISOString().split('T')[0];
+    } catch(e) {
+      document.getElementById('editEtabEcheance').value = '';
+    }
+  } else {
+    document.getElementById('editEtabEcheance').value = '';
+  }
+
+  document.getElementById('editEtabSecretKey').value = etab.secretKey || ('ADM-' + (etab.code || '').replace(/[^0-9]/g, ''));
+
+  const subtitle = document.getElementById('editEtabSubtitle');
+  if (subtitle) subtitle.textContent = `${etab.name} (${etab.code || 'SSE'})`;
+
+  const msg = document.getElementById('editEtabMsg');
+  if (msg) msg.style.display = 'none';
+
+  const modal = document.getElementById('editEtabModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeEditModalHQ() {
+  const modal = document.getElementById('editEtabModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function handleEditPlanChange(planName) {
+  const prixInput = document.getElementById('editEtabPrix');
+  if (prixInput) {
+    prixInput.value = getMonthlyPriceForPlan(planName);
+  }
+}
+
+function extendEcheance(days) {
+  const input = document.getElementById('editEtabEcheance');
+  if (!input) return;
+  let baseDate = new Date();
+  if (input.value) {
+    const cur = new Date(input.value);
+    if (!isNaN(cur.getTime()) && cur > baseDate) baseDate = cur;
+  }
+  baseDate.setDate(baseDate.getDate() + Number(days));
+  input.value = baseDate.toISOString().split('T')[0];
+}
+
+function generateNewSecretKeyHQ() {
+  const codeVal = document.getElementById('editEtabCode').value || '';
+  const numPart = codeVal.replace(/[^0-9]/g, '') || Math.floor(1000 + Math.random() * 9000);
+  const randSuffix = Math.floor(10 + Math.random() * 90);
+  document.getElementById('editEtabSecretKey').value = `ADM-${numPart}${randSuffix}`;
+}
+
+async function handleSaveEditEtab(event) {
+  if (event && event.preventDefault) event.preventDefault();
+
+  const id = document.getElementById('editEtabId').value;
+  const idx = adminState.etablissements.findIndex(e => e.id === id || e.code === id);
+  if (idx === -1) return alert("Établissement introuvable.");
+
+  const current = adminState.etablissements[idx];
+  const echeanceVal = document.getElementById('editEtabEcheance').value;
+  const fraisPayes = document.getElementById('editEtabFraisAdhesion').value === 'true';
+
+  const updatedEtab = {
+    ...current,
+    name: document.getElementById('editEtabName').value.trim(),
+    type: document.getElementById('editEtabType').value,
+    city: document.getElementById('editEtabCity').value.trim() || 'Dakar',
+    directeurNom: document.getElementById('editEtabDirecteur').value.trim(),
+    phone: document.getElementById('editEtabPhone').value.trim(),
+    email: document.getElementById('editEtabEmail').value.trim(),
+    plan: document.getElementById('editEtabPlan').value,
+    prixMensuel: Number(document.getElementById('editEtabPrix').value) || 0,
+    statut: document.getElementById('editEtabStatut').value,
+    statutAbonnement: document.getElementById('editEtabStatut').value,
+    fraisAdhesionPayes: fraisPayes,
+    waveTransactionRef: document.getElementById('editEtabWaveRef').value.trim() || current.waveTransactionRef || 'WAV-MANUAL-HQ',
+    secretKey: document.getElementById('editEtabSecretKey').value.trim()
+  };
+
+  if (echeanceVal) {
+    updatedEtab.echeanceAbonnement = new Date(echeanceVal).toISOString();
+  }
+
+  if (updatedEtab.statut === 'ACTIF' && !updatedEtab.dateValidation) {
+    updatedEtab.dateValidation = new Date().toISOString();
+  }
+
+  adminState.etablissements[idx] = updatedEtab;
+
+  adminState.auditLogs.unshift({
+    id: `log-edit-${Date.now()}`,
+    date: new Date().toISOString(),
+    user: 'SUPER_ADMIN_HQ',
+    action: 'MODIFICATION_ETABLISSEMENT',
+    details: `Mise à jour des coordonnées et abonnement de « ${updatedEtab.name} » (${updatedEtab.code}).`
+  });
+
+  saveAllToStorage(updatedEtab);
+
+  // Synchronisation avec le backend Node.js
+  if (isBackendActive) {
+    try {
+      const baseUrl = getBackendBaseUrl();
+      if (baseUrl) {
+        fetch(`${baseUrl}/api/saas/clients/${encodeURIComponent(updatedEtab.id || updatedEtab.code)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedEtab)
+        }).catch(() => {});
+      }
+    } catch(e) {}
+  }
+
+  const msg = document.getElementById('editEtabMsg');
+  if (msg) {
+    msg.style.display = 'block';
+    msg.style.background = 'rgba(16, 185, 129, 0.15)';
+    msg.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+    msg.style.color = '#34D399';
+    msg.innerHTML = `✓ Établissement « ${updatedEtab.name} » mis à jour avec succès !`;
+  }
+
+  setTimeout(() => {
+    closeEditModalHQ();
+    renderAdminViews();
+  }, 700);
+}
+
+// --- GÉNÉRATEUR DU REÇU OFFICIEL D'ADHÉSION WAVE SYSCOHADA ---
+function generateReceiptHQ(idOrCode) {
+  const etab = adminState.etablissements.find(e => e.id === idOrCode || e.code === idOrCode);
+  if (!etab) return alert("Établissement introuvable.");
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const recuNum = `SSE-REC-${(etab.code || 'SN').replace(/[^0-9]/g, '') || Math.floor(1000 + Math.random()*9000)}-${now.getFullYear()}`;
+  const waveRef = etab.waveTransactionRef || `WAV-${Math.floor(100000 + Math.random()*900000)}-SN`;
+  const isDaara = etab.type === 'DAARA' || (etab.plan && etab.plan.toLowerCase().includes('daara'));
+  const typeLabel = isDaara ? 'Institut Coranique / Daara Moderne' : 'École Privée / Collège / Lycée';
+
+  const receiptWindow = window.open('', '_blank', 'width=850,height=750');
+  if (!receiptWindow) return alert("Veuillez autoriser les fenêtres pop-up pour afficher le reçu officiel.");
+
+  receiptWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Reçu Officiel d'Adhésion Wave — ${etab.name}</title>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #071020; color: #1E293B; margin: 0; padding: 2rem; }
+        .receipt-container { max-width: 750px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #00D2B4; padding-bottom: 1.2rem; margin-bottom: 1.5rem; }
+        .logo-area h1 { margin: 0; font-size: 1.4rem; color: #0F172A; }
+        .logo-area .sub { font-size: 0.8rem; color: #64748B; font-weight: 700; }
+        .badge-paid { background: #10B981; color: #FFF; padding: 0.4rem 0.9rem; border-radius: 99px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.8rem; }
+        .info-box { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem; }
+        .info-box h3 { margin: 0 0 0.5rem; font-size: 0.82rem; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-box p { margin: 0.2rem 0; font-size: 0.88rem; color: #1E293B; }
+        .info-box strong { color: #0F172A; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+        th { text-align: left; padding: 0.75rem; background: #0F172A; color: #FFF; font-size: 0.8rem; text-transform: uppercase; }
+        td { padding: 0.85rem 0.75rem; border-bottom: 1px solid #E2E8F0; font-size: 0.88rem; }
+        .total-row { background: #F1F5F9; font-weight: 800; font-size: 1.05rem; }
+        .total-row td { color: #0F172A; }
+        .syscohada-tag { display: inline-block; background: #E0E7FF; color: #3730A3; font-weight: 700; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
+        .footer-stamps { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 2rem; border-top: 1px dashed #CBD5E1; padding-top: 1.2rem; }
+        .stamp-box { border: 2px solid #00D2B4; border-radius: 8px; padding: 0.8rem 1.2rem; text-align: center; color: #008775; font-size: 0.78rem; font-weight: 800; transform: rotate(-3deg); }
+        .btn-print { background: #10B981; color: #FFF; border: none; padding: 0.7rem 1.5rem; font-size: 0.95rem; font-weight: 800; border-radius: 8px; cursor: pointer; }
+        @media print {
+          body { background: #FFF; padding: 0; }
+          .receipt-container { box-shadow: none; border: 1px solid #CCC; }
+          .btn-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="receipt-container">
+        <div class="header">
+          <div class="logo-area">
+            <h1>SUNUSCHOOL-EXPRESS</h1>
+            <div class="sub">Plateforme Nationale de Gestion Scolaire • Dakar, Sénégal</div>
+            <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.2rem;">Éditeur : Diamil-Express SASU • RCCM SN.DKR.2024 • NINEA 00984512</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="badge-paid">✓ ENCAISSÉ PAR WAVE</div>
+            <div style="font-size: 0.8rem; color: #64748B; margin-top: 0.4rem; font-weight: 700;">N° ${recuNum}</div>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="info-box">
+            <h3>Établissement Bénéficiaire</h3>
+            <p><strong>${etab.name}</strong></p>
+            <p>Code SSE : <strong>${etab.code || 'N/A'}</strong></p>
+            <p>Type : ${typeLabel}</p>
+            <p>Directeur : ${etab.directeurNom || 'Direction Générale'}</p>
+            <p>Téléphone : ${etab.phone || 'N/A'}</p>
+            <p>Ville : ${etab.city || 'Sénégal'}</p>
+          </div>
+
+          <div class="info-box">
+            <h3>Transaction &amp; Imputation</h3>
+            <p>Date d'émission : <strong>${dateStr} à ${timeStr}</strong></p>
+            <p>Opérateur : <strong>Wave Mobile Money Sénégal</strong></p>
+            <p>Réf. Virement : <strong style="color: #0284C7;">${waveRef}</strong></p>
+            <p>Compte SYSCOHADA : <span class="syscohada-tag">Compte 706 — Prestations SaaS</span></p>
+            <p>Abonnement : <strong>${etab.plan || 'Formule Pro'}</strong></p>
+            <p>Statut Plateforme : <strong style="color: #10B981;">Actif / Débloqué</strong></p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Désignation de la Prestation</th>
+              <th>Période / Validité</th>
+              <th style="text-align: right;">Montant Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>Frais d'Adhésion Initiale &amp; Mise en Service SaaS</strong><br>
+                <span style="font-size: 0.75rem; color: #64748B;">
+                  Configuration de la base Cloud sécurisée, création de l'espace directeur et des accès enseignants/parents.
+                </span>
+              </td>
+              <td>Activation Définitive (30 jours offerts inclus)</td>
+              <td style="text-align: right; font-weight: 700;">10 000 FCFA</td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="2" style="text-align: right;">TOTAL ENCAISSÉ (NET) :</td>
+              <td style="text-align: right; color: #10B981;">10 000 FCFA</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="background: #F8FAFC; border-left: 4px solid #00D2B4; padding: 0.75rem 1rem; border-radius: 4px; font-size: 0.8rem; color: #475569; margin-bottom: 1.5rem;">
+          💡 <strong>Quittance officielle libératoire :</strong> Le présent reçu atteste du règlement intégral des droits d'adhésion pour l'accès aux modules de gestion de SunuSchool-Express.
+        </div>
+
+        <div class="footer-stamps">
+          <div>
+            <div style="font-size: 0.78rem; color: #64748B;">Émis pour le compte de Diamil-Express SASU :</div>
+            <strong style="font-size: 0.9rem; color: #0F172A;">Direction des Opérations &amp; Trésorerie</strong>
+            <div style="font-size: 0.75rem; color: #94A3B8;">Dakar, République du Sénégal</div>
+          </div>
+
+          <div class="stamp-box">
+            DIAMIL-EXPRESS SASU<br>
+            ★ CACHET NUMÉRIQUE CERTIFIÉ ★<br>
+            WAVE ENCAISSÉ ✓
+          </div>
+
+          <div>
+            <button class="btn-print" onclick="window.print()">🖨️ Imprimer le Reçu</button>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  receiptWindow.document.close();
+}
+
+// --- EXPORT DU PARC ÉTABLISSEMENTS EN CSV EXCEL ---
+function exportEtabsCSV() {
+  const etabs = adminState.etablissements || [];
+  if (etabs.length === 0) return alert("Aucun établissement à exporter.");
+
+  const headers = [
+    "Code SSE",
+    "Nom Etablissement",
+    "Type",
+    "Ville",
+    "Directeur",
+    "Telephone",
+    "Email",
+    "Formule",
+    "Prix Mensuel FCFA",
+    "Effectif Eleves",
+    "Statut Abonnement",
+    "Frais Adhesion Wave",
+    "Echeance Abonnement",
+    "Ref Wave"
+  ];
+
+  const rows = etabs.map(e => [
+    `"${(e.code || '').replace(/"/g, '""')}"`,
+    `"${(e.name || '').replace(/"/g, '""')}"`,
+    `"${(e.type || '').replace(/"/g, '""')}"`,
+    `"${(e.city || 'Dakar').replace(/"/g, '""')}"`,
+    `"${(e.directeurNom || '').replace(/"/g, '""')}"`,
+    `"${(e.phone || '').replace(/"/g, '""')}"`,
+    `"${(e.email || '').replace(/"/g, '""')}"`,
+    `"${(e.plan || 'Formule Pro').replace(/"/g, '""')}"`,
+    Number(e.prixMensuel) || getMonthlyPriceForPlan(e.plan),
+    getStudentCountForEtab(e),
+    `"${(e.statut || (e.statutAbonnement === 'ACTIF' ? 'ACTIF' : 'EN_ATTENTE')).replace(/"/g, '""')}"`,
+    e.fraisAdhesionPayes !== false ? 'PAYE' : 'EN_ATTENTE',
+    `"${(e.echeanceAbonnement ? new Date(e.echeanceAbonnement).toLocaleDateString('fr-FR') : '').replace(/"/g, '""')}"`,
+    `"${(e.waveTransactionRef || '').replace(/"/g, '""')}"`
+  ]);
+
+  const csvContent = "\uFEFF" + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `PARC_ETABLISSEMENTS_SUNUSCHOOL_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// --- EXPORT DU GRAND LIVRE FINANCIER EN CSV EXCEL ---
+function exportFinanceCSV() {
+  const transactions = [];
+  (adminState.etablissements || []).forEach(e => {
+    if (e.fraisAdhesionPayes !== false || e.statut === 'ACTIF' || e.statutAbonnement === 'ACTIF') {
+      transactions.push({
+        date: e.dateValidation || e.dateAdhesion || new Date().toISOString(),
+        etab: e.name,
+        code: e.code,
+        type: "Droit d'adhésion & Mise en service",
+        operateur: "Wave Mobile Money",
+        montant: 10000,
+        compte: "706 — Prestations SaaS"
+      });
+    }
+  });
+
+  if (Array.isArray(adminState.transactions)) {
+    adminState.transactions.forEach(t => {
+      transactions.push({
+        date: t.date || new Date().toISOString(),
+        etab: t.etablissement || t.schoolName || 'Partenaire',
+        code: t.code || '',
+        type: t.type || 'Abonnement Mensuel',
+        operateur: t.operator || 'Wave',
+        montant: Number(t.montant) || 0,
+        compte: t.compte || '706 — Prestations SaaS'
+      });
+    });
+  }
+
+  if (transactions.length === 0) return alert("Aucune écriture comptable disponible pour l'export.");
+
+  const headers = ["Date", "Code SSE", "Etablissement", "Type d'Ecriture", "Operateur", "Montant FCFA", "Compte SYSCOHADA"];
+  const rows = transactions.map(t => [
+    `"${new Date(t.date).toLocaleDateString('fr-FR')}"`,
+    `"${(t.code || '').replace(/"/g, '""')}"`,
+    `"${(t.etab || '').replace(/"/g, '""')}"`,
+    `"${(t.type || '').replace(/"/g, '""')}"`,
+    `"${(t.operateur || '').replace(/"/g, '""')}"`,
+    t.montant,
+    `"${(t.compte || '').replace(/"/g, '""')}"`
+  ]);
+
+  const csvContent = "\uFEFF" + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `JOURNAL_SYSCOHADA_SUNUSCHOOL_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 
 // --- GESTION DES ONGLETS ADMIN ---
 function switchAdminTab(tabKey) {
@@ -1629,10 +2158,26 @@ window.rejectEstablishmentHQ = rejectEstablishmentHQ;
 window.deleteEstablishmentHQ = deleteEstablishmentHQ;
 window.inspectSchoolInSupportMode = inspectSchoolInSupportMode;
 window.exportISO27001AuditReport = exportISO27001AuditReport;
+window.handleSearchPending = handleSearchPending;
+window.handleSearchQuotes = handleSearchQuotes;
+window.handleSearchEtabs = handleSearchEtabs;
+window.handleFilterEtabsPlan = handleFilterEtabsPlan;
+window.handleFilterEtabsStatus = handleFilterEtabsStatus;
+window.updateCloudBadgeUI = updateCloudBadgeUI;
+window.openEditModalHQ = openEditModalHQ;
+window.closeEditModalHQ = closeEditModalHQ;
+window.handleEditPlanChange = handleEditPlanChange;
+window.extendEcheance = extendEcheance;
+window.generateNewSecretKeyHQ = generateNewSecretKeyHQ;
+window.handleSaveEditEtab = handleSaveEditEtab;
+window.generateReceiptHQ = generateReceiptHQ;
+window.exportEtabsCSV = exportEtabsCSV;
+window.exportFinanceCSV = exportFinanceCSV;
 
 // Synchronisation temps réel automatique si une inscription est soumise dans un autre onglet
 window.addEventListener('storage', (e) => {
-  if (e.key === 'sunuschool_establishment' || e.key === 'sunuschool_establishments_registry' || e.key === 'sunuschool_erp_db') {
+  if (e.key === 'sunuschool_establishment' || e.key === 'sunuschool_establishments_registry' || e.key === 'sunuschool_erp_db' || e.key === 'sse_saas_database') {
     loadAdminData();
   }
 });
+

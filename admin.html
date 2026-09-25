@@ -255,6 +255,197 @@
       border-color: #EF4444;
       box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
     }
+    .btn-action-edit {
+      background: rgba(59, 130, 246, 0.12);
+      color: #60A5FA;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      padding: 0.48rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+    .btn-action-edit:hover {
+      background: #3B82F6;
+      color: #FFFFFF;
+      border-color: #3B82F6;
+      box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+    }
+    .btn-action-receipt {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--gold-light);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 0.48rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+    .btn-action-receipt:hover {
+      background: var(--gold);
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+    }
+    .btn-action-export {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+    .btn-action-export:hover {
+      background: #10B981;
+      color: #FFF;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+    }
+    /* Barre de recherche et filtres */
+    .admin-search-row {
+      display: flex;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .admin-search-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .admin-search-input:focus {
+      border-color: var(--gold);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .admin-filter-select {
+      background: #0B132B;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #F8FAFC;
+      padding: 0.62rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .admin-filter-select:focus {
+      border-color: var(--turquoise);
+    }
+    /* Badge de statut Cloud Render */
+    .admin-cloud-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .admin-cloud-badge.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10B981;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .admin-cloud-badge.offline {
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+    .admin-cloud-badge .cloud-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
+    }
+    /* Modal Édition Établissement */
+    .admin-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(2, 6, 15, 0.88);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1.5rem;
+      box-sizing: border-box;
+    }
+    .admin-modal-card {
+      background: #0B132B;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 600px) {
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+    .admin-form-group {
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+    .admin-form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #CBD5E1;
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .admin-form-control {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      padding: 0.7rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .admin-form-control:focus {
+      border-color: var(--gold);
+    }
     /* Modal Master Login */
     .master-login-overlay {
       position: fixed;
@@ -392,6 +583,11 @@
         </div>
 
         <div class="admin-topbar-right">
+          <div id="cloudStatusBadge" class="admin-cloud-badge offline" onclick="checkBackendOnline(updateCloudBadgeUI)" title="Cliquer pour retester la connexion au Cloud Render">
+            <span class="cloud-dot"></span>
+            <span id="cloudStatusText">Connexion Cloud...</span>
+          </div>
+
           <div class="admin-user-pill">
             <span style="color: #10B981;">🟢</span>
             <span>sunuschoolexpress@gmail.com</span>
@@ -454,6 +650,7 @@
                 <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
                   Établissements ayant soumis le virement Wave (10 000 FCFA). Vérifiez votre compte Wave puis cliquez sur « Valider &amp; Débloquer ».
                 </p>
+              </div>
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <button onclick="loadAdminData()" class="btn-action-reject" style="color: #94A3B8; border-color: rgba(255,255,255,0.2);">
                   🔄 Actualiser
@@ -462,6 +659,11 @@
                   🧹 Purger les Demandes de Test
                 </button>
               </div>
+            </div>
+
+            <!-- Filtre de recherche rapide -->
+            <div class="admin-search-row">
+              <input type="text" id="searchPendingInput" class="admin-search-input" placeholder="🔍 Filtrer les adhésions par école, code, directeur, téléphone..." oninput="handleSearchPending(this.value)">
             </div>
 
             <table class="admin-table">
@@ -497,6 +699,13 @@
               </button>
             </div>
 
+            <!-- Recherche & filtre Devis -->
+            <div class="admin-search-row">
+              <div style="flex: 1; min-width: 240px;">
+                <input type="text" id="searchQuotesInput" class="admin-search-input" placeholder="🔍 Rechercher par organisation, ville, contact, email..." oninput="handleSearchQuotes(this.value)">
+              </div>
+            </div>
+
             <table class="admin-table">
               <thead>
                 <tr>
@@ -518,13 +727,17 @@
         <!-- ==================== VUE 2 : PARC COMPLET ÉTABLISSEMENTS ==================== -->
         <section id="viewEtabs" class="admin-tab-view" style="display: none;">
           <div class="admin-table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
               <div>
                 <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">🏫 Parc des Établissements Partenaires</h2>
                 <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
-                  Tous les comptes scolaires enregistrés sur la plateforme.
+                  Tous les comptes scolaires enregistrés sur la plateforme SunuSchool-Express.
                 </p>
+              </div>
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button onclick="exportEtabsCSV()" class="btn-action-export" title="Exporter la liste au format CSV Excel">
+                  📥 Exporter CSV
+                </button>
                 <button onclick="loadAdminData()" class="btn-action-reject" style="color: #94A3B8; border-color: rgba(255,255,255,0.2);">
                   🔄 Actualiser
                 </button>
@@ -535,6 +748,27 @@
                   🧹 Purger Tous les Établissements de Test
                 </button>
               </div>
+            </div>
+
+            <!-- Barre de Recherche Multi-critères & Filtres -->
+            <div class="admin-search-row">
+              <div style="flex: 2; min-width: 250px;">
+                <input type="text" id="searchEtabsInput" class="admin-search-input" placeholder="🔍 Rechercher par école, code SSE, directeur, téléphone, ville..." oninput="handleSearchEtabs(this.value)">
+              </div>
+              <select id="filterEtabsPlan" class="admin-filter-select" onchange="handleFilterEtabsPlan(this.value)">
+                <option value="ALL">Toutes les formules</option>
+                <option value="ESSAI">Essai Gratuit</option>
+                <option value="STARTER">Formule Starter (15k)</option>
+                <option value="PRO">Formule Pro (25k)</option>
+                <option value="DAARA">Daara Moderne (15k)</option>
+                <option value="ENTERPRISE">Formule Enterprise (50k)</option>
+              </select>
+              <select id="filterEtabsStatus" class="admin-filter-select" onchange="handleFilterEtabsStatus(this.value)">
+                <option value="ALL">Tous les statuts</option>
+                <option value="ACTIF">✓ Actif (Débloqué)</option>
+                <option value="PENDING">🟡 En attente Wave</option>
+                <option value="UPGRADE">🟣 Surclassement demandé</option>
+              </select>
             </div>
 
             <table class="admin-table">
@@ -556,13 +790,21 @@
           </div>
         </section>
 
+
         <!-- ==================== VUE 3 : TRÉSORERIE SAAS ==================== -->
         <section id="viewFinance" class="admin-tab-view" style="display: none;">
           <div class="admin-table-container">
-            <h2 style="margin: 0 0 0.5rem; font-size: 1.2rem; color: #FFFFFF;">💰 Suivi Financier des Abonnements SaaS</h2>
-            <p style="margin: 0 0 1.2rem; font-size: 0.82rem; color: #94A3B8;">
-              Comptabilité SYSCOHADA des encaissements d'adhésion et renouvellements mensuels.
-            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+              <div>
+                <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">💰 Suivi Financier des Abonnements SaaS</h2>
+                <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
+                  Comptabilité SYSCOHADA des encaissements d'adhésion Wave et renouvellements mensuels.
+                </p>
+              </div>
+              <button onclick="exportFinanceCSV()" class="btn-action-export" title="Télécharger l'historique comptable au format CSV">
+                📥 Exporter Grand Livre SYSCOHADA (CSV)
+              </button>
+            </div>
 
             <table class="admin-table">
               <thead>
@@ -711,6 +953,146 @@
 
       </div>
     </main>
+  </div>
+
+  <!-- ==================== MODAL ÉDITION ÉTABLISSEMENT ==================== -->
+  <div id="editEtabModal" class="admin-modal-overlay" style="display: none;" onclick="if(event.target === this) closeEditModalHQ()">
+    <div class="admin-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.5rem;">✏️</span>
+          <div>
+            <h3 style="margin: 0; color: #FFFFFF; font-size: 1.2rem; font-family: 'Outfit', sans-serif;">Fiche &amp; Paramètres Établissement</h3>
+            <span style="font-size: 0.75rem; color: var(--gold-light);" id="editEtabSubtitle">Modification centralisée</span>
+          </div>
+        </div>
+        <button onclick="closeEditModalHQ()" style="background: transparent; border: none; color: #94A3B8; font-size: 1.5rem; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 6px;">✕</button>
+      </div>
+
+      <form id="editEtabForm" onsubmit="handleSaveEditEtab(event)">
+        <input type="hidden" id="editEtabId">
+
+        <div class="form-grid-2">
+          <div class="admin-form-group">
+            <label>Nom de l'Établissement *</label>
+            <input type="text" id="editEtabName" class="admin-form-control" required placeholder="Ex: Groupe Scolaire Diamil">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Code Unique SSE</label>
+            <input type="text" id="editEtabCode" class="admin-form-control" readonly style="background: rgba(255,255,255,0.02); color: var(--gold-light); font-weight: 800;">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="admin-form-group">
+            <label>Type d'Établissement</label>
+            <select id="editEtabType" class="admin-form-control">
+              <option value="ECOLE">🏫 École Privée / Collège / Lycée</option>
+              <option value="DAARA">🕌 Daara Moderne / Institut Coranique</option>
+              <option value="GROUPE">🏢 Groupe Multi-Campus</option>
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label>Ville / Région</label>
+            <input type="text" id="editEtabCity" class="admin-form-control" placeholder="Dakar, Thiès, Kaolack...">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="admin-form-group">
+            <label>Directeur / Responsable</label>
+            <input type="text" id="editEtabDirecteur" class="admin-form-control" placeholder="Nom du responsable">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Téléphone WhatsApp *</label>
+            <input type="text" id="editEtabPhone" class="admin-form-control" required placeholder="+221 77 000 00 00">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="admin-form-group">
+            <label>Email Officiel</label>
+            <input type="email" id="editEtabEmail" class="admin-form-control" placeholder="direction@ecole.sn">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Formule d'Abonnement</label>
+            <select id="editEtabPlan" class="admin-form-control" onchange="handleEditPlanChange(this.value)">
+              <option value="Essai Gratuit">Essai Gratuit 30 Jours</option>
+              <option value="Formule Starter">Formule Starter (15 000 FCFA / mois)</option>
+              <option value="Formule Pro">Formule Pro (25 000 FCFA / mois)</option>
+              <option value="Formule Daara Moderne">Formule Daara Moderne (15 000 FCFA / mois)</option>
+              <option value="Formule Enterprise">Formule Enterprise Multi-Campus (50 000 FCFA / mois)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="admin-form-group">
+            <label>Tarif Mensuel (FCFA)</label>
+            <input type="number" id="editEtabPrix" class="admin-form-control" placeholder="25000">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Statut Compte</label>
+            <select id="editEtabStatut" class="admin-form-control">
+              <option value="ACTIF">✓ ACTIF (Accès débloqué)</option>
+              <option value="EN_ATTENTE">🟡 EN ATTENTE WAVE</option>
+              <option value="SUSPENDU">🔴 SUSPENDU (Non payé)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="admin-form-group">
+            <label>Frais d'Adhésion Wave (10 000 FCFA)</label>
+            <select id="editEtabFraisAdhesion" class="admin-form-control">
+              <option value="true">✓ Payé &amp; Encaissé</option>
+              <option value="false">⏳ Non Réglé</option>
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label>Réf. Virement Wave</label>
+            <input type="text" id="editEtabWaveRef" class="admin-form-control" placeholder="Ex: WAV-98234-SN">
+          </div>
+        </div>
+
+        <div class="admin-form-group">
+          <label>Échéance Abonnement</label>
+          <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+            <input type="date" id="editEtabEcheance" class="admin-form-control" style="flex: 1; min-width: 180px;">
+            <button type="button" class="btn-action-validate" onclick="extendEcheance(30)" style="padding: 0.5rem 0.75rem; font-size: 0.78rem;">+30 Jours</button>
+            <button type="button" class="btn-action-validate" onclick="extendEcheance(90)" style="padding: 0.5rem 0.75rem; font-size: 0.78rem; background: #3B82F6;">+3 Mois</button>
+            <button type="button" class="btn-action-validate" onclick="extendEcheance(365)" style="padding: 0.5rem 0.75rem; font-size: 0.78rem; background: #8B5CF6;">+1 An</button>
+          </div>
+        </div>
+
+        <div class="admin-form-group">
+          <label>Clé d'Administration / Mot de Passe Directeur</label>
+          <div style="display: flex; gap: 0.6rem; align-items: center;">
+            <input type="text" id="editEtabSecretKey" class="admin-form-control" placeholder="ADM-XXXX" style="font-family: monospace; letter-spacing: 1px;">
+            <button type="button" class="btn-action-reject" onclick="generateNewSecretKeyHQ()" style="white-space: nowrap; color: var(--turquoise); border-color: rgba(0,210,180,0.4);">
+              🔄 Générer Clé
+            </button>
+          </div>
+        </div>
+
+        <div id="editEtabMsg" style="display: none; padding: 0.7rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem;"></div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.2rem;">
+          <button type="button" onclick="closeEditModalHQ()" class="btn-action-reject" style="padding: 0.65rem 1.2rem; font-size: 0.9rem;">
+            Annuler
+          </button>
+          <button type="submit" class="btn-action-validate" style="background: linear-gradient(135deg, #10B981, #059669); padding: 0.65rem 1.5rem; font-size: 0.9rem;">
+            💾 Enregistrer les Modifications
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="admin.js?v=3.9.0"></script>

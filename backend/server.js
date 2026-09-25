@@ -1079,6 +1079,48 @@ app.post('/api/saas/clients/:id/status', (req, res) => {
   res.json({ success: true, message: `Statut mis à jour : ${statut}`, data: etab });
 });
 
+// Mise à jour complète de la fiche établissement par le Super-Admin HQ
+const updateClientHandler = (req, res) => {
+  const { id } = req.params;
+  const updates = req.body || {};
+  const etab = db.etablissements.find(e => e.id === id || e.code === id);
+  if (!etab) return res.status(404).json({ success: false, message: 'Établissement introuvable' });
+
+  if (updates.name) etab.name = String(updates.name).trim();
+  if (updates.directeurNom !== undefined) etab.directeurNom = updates.directeurNom;
+  if (updates.type) etab.type = updates.type;
+  if (updates.city) etab.city = updates.city;
+  if (updates.phone) etab.phone = updates.phone;
+  if (updates.email) etab.email = updates.email;
+  if (updates.plan) etab.plan = updates.plan;
+  if (updates.prixMensuel !== undefined) etab.prixMensuel = Number(updates.prixMensuel) || 0;
+  if (updates.statut) {
+    etab.statut = updates.statut;
+    etab.statutAbonnement = updates.statut;
+  }
+  if (updates.statutAbonnement) etab.statutAbonnement = updates.statutAbonnement;
+  if (updates.echeanceAbonnement) etab.echeanceAbonnement = updates.echeanceAbonnement;
+  if (updates.secretKey) etab.secretKey = updates.secretKey;
+  if (updates.fraisAdhesionPayes !== undefined) etab.fraisAdhesionPayes = updates.fraisAdhesionPayes;
+  if (updates.waveTransactionRef) etab.waveTransactionRef = updates.waveTransactionRef;
+
+  db.auditLogs.unshift({
+    id: `log-edit-${Date.now()}`,
+    date: new Date().toISOString(),
+    user: updates.updatedBy || 'SUPER_ADMIN_HQ',
+    role: 'SUPER_ADMIN',
+    action: 'MODIFICATION_FICHE_ETABLISSEMENT',
+    details: `Mise à jour des coordonnées et paramètres de ${etab.name} (${etab.code}) par la direction centrale.`
+  });
+
+  saveDatabase(db);
+  res.json({ success: true, message: 'Établissement mis à jour avec succès.', data: etab });
+};
+
+app.put('/api/saas/clients/:id', updateClientHandler);
+app.post('/api/saas/clients/:id', updateClientHandler);
+
+
 app.delete('/api/saas/clients/:id', (req, res) => {
   const { id } = req.params;
   const initialLength = db.etablissements.length;
