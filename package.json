@@ -1,0 +1,14 @@
+{
+  "name": "sunuschoolexpress",
+  "version": "1.0.0",
+  "description": "SunuSchool Express - Plateforme SaaS Ecoles et Daaras Senegal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm install"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
