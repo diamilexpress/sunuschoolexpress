@@ -55,10 +55,22 @@ function handleFilterEtabsStatus(val) {
   renderAllEtabsTable();
 }
 
+let activeApiBaseUrl = null;
+const failedApiUrls = new Set();
+
 function getBackendBaseUrl() {
+  if (activeApiBaseUrl && !failedApiUrls.has(activeApiBaseUrl)) {
+    return activeApiBaseUrl;
+  }
   if (typeof window !== 'undefined') {
+    if (window.location.protocol === 'file:') {
+      return 'https://sunuschoolexpress.onrender.com';
+    }
     if (window.location.port === '5000') return window.location.origin;
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      if (failedApiUrls.has('http://localhost:5000')) {
+        return 'https://sunuschoolexpress.onrender.com';
+      }
       return 'http://localhost:5000';
     }
     if (/^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname)) {
@@ -66,7 +78,7 @@ function getBackendBaseUrl() {
     }
     return window.location.origin;
   }
-  return null;
+  return 'https://sunuschoolexpress.onrender.com';
 }
 
 let isBackendActive = false;
@@ -91,9 +103,9 @@ function updateCloudBadgeUI(isOnline) {
 }
 
 function checkBackendOnline(callback) {
-  const baseUrl = getBackendBaseUrl();
   const urls = [];
-  if (baseUrl) urls.push(baseUrl);
+  const base = getBackendBaseUrl();
+  if (base && !failedApiUrls.has(base)) urls.push(base);
   if (!urls.includes('https://sunuschoolexpress.onrender.com')) {
     urls.push('https://sunuschoolexpress.onrender.com');
   }
@@ -104,11 +116,12 @@ function checkBackendOnline(callback) {
   let tried = 0;
   function tryUrl(url) {
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 7000);
+    const tid = setTimeout(() => ctrl.abort(), 6000);
     fetch(`${url}/api/saas/monitoring/stats`, { method: 'GET', signal: ctrl.signal })
       .then(r => {
         clearTimeout(tid);
         if (r && r.ok) {
+          activeApiBaseUrl = url;
           isBackendActive = true;
           updateCloudBadgeUI(true);
           if (callback) callback(true);
@@ -118,6 +131,7 @@ function checkBackendOnline(callback) {
       })
       .catch(() => {
         clearTimeout(tid);
+        failedApiUrls.add(url);
         tried++;
         if (tried < urls.length) {
           tryUrl(urls[tried]);
@@ -472,9 +486,12 @@ async function syncCloudEstablishments() {
         }
       }
 
-      if (success) break;
+      if (success) {
+        activeApiBaseUrl = apiUrl;
+        break;
+      }
     } catch(err) {
-      // Essayer le serveur suivant
+      failedApiUrls.add(apiUrl);
     }
   }
 
@@ -577,17 +594,22 @@ function renderIsoMetrics() {
 
   // Interrogation en tâche de fond du endpoint de monitoring backend si actif
   try {
-    if (typeof isBackendActive !== 'undefined' && isBackendActive) {
-      const backendBaseUrl = getBackendBaseUrl();
+    const backendBaseUrl = getBackendBaseUrl();
+    if (isBackendActive && backendBaseUrl && !failedApiUrls.has(backendBaseUrl)) {
       fetch(`${backendBaseUrl}/api/saas/monitoring/stats`)
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error('status err');
+          return r.json();
+        })
         .then(res => {
           if (res && res.data && typeof res.data.bruteForceBlocked === 'number') {
             const total = Math.max(blockedCount, res.data.bruteForceBlocked);
             el.textContent = `${total} Intrusion${total > 1 ? 's' : ''} Bloquée${total > 1 ? 's' : ''}`;
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          failedApiUrls.add(backendBaseUrl);
+        });
     }
   } catch(e) {}
 
@@ -2257,13 +2279,13 @@ window.toggleAdminSidebar = toggleAdminSidebar;
 
 window.hardRefreshAdmin = async function() {
   try {
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       for (const r of registrations) {
         await r.unregister();
       }
     }
-    if ('caches' in window) {
+    if ('caches' in window && window.location.protocol.startsWith('http')) {
       const cacheKeys = await caches.keys();
       for (const key of cacheKeys) {
         await caches.delete(key);
@@ -2272,7 +2294,11 @@ window.hardRefreshAdmin = async function() {
   } catch (err) {
     console.warn('[Admin] Cache clear error:', err);
   }
-  window.location.href = window.location.pathname + '?reload=' + Date.now();
+  if (window.location.protocol.startsWith('http')) {
+    window.location.href = window.location.pathname + '?reload=' + Date.now();
+  } else {
+    window.location.reload();
+  }
 };
 
 // Synchronisation temps réel automatique si une inscription est soumise dans un autre onglet
