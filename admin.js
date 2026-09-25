@@ -1858,9 +1858,26 @@ function exportFinanceCSV() {
 }
 
 
+// --- GESTION DU TIROIR LATÉRAL MOBILE ---
+function toggleAdminSidebar(isOpen) {
+  const sidebar = document.getElementById('adminSidebar');
+  const backdrop = document.getElementById('adminSidebarBackdrop');
+  if (!sidebar) return;
+  if (typeof isOpen === 'boolean') {
+    sidebar.classList.toggle('open', isOpen);
+    if (backdrop) backdrop.classList.toggle('active', isOpen);
+  } else {
+    sidebar.classList.toggle('open');
+    if (backdrop) backdrop.classList.toggle('active', sidebar.classList.contains('open'));
+  }
+}
+
 // --- GESTION DES ONGLETS ADMIN ---
 function switchAdminTab(tabKey) {
   adminState.activeTab = tabKey;
+
+  // Fermer automatiquement le tiroir mobile après avoir cliqué sur un onglet
+  toggleAdminSidebar(false);
 
   document.querySelectorAll('.admin-nav-item').forEach(item => item.classList.remove('active'));
   document.querySelectorAll('.admin-tab-view').forEach(view => view.style.display = 'none');
@@ -2173,6 +2190,8 @@ window.handleSaveEditEtab = handleSaveEditEtab;
 window.generateReceiptHQ = generateReceiptHQ;
 window.exportEtabsCSV = exportEtabsCSV;
 window.exportFinanceCSV = exportFinanceCSV;
+window.toggleAdminSidebar = toggleAdminSidebar;
+
 
 // Synchronisation temps réel automatique si une inscription est soumise dans un autre onglet
 window.addEventListener('storage', (e) => {
