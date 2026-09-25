@@ -835,9 +835,10 @@ app.post('/api/quotes', (req, res) => {
   res.json({ success: true, message: 'Demande de devis enregistrée avec succès', data: quoteData });
 });
 
-// Endpoint consolidé de toutes les demandes en attente (Adhésions, Surclassements, Devis)
+// Endpoint consolidé de toutes les demandes et établissements (Adhésions, Surclassements, Devis, Parc)
 app.get('/api/saas/demandes', (req, res) => {
-  const pendingEtabs = (db.etablissements || []).filter(e => {
+  const allEtabs = db.etablissements || [];
+  const pendingEtabs = allEtabs.filter(e => {
     if (!e) return false;
     const st = (e.statut || '').toUpperCase();
     const stAb = (e.statutAbonnement || '').toUpperCase();
@@ -845,6 +846,8 @@ app.get('/api/saas/demandes', (req, res) => {
   });
   res.json({
     success: true,
+    count: allEtabs.length,
+    etablissements: allEtabs,
     pendingEtablissements: pendingEtabs,
     quotes: db.quotes || [],
     totalPending: pendingEtabs.length + (db.quotes || []).length
@@ -1409,26 +1412,6 @@ app.post('/api/subscriptions/confirm', (req, res) => {
   });
 });
 
-// Route consultation & synchronisation des demandes SaaS pour Admin HQ
-app.get('/api/saas/demandes', (req, res) => {
-  const etabs = db.etablissements || [];
-  const quotes = db.quotes || [];
-  res.json({
-    success: true,
-    count: etabs.length,
-    etablissements: etabs,
-    pendingEtablissements: etabs,
-    quotes: quotes
-  });
-});
-
-app.get('/api/saas/clients', (req, res) => {
-  res.json({
-    success: true,
-    count: (db.etablissements || []).length,
-    data: db.etablissements || []
-  });
-});
 
 app.post('/api/saas/demandes', (req, res) => {
   const body = req.body || {};

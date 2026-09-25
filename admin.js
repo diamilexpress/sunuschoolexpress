@@ -92,34 +92,44 @@ function updateCloudBadgeUI(isOnline) {
 
 function checkBackendOnline(callback) {
   const baseUrl = getBackendBaseUrl();
-  if (!baseUrl) {
-    isBackendActive = false;
-    updateCloudBadgeUI(false);
-    if (callback) callback(false);
-    return;
+  const urls = [];
+  if (baseUrl) urls.push(baseUrl);
+  if (!urls.includes('https://sunuschoolexpress.onrender.com')) {
+    urls.push('https://sunuschoolexpress.onrender.com');
   }
+
   const now = Date.now();
   lastBackendCheckTime = now;
-  try {
+
+  let tried = 0;
+  function tryUrl(url) {
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 1800);
-    fetch(`${baseUrl}/api/saas/monitoring/stats`, { method: 'GET', signal: ctrl.signal })
+    const tid = setTimeout(() => ctrl.abort(), 7000);
+    fetch(`${url}/api/saas/monitoring/stats`, { method: 'GET', signal: ctrl.signal })
       .then(r => {
         clearTimeout(tid);
-        isBackendActive = Boolean(r && r.ok);
-        updateCloudBadgeUI(isBackendActive);
-        if (callback) callback(isBackendActive);
+        if (r && r.ok) {
+          isBackendActive = true;
+          updateCloudBadgeUI(true);
+          if (callback) callback(true);
+        } else {
+          throw new Error('Not ok');
+        }
       })
       .catch(() => {
-        isBackendActive = false;
-        updateCloudBadgeUI(false);
-        if (callback) callback(false);
+        clearTimeout(tid);
+        tried++;
+        if (tried < urls.length) {
+          tryUrl(urls[tried]);
+        } else {
+          isBackendActive = false;
+          updateCloudBadgeUI(false);
+          if (callback) callback(false);
+        }
       });
-  } catch(e) {
-    isBackendActive = false;
-    updateCloudBadgeUI(false);
-    if (callback) callback(false);
   }
+
+  tryUrl(urls[0]);
 }
 checkBackendOnline();
 
@@ -366,60 +376,109 @@ function loadAdminData() {
 
   renderAdminViews();
 
-  // 4. Interrogation ASYNCHRONE du serveur Backend pour rapatrier les demandes mobile/web (Si actif)
-  if (isBackendActive) {
-    try {
-      const backendBaseUrl = getBackendBaseUrl();
-      if (!backendBaseUrl) return;
-      fetch(`${backendBaseUrl}/api/saas/demandes`)
-        .then(r => {
-          if (r.ok) return r.json();
-          throw new Error('API Error');
-        })
-      .then(res => {
-        if (res && res.success) {
-          const fetchedEtabs = res.etablissements || res.pendingEtablissements || [];
-          if (Array.isArray(fetchedEtabs) && fetchedEtabs.length > 0) {
-            fetchedEtabs.forEach(be => {
-              if (!be || !be.name || isFakeDemoSchool(be)) return;
-              const idx = adminState.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
-              if (idx === -1) {
-                adminState.etablissements.unshift(be);
-              } else {
-                const isCurPending = isPendingEtab(adminState.etablissements[idx]);
-                const isBePending = isPendingEtab(be);
-                if (!isCurPending && isBePending) {
-                  adminState.etablissements[idx] = { ...be, ...adminState.etablissements[idx] };
-                } else {
-                  adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...be };
-                }
-              }
-            });
+  // 4. Synchronisation CLOUD BIDIRECTIONNELLE ASYNCHRONE (PC & Mobile unifiés)
+  syncCloudEstablishments();
+}
 
-            if (Array.isArray(res.quotes)) {
-              res.quotes.forEach(bq => {
-                const qIdx = adminState.quotes.findIndex(q => (bq.ref && q.ref === bq.ref) || (bq.id && q.id === bq.id));
-                if (qIdx === -1) adminState.quotes.unshift(bq);
-                else adminState.quotes[qIdx] = { ...adminState.quotes[qIdx], ...bq };
-              });
-            }
+let isSyncingCloud = false;
+async function syncCloudEstablishments() {
+  if (isSyncingCloud) return;
+  isSyncingCloud = true;
 
-            // Sauvegarder localement sur le PC
-            try {
-              let sseDbRaw = localStorage.getItem('sse_saas_database');
-              let sseDb = sseDbRaw ? JSON.parse(sseDbRaw) : { etablissements: [] };
-              sseDb.etablissements = [...adminState.etablissements];
-              localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
-              localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(adminState.etablissements));
-            } catch(e) {}
-
-            renderAdminViews();
-          }
-        }
-      })
-      .catch(() => { isBackendActive = false; });
-    } catch(e) {}
+  const base = getBackendBaseUrl();
+  const urls = [];
+  if (base) urls.push(base);
+  if (!urls.includes('https://sunuschoolexpress.onrender.com')) {
+    urls.push('https://sunuschoolexpress.onrender.com');
   }
+
+  let success = false;
+  for (const apiUrl of urls) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 7500);
+
+      const [resClients, resDemandes] = await Promise.allSettled([
+        fetch(`${apiUrl}/api/saas/clients`, { method: 'GET', signal: ctrl.signal }),
+        fetch(`${apiUrl}/api/saas/demandes`, { method: 'GET', signal: ctrl.signal })
+      ]);
+      clearTimeout(tid);
+
+      let fetchedList = [];
+      let fetchedQuotes = [];
+
+      if (resClients.status === 'fulfilled' && resClients.value && resClients.value.ok) {
+        const jsonClients = await resClients.value.json();
+        const list = jsonClients.clients || jsonClients.data || [];
+        if (Array.isArray(list)) fetchedList.push(...list);
+      }
+
+      if (resDemandes.status === 'fulfilled' && resDemandes.value && resDemandes.value.ok) {
+        const jsonDemandes = await resDemandes.value.json();
+        const list = jsonDemandes.etablissements || jsonDemandes.pendingEtablissements || [];
+        if (Array.isArray(list)) fetchedList.push(...list);
+        if (Array.isArray(jsonDemandes.quotes)) fetchedQuotes = jsonDemandes.quotes;
+      }
+
+      if (fetchedList.length > 0 || fetchedQuotes.length > 0) {
+        fetchedList.forEach(be => {
+          if (!be || !be.name || isFakeDemoSchool(be)) return;
+          const idx = adminState.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
+          if (idx === -1) {
+            adminState.etablissements.unshift(be);
+          } else {
+            const isCurPending = isPendingEtab(adminState.etablissements[idx]);
+            const isBePending = isPendingEtab(be);
+            if (!isCurPending && isBePending) {
+              adminState.etablissements[idx] = { ...be, ...adminState.etablissements[idx] };
+            } else {
+              adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...be };
+            }
+          }
+        });
+
+        if (fetchedQuotes.length > 0) {
+          fetchedQuotes.forEach(bq => {
+            const qIdx = adminState.quotes.findIndex(q => (bq.ref && q.ref === bq.ref) || (bq.id && q.id === bq.id));
+            if (qIdx === -1) adminState.quotes.unshift(bq);
+            else adminState.quotes[qIdx] = { ...adminState.quotes[qIdx], ...bq };
+          });
+        }
+
+        // Sauvegarder dans le stockage local du navigateur (Téléphone ou Ordinateur)
+        try {
+          let sseDbRaw = localStorage.getItem('sse_saas_database');
+          let sseDb = sseDbRaw ? JSON.parse(sseDbRaw) : { etablissements: [] };
+          sseDb.etablissements = [...adminState.etablissements];
+          localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
+          localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(adminState.etablissements));
+        } catch(e) {}
+
+        isBackendActive = true;
+        updateCloudBadgeUI(true);
+        renderAdminViews();
+        success = true;
+      }
+
+      // Synchronisation bidirectionnelle : sauvegarder les écoles locales vers le cloud
+      if (Array.isArray(adminState.etablissements) && adminState.etablissements.length > 0) {
+        for (const localEtab of adminState.etablissements) {
+          if (!localEtab || !localEtab.name || isFakeDemoSchool(localEtab)) continue;
+          fetch(`${apiUrl}/api/saas/demandes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(localEtab)
+          }).catch(() => {});
+        }
+      }
+
+      if (success) break;
+    } catch(err) {
+      // Essayer le serveur suivant
+    }
+  }
+
+  isSyncingCloud = false;
 }
 
 function promptImportMobileData() {
