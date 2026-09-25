@@ -2196,10 +2196,31 @@ window.exportFinanceCSV = exportFinanceCSV;
 window.toggleAdminSidebar = toggleAdminSidebar;
 
 
+window.hardRefreshAdmin = async function() {
+  try {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const r of registrations) {
+        await r.unregister();
+      }
+    }
+    if ('caches' in window) {
+      const cacheKeys = await caches.keys();
+      for (const key of cacheKeys) {
+        await caches.delete(key);
+      }
+    }
+  } catch (err) {
+    console.warn('[Admin] Cache clear error:', err);
+  }
+  window.location.href = window.location.pathname + '?reload=' + Date.now();
+};
+
 // Synchronisation temps réel automatique si une inscription est soumise dans un autre onglet
 window.addEventListener('storage', (e) => {
   if (e.key === 'sunuschool_establishment' || e.key === 'sunuschool_establishments_registry' || e.key === 'sunuschool_erp_db' || e.key === 'sse_saas_database') {
     loadAdminData();
   }
 });
+
 

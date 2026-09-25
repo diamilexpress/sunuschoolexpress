@@ -2,13 +2,23 @@
 <html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>SunuSchool Express HQ — Console Centrale Super-Admin</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E%3Ctext y=%2226%22 font-size=%2226%22>👑</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="dashboard.css?v=3.9.5">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(r) { r.update(); });
+      });
+    }
+  </script>
   <style>
     :root {
       --admin-bg: #040914;
@@ -578,8 +588,8 @@
       pointer-events: auto;
     }
 
-    /* MEDIA QUERIES RESPONSIVES MOBILES ET TABLETTES */
-    @media (max-width: 900px) {
+    /* MEDIA QUERIES RESPONSIVES MOBILES ET TABLETTES (Prend en compte l'affichage standard et le mode ordinateur mobile) */
+    @media (max-width: 1024px) {
       .admin-layout {
         position: relative;
         flex-direction: column;
@@ -813,8 +823,11 @@
       <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #64748B;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
           <span>Version SaaS</span>
-          <strong style="color: #FFF;">v2.6.4 PRO</strong>
+          <strong style="color: #10B981; font-weight: 800;">v3.9.5 Mobile Ultra</strong>
         </div>
+        <button type="button" onclick="hardRefreshAdmin()" style="width: 100%; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); color: var(--gold-light); font-size: 0.72rem; padding: 0.45rem; border-radius: 6px; cursor: pointer; font-weight: 700; margin-bottom: 0.5rem; transition: background 0.2s;" title="Efface le cache du téléphone et recharge immédiatement">
+          🔄 Vider Cache &amp; Recharger
+        </button>
         <a href="index.html" target="_blank" rel="noopener noreferrer" style="color: var(--turquoise); text-decoration: none; font-weight: 700; display: block; margin-top: 0.4rem;">
           🌐 Voir le Site Public →
         </a>
@@ -1352,6 +1365,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=3.9.0"></script>
+  <script src="admin.js?v=3.9.5"></script>
 </body>
 </html>

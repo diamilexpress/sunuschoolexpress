@@ -53,7 +53,7 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-# 4. Gestion du cache du Service Worker PWA (Mise à jour immédiate)
+# 4. Gestion du cache du Service Worker PWA & Console Admin (Mise à jour immédiate)
 [[headers]]
   for = "/sw.js"
   [headers.values]
@@ -64,3 +64,19 @@
   for = "/manifest.json"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/admin"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/admin.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+

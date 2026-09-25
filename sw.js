@@ -3,7 +3,7 @@
  * Cache-First Strategy pour fonctionnement 100% autonome sans Internet
  */
 
-const CACHE_NAME = 'sunuschool-pwa-v3.9.2';
+const CACHE_NAME = 'sunuschool-pwa-v3.9.5';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -35,7 +35,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. Activation et nettoyage des anciens caches
+// 2. Activation et nettoyage immédiat des anciens caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -51,19 +51,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Stratégie Réseau en priorité (Network-First) pour scripts & pages HTML, avec repli Cache hors-ligne
+// 3. Stratégie Réseau en priorité (Network-First) pour scripts, pages HTML et requêtes de navigation
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith('http')) return;
   if (url.pathname.includes('/api/')) return;
 
-  // Pour les pages HTML et scripts JS : Toujours chercher la version la plus récente sur le réseau
-  const isCodeOrPage = url.pathname.endsWith('.js') || 
+  const isNavigate = event.request.mode === 'navigate';
+  const isCodeOrPage = isNavigate ||
+                       url.pathname.endsWith('.js') || 
                        url.pathname.endsWith('.html') || 
                        url.pathname.endsWith('.css') || 
                        url.pathname === '/' || 
-                       url.pathname.endsWith('/');
+                       url.pathname.endsWith('/') ||
+                       url.pathname.includes('/admin') ||
+                       url.pathname.includes('/dashboard');
 
   if (isCodeOrPage) {
     event.respondWith(
@@ -78,8 +81,10 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           return caches.match(event.request).then((cached) => {
             if (cached) return cached;
-            if (event.request.headers.get('accept')?.includes('text/html')) {
-              return caches.match('./dashboard.html') || caches.match('./index.html');
+            if (event.request.headers.get('accept')?.includes('text/html') || isNavigate) {
+              if (url.pathname.includes('/admin')) return caches.match('./admin.html');
+              if (url.pathname.includes('/dashboard')) return caches.match('./dashboard.html');
+              return caches.match('./index.html');
             }
           });
         })
