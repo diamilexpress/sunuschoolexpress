@@ -3,7 +3,7 @@
  * Cache-First Strategy pour fonctionnement 100% autonome sans Internet
  */
 
-const CACHE_NAME = 'sunuschool-pwa-v3.9.1';
+const CACHE_NAME = 'sunuschool-pwa-v3.9.2';
 
 const ASSETS_TO_CACHE = [
   './',
