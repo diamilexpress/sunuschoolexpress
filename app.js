@@ -391,6 +391,63 @@ function saveEstablishmentToRegistry(est) {
   }
 }
 
+function getBackendBaseUrl() {
+  if (typeof window !== 'undefined') {
+    if (window.location.protocol === 'file:') {
+      return 'https://sunuschoolexpress.onrender.com';
+    }
+    if (window.location.port === '5000') return window.location.origin;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
+    return window.location.origin;
+  }
+  return 'https://sunuschoolexpress.onrender.com';
+}
+
+function sendToCloudBackend(endpoint, payload) {
+  const base = getBackendBaseUrl();
+  const urls = [];
+  if (base) urls.push(`${base}${endpoint}`);
+  const directRender = `https://sunuschoolexpress.onrender.com${endpoint}`;
+  if (!urls.includes(directRender)) urls.push(directRender);
+
+  function tryPost(idx) {
+    if (idx >= urls.length) return;
+    fetch(urls[idx], {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(r => {
+      if (!r.ok && idx + 1 < urls.length) tryPost(idx + 1);
+    }).catch(() => {
+      if (idx + 1 < urls.length) tryPost(idx + 1);
+    });
+  }
+
+  tryPost(0);
+}
+
+function flushPendingSyncQueue() {
+  try {
+    const raw = localStorage.getItem('sse_pending_sync_queue');
+    if (raw) {
+      const queue = JSON.parse(raw);
+      if (Array.isArray(queue) && queue.length > 0) {
+        queue.forEach(item => {
+          if (item && item.name) {
+            sendToCloudBackend('/api/saas/demandes', item);
+          }
+        });
+        localStorage.removeItem('sse_pending_sync_queue');
+      }
+    }
+  } catch(e) {}
+}
+if (typeof window !== 'undefined') {
+  setTimeout(flushPendingSyncQueue, 1500);
+}
+
 function syncWithSaaSDatabase(est) {
   if (!est || !est.name) return;
   try {
@@ -453,29 +510,8 @@ function syncWithSaaSDatabase(est) {
 
     localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
 
-    // 2. Synchronisation automatique multi-appareils (Serveur Cloud / IP Wi-Fi)
-    try {
-      const backendBaseUrl = (typeof getBackendBaseUrl === 'function') ? getBackendBaseUrl() : null;
-      if (backendBaseUrl) {
-        fetch(`${backendBaseUrl}/api/saas/demandes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(etabObj)
-        }).catch(() => {
-          try {
-            const queue = JSON.parse(localStorage.getItem('sse_pending_sync_queue') || '[]');
-            queue.push(etabObj);
-            localStorage.setItem('sse_pending_sync_queue', JSON.stringify(queue));
-          } catch(e) {}
-        });
-      } else {
-        try {
-          const queue = JSON.parse(localStorage.getItem('sse_pending_sync_queue') || '[]');
-          queue.push(etabObj);
-          localStorage.setItem('sse_pending_sync_queue', JSON.stringify(queue));
-        } catch(e) {}
-      }
-    } catch(e) {}
+    // 2. Synchronisation automatique vers le Cloud (immédiate sur Mobile & PC)
+    sendToCloudBackend('/api/saas/demandes', etabObj);
   } catch (e) {
     console.warn("syncWithSaaSDatabase:", e);
   }
@@ -483,28 +519,21 @@ function syncWithSaaSDatabase(est) {
 
 function flushPendingSyncQueue() {
   try {
-    if (typeof isBackendActive !== 'undefined' && !isBackendActive) return;
-    const backendBaseUrl = (typeof getBackendBaseUrl === 'function') ? getBackendBaseUrl() : null;
-    if (!backendBaseUrl) return;
-
     const queue = JSON.parse(localStorage.getItem('sse_pending_sync_queue') || '[]');
     if (!Array.isArray(queue) || queue.length === 0) return;
 
-    const remaining = [];
-    
-    Promise.all(queue.map(item => 
-      fetch(`${backendBaseUrl}/api/saas/demandes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
-      }).then(r => { if (!r.ok) remaining.push(item); })
-        .catch(() => { remaining.push(item); })
-    )).then(() => {
-      localStorage.setItem('sse_pending_sync_queue', JSON.stringify(remaining));
+    queue.forEach(item => {
+      if (item && item.name) {
+        sendToCloudBackend('/api/saas/demandes', item);
+      }
     });
+    localStorage.removeItem('sse_pending_sync_queue');
   } catch(e) {}
 }
-setInterval(flushPendingSyncQueue, 15000);
+if (typeof window !== 'undefined') {
+  setTimeout(flushPendingSyncQueue, 1500);
+  setInterval(flushPendingSyncQueue, 30000);
+}
 
 function populateWorkspaceEstablishmentsDropdown() {
   const select = document.getElementById('wsTopEstablishmentSelector');
@@ -3973,13 +4002,9 @@ function submitEnterpriseQuote() {
     existingQuotes.unshift(quoteData);
     localStorage.setItem('sunuschool_enterprise_quotes', JSON.stringify(existingQuotes));
 
-    // Envoi vers le serveur backend si actif
-    const backendBaseUrl = getBackendBaseUrl();
-    fetch(`${backendBaseUrl}/api/quotes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(quoteData)
-    }).catch(() => {});
+    // Envoi garanti vers le Cloud (Netlify proxy + Render direct)
+    sendToCloudBackend('/api/quotes', quoteData);
+    sendToCloudBackend('/api/saas/quotes', quoteData);
   } catch (e) {}
 
   if (demoState && demoState.auditLogs) {
@@ -4107,23 +4132,16 @@ function switchPlanDemo(planKey) {
       };
       localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(reg));
     }
-    // Synchronisation avec l'API backend si le serveur est actif
-    try {
-      const backendBaseUrl = getBackendBaseUrl();
-      fetch(`${backendBaseUrl}/api/subscriptions/confirm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          schoolName: currentEstablishment.name,
-          code: currentEstablishment.code,
-          email: currentEstablishment.email,
-          phone: currentEstablishment.phone,
-          planName: currentEstablishment.requestedPlan || targetPlanName,
-          type: currentEstablishment.type,
-          city: currentEstablishment.city
-        })
-      }).catch(() => {});
-    } catch(e) {}
+    // Synchronisation avec l'API Cloud (Netlify proxy + Render direct)
+    sendToCloudBackend('/api/subscriptions/confirm', {
+      schoolName: currentEstablishment.name,
+      code: currentEstablishment.code,
+      email: currentEstablishment.email,
+      phone: currentEstablishment.phone,
+      planName: currentEstablishment.requestedPlan || targetPlanName,
+      type: currentEstablishment.type,
+      city: currentEstablishment.city
+    });
   } catch (e) {}
 
   if (currentEstablishment.type === 'SUPER_ADMIN' || currentEstablishment.code === 'SSE-ADMIN-HQ') {
