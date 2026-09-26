@@ -1138,6 +1138,23 @@ function validatePlanUpgradeHQ(idOrCode) {
   });
 
   saveAllToStorage(etab);
+  
+  // Synchronisation Cloud immédiate vers Render
+  try {
+    const etabPrice = (typeof getMonthlyPriceForPlan === 'function') ? getMonthlyPriceForPlan(targetPlan) : (targetPlan.includes('Pro') ? 55000 : 85000);
+    etab.prixMensuel = etabPrice;
+    sendToCloudBackend(`/api/saas/clients/${encodeURIComponent(etab.id || etab.code)}`, {
+      plan: etab.plan,
+      prixMensuel: etabPrice,
+      requestedPlan: null,
+      statutChangementFormule: 'VALIDEE',
+      statut: 'ACTIF',
+      statutAbonnement: 'ACTIF',
+      fraisAdhesionPayes: true
+    });
+    sendToCloudBackend('/api/saas/demandes', etab);
+  } catch(e) {}
+
   renderAdminViews();
 
   alert(`✅ Surclassement vers « ${targetPlan} » validé avec succès pour « ${etab.name} » !`);

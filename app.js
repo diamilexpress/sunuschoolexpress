@@ -4104,21 +4104,10 @@ function switchPlanDemo(planKey) {
     'Option Annuelle Sérénité Daara': 55000
   };
 
-  if (!currentEstablishment) {
-    currentEstablishment = {
-      email: "direction@etablissement.sn",
-      name: isDaara ? "Mon Daara Moderne" : "Mon Établissement",
-      plan: targetPlanName,
-      prixMensuel: priceMap[targetPlanName] || 55000,
-      type: isDaara ? "DAARA" : "ECOLE",
-      city: "Dakar",
-      code: "SSE-SN-1786",
-      statut: "ACTIF",
-      statutAbonnement: "ACTIF",
-      fraisAdhesionPayes: true
-    };
-  } else {
-    // PASSAGE DIRECT ET DÉVERROUILLAGE IMMÉDIAT DE LA NOUVELLE FORMULE
+  const isSuperAdminHQ = (currentEstablishment && (currentEstablishment.type === 'SUPER_ADMIN' || currentEstablishment.code === 'SSE-ADMIN-HQ' || (currentEstablishment.email && currentEstablishment.email.toLowerCase() === 'sunuschoolexpress@gmail.com')));
+
+  if (isSuperAdminHQ) {
+    // SÉCURITÉ : SEUL LE SUPER-ADMIN HQ PEUT ACTIVER DIRECTEMENT
     currentEstablishment.plan = targetPlanName;
     currentEstablishment.prixMensuel = priceMap[targetPlanName] || 55000;
     currentEstablishment.statut = 'ACTIF';
@@ -4131,9 +4120,55 @@ function switchPlanDemo(planKey) {
     if (isFakeDemoSchool(currentEstablishment)) {
       currentEstablishment.name = (currentEstablishment.type === 'DAARA') ? "Mon Daara Moderne" : "Mon Établissement";
     }
+
+    try {
+      localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+      localStorage.setItem('sunuschool_active_workspace', 'true');
+
+      const reg = JSON.parse(localStorage.getItem('sunuschool_establishments_registry') || '[]');
+      const idx = reg.findIndex(e => e && (e.id === currentEstablishment.id || (currentEstablishment.code && e.code === currentEstablishment.code)));
+      if (idx !== -1) {
+        reg[idx] = { 
+          ...reg[idx], 
+          plan: currentEstablishment.plan,
+          prixMensuel: currentEstablishment.prixMensuel,
+          statut: 'ACTIF',
+          statutAbonnement: 'ACTIF',
+          fraisAdhesionPayes: true,
+          requestedPlan: null,
+          statutChangementFormule: null
+        };
+        localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(reg));
+      }
+    } catch(e) {}
+
+    try {
+      const etabIdentifier = currentEstablishment.id || currentEstablishment.code;
+      sendToCloudBackend(`/api/saas/clients/${encodeURIComponent(etabIdentifier)}`, {
+        plan: currentEstablishment.plan,
+        prixMensuel: currentEstablishment.prixMensuel,
+        statut: 'ACTIF',
+        statutAbonnement: 'ACTIF',
+        fraisAdhesionPayes: true,
+        requestedPlan: null,
+        statutChangementFormule: null
+      });
+      sendToCloudBackend('/api/saas/demandes', currentEstablishment);
+    } catch(e) {}
+
+    if (typeof closeAllModals === 'function') closeAllModals();
+    activateDedicatedWorkspace(currentEstablishment);
+    showNotification(`✨ Formule activée directement par l'Admin HQ : « ${targetPlanName} » !`);
+    return;
   }
 
-  // 1. Sauvegarde dans tous les registres locaux du navigateur
+  // ÉTABLISSEMENT CLIENT : SÉCURITÉ RENFORCÉE — VALIDATION OBLIGATOIRE PAR L'ADMINISTRATEUR HQ
+  // La formule actuelle NE CHANGE PAS et reste protégée tant que l'Admin HQ n'a pas validé le virement Wave
+  currentEstablishment.requestedPlan = targetPlanName;
+  currentEstablishment.statutChangementFormule = 'EN_ATTENTE_VALIDATION';
+  const targetPrice = priceMap[targetPlanName] || 55000;
+
+  // 1. Sauvegarde locale de la demande de surclassement
   try {
     localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
     localStorage.setItem('sunuschool_active_workspace', 'true');
@@ -4144,13 +4179,8 @@ function switchPlanDemo(planKey) {
     if (idx !== -1) {
       reg[idx] = { 
         ...reg[idx], 
-        plan: currentEstablishment.plan,
-        prixMensuel: currentEstablishment.prixMensuel,
-        statut: 'ACTIF',
-        statutAbonnement: 'ACTIF',
-        fraisAdhesionPayes: true,
-        requestedPlan: null,
-        statutChangementFormule: null
+        requestedPlan: targetPlanName,
+        statutChangementFormule: 'EN_ATTENTE_VALIDATION'
       };
       localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(reg));
     }
@@ -4162,7 +4192,7 @@ function switchPlanDemo(planKey) {
       if (Array.isArray(sseDb.etablissements)) {
         const sIdx = sseDb.etablissements.findIndex(e => e && (e.id === currentEstablishment.id || (currentEstablishment.code && e.code === currentEstablishment.code)));
         if (sIdx !== -1) {
-          sseDb.etablissements[sIdx] = { ...sseDb.etablissements[sIdx], ...currentEstablishment };
+          sseDb.etablissements[sIdx] = { ...sseDb.etablissements[sIdx], requestedPlan: targetPlanName, statutChangementFormule: 'EN_ATTENTE_VALIDATION' };
           localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
         }
       }
@@ -4175,40 +4205,47 @@ function switchPlanDemo(planKey) {
       if (Array.isArray(erpDb.etablissements)) {
         const eIdx = erpDb.etablissements.findIndex(e => e && (e.id === currentEstablishment.id || (currentEstablishment.code && e.code === currentEstablishment.code)));
         if (eIdx !== -1) {
-          erpDb.etablissements[eIdx] = { ...erpDb.etablissements[eIdx], ...currentEstablishment };
+          erpDb.etablissements[eIdx] = { ...erpDb.etablissements[eIdx], requestedPlan: targetPlanName, statutChangementFormule: 'EN_ATTENTE_VALIDATION' };
           localStorage.setItem('sunuschool_erp_db', JSON.stringify(erpDb));
         }
       }
     }
   } catch (e) {}
 
-  // 2. Synchronisation Cloud immédiate vers Render
+  // 2. Synchronisation Cloud immédiate vers Render pour que l'Admin HQ reçoive la demande en direct
   try {
     const etabIdentifier = currentEstablishment.id || currentEstablishment.code;
     sendToCloudBackend(`/api/saas/clients/${encodeURIComponent(etabIdentifier)}`, {
-      plan: currentEstablishment.plan,
-      prixMensuel: currentEstablishment.prixMensuel,
-      statut: 'ACTIF',
-      statutAbonnement: 'ACTIF',
-      fraisAdhesionPayes: true
+      requestedPlan: targetPlanName,
+      statutChangementFormule: 'EN_ATTENTE_VALIDATION'
     });
     sendToCloudBackend('/api/saas/demandes', currentEstablishment);
   } catch(e) {}
 
-  // 3. Fermer les modales et rafraîchir l'interface immédiatement
+  // 3. Fermer la modale et actualiser l'affichage avec la mention en attente
   if (typeof closeAllModals === 'function') closeAllModals();
 
-  // Mettre à jour le sélecteur d'abonnement en haut
-  const topPlanSelect = document.getElementById('wsTopPlanSelector');
-  if (topPlanSelect) {
-    topPlanSelect.value = planKey;
-  }
-
-  // Activer le workspace avec la nouvelle formule débloquée
   activateDedicatedWorkspace(currentEstablishment);
 
-  // Notification claire et valorisante
-  showNotification(`✨ Félicitations ! Votre établissement « ${currentEstablishment.name} » est désormais activé en « ${targetPlanName} » !`);
+  showNotification(`📋 Demande de surclassement vers « ${targetPlanName} » transmise à la Direction Centrale HQ !`);
+
+  // Message WhatsApp officiel
+  const msgWhatsApp = encodeURIComponent(
+    `Bonjour Direction Centrale SunuSchool-Express (Diamil Express),\n\n` +
+    `Je sollicite la validation du surclassement vers la « ${targetPlanName} » (${targetPrice.toLocaleString()} FCFA/mois) pour mon établissement « ${currentEstablishment.name} » (Code: ${currentEstablishment.code || 'N/A'}).\n\n` +
+    `Règlement effectué sur le compte Wave Marchand 77 106 48 77.`
+  );
+
+  alert(
+    `🔒 SÉCURITÉ SAAS : DEMANDE DE SURCLASSEMENT TRANSMISE\n\n` +
+    `Votre demande de passage à la « ${targetPlanName} » (${targetPrice.toLocaleString()} FCFA/mois) a été enregistrée avec succès.\n\n` +
+    `Conformément au protocole de sécurité et de facturation :\n` +
+    `1. Votre formule actuelle reste active jusqu'à confirmation du règlement.\n` +
+    `2. Effectuez le virement de souscription sur le compte Wave Marchand : 77 106 48 77 (Diamil express).\n` +
+    `3. Dès vérification par l'Administrateur HQ Moustapha Diamil Diouf dans la console centrale, votre nouvelle formule « ${targetPlanName} » sera débloquée sur tous vos appareils.`
+  );
+
+  window.open(`https://wa.me/221761503938?text=${msgWhatsApp}`, '_blank', 'noopener,noreferrer');
 }
 
 let pendingUpgradeTarget = 'pro';
@@ -4780,7 +4817,7 @@ function activateDedicatedWorkspace(est) {
   const topPlanChipText = document.getElementById('wsTopPlanChipText');
   const topPlanChipIcon = document.getElementById('wsTopPlanChipIcon');
   if (topPlanChipText) {
-    topPlanChipText.textContent = displayPlan;
+    topPlanChipText.textContent = est.requestedPlan ? `${displayPlan} (⏳ ${est.requestedPlan} en attente HQ)` : displayPlan;
     if (topPlanChipIcon) topPlanChipIcon.textContent = planIcon;
   }
 
@@ -4788,7 +4825,7 @@ function activateDedicatedWorkspace(est) {
   const sidebarPlanText = document.getElementById('wsSidebarPlanText');
   const sidebarPlanIcon = document.getElementById('wsSidebarPlanIcon');
   if (sidebarPlanText) {
-    sidebarPlanText.textContent = displayPlan;
+    sidebarPlanText.textContent = est.requestedPlan ? `${displayPlan} (⏳ En attente)` : displayPlan;
     if (sidebarPlanIcon) sidebarPlanIcon.textContent = planIcon;
   }
 
@@ -4798,7 +4835,11 @@ function activateDedicatedWorkspace(est) {
   // 3. Pastille dans le résumé du tableau de bord
   const summaryPlanEl = document.getElementById('wsSummaryPlan');
   if (summaryPlanEl) {
-    summaryPlanEl.textContent = `Abonnement Actif : ${displayPlan}`;
+    if (est.requestedPlan) {
+      summaryPlanEl.innerHTML = `ABONNEMENT ACTIF : ${displayPlan.toUpperCase()} <span style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.6); padding: 2px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; margin-left: 8px;">⏳ Surclassement « ${est.requestedPlan} » en attente de validation Admin HQ</span>`;
+    } else {
+      summaryPlanEl.textContent = `ABONNEMENT ACTIF : ${displayPlan.toUpperCase()}`;
+    }
     summaryPlanEl.style.display = 'inline-block';
   }
   let cleanDir = est.directeurNom || '';

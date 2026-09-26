@@ -180,9 +180,11 @@ const initialSeedData = {
       plan: "Starter",
       prixMensuel: 20000,
       effectif: 0,
-      statut: "EN_ATTENTE_VALIDATION",
-      statutAbonnement: "EN_ATTENTE_VALIDATION",
-      fraisAdhesionPayes: false,
+      statut: "ACTIF",
+      statutAbonnement: "ACTIF",
+      fraisAdhesionPayes: true,
+      requestedPlan: "Formule École Pro",
+      statutChangementFormule: "EN_ATTENTE_VALIDATION",
       dateAdhesion: "2026-09-26",
       echeanceAbonnement: "2026-11-30",
       waveTransactionRef: "SSE-SUB-955619-726"
@@ -1267,6 +1269,8 @@ const updateClientHandler = (req, res) => {
   if (updates.secretKey) etab.secretKey = updates.secretKey;
   if (updates.fraisAdhesionPayes !== undefined) etab.fraisAdhesionPayes = updates.fraisAdhesionPayes;
   if (updates.waveTransactionRef) etab.waveTransactionRef = updates.waveTransactionRef;
+  if (updates.requestedPlan !== undefined) etab.requestedPlan = updates.requestedPlan;
+  if (updates.statutChangementFormule !== undefined) etab.statutChangementFormule = updates.statutChangementFormule;
 
   db.auditLogs.unshift({
     id: `log-edit-${Date.now()}`,
