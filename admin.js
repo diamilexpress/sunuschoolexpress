@@ -58,6 +58,25 @@ function handleFilterEtabsStatus(val) {
 let activeApiBaseUrl = null;
 const failedApiUrls = new Set();
 
+// Détection STRICTEMENT technique : aucun nom d'établissement réel ne doit JAMAIS être filtré
+function isFakeDemoSchool(item) {
+  if (!item) return false;
+  if (typeof item === 'object') {
+    if (item.isUserCreated || item.phone || item.email || item.dateAdhesion) return false;
+    const id = (item.id || '').toLowerCase();
+    const code = (item.code || '').toUpperCase();
+    return id === 'etab-001' || id === 'etab-002' || id === 'etab-003' || id === 'etab-demo' || id === 'demo' ||
+           code === 'SSE-SN-1001' || code === 'SSE-SN-1002' || code === 'SSE-SN-1003' || code === 'DEMO';
+  }
+  if (typeof item === 'string') {
+    const s = item.toLowerCase().trim();
+    return s === 'etab-001' || s === 'etab-002' || s === 'etab-003' || s === 'etab-demo' || s === 'demo' ||
+           s === 'sse-sn-1001' || s === 'sse-sn-1002' || s === 'sse-sn-1003';
+  }
+  return false;
+}
+window.isFakeDemoSchool = isFakeDemoSchool;
+
 function getBackendBaseUrl() {
   if (activeApiBaseUrl && !failedApiUrls.has(activeApiBaseUrl)) {
     return activeApiBaseUrl;
@@ -80,6 +99,33 @@ function getBackendBaseUrl() {
   }
   return 'https://sunuschoolexpress.onrender.com';
 }
+
+function sendToCloudBackend(endpoint, payload, method = 'POST') {
+  const base = getBackendBaseUrl();
+  const urls = [];
+  if (base) urls.push(`${base}${endpoint}`);
+  const directRender = `https://sunuschoolexpress.onrender.com${endpoint}`;
+  if (!urls.includes(directRender)) urls.push(directRender);
+
+  function trySend(idx) {
+    if (idx >= urls.length) return;
+    const opts = {
+      method: method,
+      headers: { 'Content-Type': 'application/json' }
+    };
+    if (method !== 'GET' && method !== 'HEAD' && payload) {
+      opts.body = JSON.stringify(payload);
+    }
+    fetch(urls[idx], opts).then(r => {
+      if (!r.ok && idx + 1 < urls.length) trySend(idx + 1);
+    }).catch(() => {
+      if (idx + 1 < urls.length) trySend(idx + 1);
+    });
+  }
+
+  trySend(0);
+}
+window.sendToCloudBackend = sendToCloudBackend;
 
 let isBackendActive = false;
 let lastBackendCheckTime = 0;
@@ -167,8 +213,8 @@ function checkAdminSession() {
     loadAdminData();
     if (!window.adminAutoPollTimer) {
       window.adminAutoPollTimer = setInterval(() => {
-        try { loadAdminData(); } catch(e) {}
-      }, 4000);
+        try { syncCloudEstablishments(); } catch(e) {}
+      }, 5000);
     }
   }
 }
@@ -350,24 +396,6 @@ function loadAdminData() {
     }
   } catch(e) {}
 
-  // Détection STRICTEMENT technique : aucun nom d'établissement ne doit JAMAIS être filtré
-  const isFakeDemoSchool = (item) => {
-    if (!item) return false;
-    if (typeof item === 'object') {
-      if (item.isUserCreated || item.phone || item.email || item.dateAdhesion) return false;
-      const id = (item.id || '').toLowerCase();
-      const code = (item.code || '').toUpperCase();
-      return id === 'etab-001' || id === 'etab-002' || id === 'etab-003' || id === 'etab-demo' || id === 'demo' ||
-             code === 'SSE-SN-1001' || code === 'SSE-SN-1002' || code === 'SSE-SN-1003' || code === 'DEMO';
-    }
-    if (typeof item === 'string') {
-      const s = item.toLowerCase().trim();
-      return s === 'etab-001' || s === 'etab-002' || s === 'etab-003' || s === 'etab-demo' || s === 'demo' ||
-             s === 'sse-sn-1001' || s === 'sse-sn-1002' || s === 'sse-sn-1003';
-    }
-    return false;
-  };
-
   // 3. Fusionner avec l'établissement actif en session
   try {
     const rawCurrent = localStorage.getItem('sunuschool_establishment');
@@ -399,103 +427,93 @@ async function syncCloudEstablishments() {
   if (isSyncingCloud) return;
   isSyncingCloud = true;
 
-  const base = getBackendBaseUrl();
-  const urls = [];
-  if (base) urls.push(base);
-  if (!urls.includes('https://sunuschoolexpress.onrender.com')) {
-    urls.push('https://sunuschoolexpress.onrender.com');
-  }
+  try {
+    const base = getBackendBaseUrl();
+    const urls = [];
+    if (base && !failedApiUrls.has(base)) urls.push(base);
+    if (!urls.includes('https://sunuschoolexpress.onrender.com')) {
+      urls.push('https://sunuschoolexpress.onrender.com');
+    }
 
-  let success = false;
-  for (const apiUrl of urls) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 7500);
+    let success = false;
+    for (const apiUrl of urls) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 8000);
 
-      const [resClients, resDemandes] = await Promise.allSettled([
-        fetch(`${apiUrl}/api/saas/clients`, { method: 'GET', signal: ctrl.signal }),
-        fetch(`${apiUrl}/api/saas/demandes`, { method: 'GET', signal: ctrl.signal })
-      ]);
-      clearTimeout(tid);
+        const [resClients, resDemandes] = await Promise.allSettled([
+          fetch(`${apiUrl}/api/saas/clients`, { method: 'GET', signal: ctrl.signal }),
+          fetch(`${apiUrl}/api/saas/demandes`, { method: 'GET', signal: ctrl.signal })
+        ]);
+        clearTimeout(tid);
 
-      let fetchedList = [];
-      let fetchedQuotes = [];
+        let fetchedList = [];
+        let fetchedQuotes = [];
 
-      if (resClients.status === 'fulfilled' && resClients.value && resClients.value.ok) {
-        const jsonClients = await resClients.value.json();
-        const list = jsonClients.clients || jsonClients.data || [];
-        if (Array.isArray(list)) fetchedList.push(...list);
-      }
+        if (resClients.status === 'fulfilled' && resClients.value && resClients.value.ok) {
+          const jsonClients = await resClients.value.json();
+          const list = jsonClients.clients || jsonClients.data || [];
+          if (Array.isArray(list)) fetchedList.push(...list);
+        }
 
-      if (resDemandes.status === 'fulfilled' && resDemandes.value && resDemandes.value.ok) {
-        const jsonDemandes = await resDemandes.value.json();
-        const list = jsonDemandes.etablissements || jsonDemandes.pendingEtablissements || [];
-        if (Array.isArray(list)) fetchedList.push(...list);
-        if (Array.isArray(jsonDemandes.quotes)) fetchedQuotes = jsonDemandes.quotes;
-      }
+        if (resDemandes.status === 'fulfilled' && resDemandes.value && resDemandes.value.ok) {
+          const jsonDemandes = await resDemandes.value.json();
+          const list = jsonDemandes.etablissements || jsonDemandes.pendingEtablissements || [];
+          if (Array.isArray(list)) fetchedList.push(...list);
+          if (Array.isArray(jsonDemandes.quotes)) fetchedQuotes = jsonDemandes.quotes;
+        }
 
-      if (fetchedList.length > 0 || fetchedQuotes.length > 0) {
-        fetchedList.forEach(be => {
-          if (!be || !be.name || isFakeDemoSchool(be)) return;
-          const idx = adminState.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
-          if (idx === -1) {
-            adminState.etablissements.unshift(be);
-          } else {
-            const isCurPending = isPendingEtab(adminState.etablissements[idx]);
-            const isBePending = isPendingEtab(be);
-            if (!isCurPending && isBePending) {
-              adminState.etablissements[idx] = { ...be, ...adminState.etablissements[idx] };
+        if (fetchedList.length > 0 || fetchedQuotes.length > 0) {
+          fetchedList.forEach(be => {
+            if (!be || !be.name || isFakeDemoSchool(be)) return;
+            const idx = adminState.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
+            if (idx === -1) {
+              adminState.etablissements.unshift(be);
             } else {
+              // Le serveur Cloud est la référence absolue partagée
               adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...be };
             }
-          }
-        });
-
-        if (fetchedQuotes.length > 0) {
-          fetchedQuotes.forEach(bq => {
-            const qIdx = adminState.quotes.findIndex(q => (bq.ref && q.ref === bq.ref) || (bq.id && q.id === bq.id));
-            if (qIdx === -1) adminState.quotes.unshift(bq);
-            else adminState.quotes[qIdx] = { ...adminState.quotes[qIdx], ...bq };
           });
+
+          if (fetchedQuotes.length > 0) {
+            fetchedQuotes.forEach(bq => {
+              const qIdx = adminState.quotes.findIndex(q => (bq.ref && q.ref === bq.ref) || (bq.id && q.id === bq.id));
+              if (qIdx === -1) adminState.quotes.unshift(bq);
+              else adminState.quotes[qIdx] = { ...adminState.quotes[qIdx], ...bq };
+            });
+          }
+
+          // Nettoyer les faux doublons ou entrées démo
+          adminState.etablissements = adminState.etablissements.filter(e => 
+            e && e.name && !isFakeDemoSchool(e) && e.type !== 'SUPER_ADMIN' && e.code !== 'SSE-ADMIN-HQ'
+          );
+
+          // Sauvegarder dans le stockage local du navigateur
+          try {
+            let sseDbRaw = localStorage.getItem('sse_saas_database');
+            let sseDb = sseDbRaw ? JSON.parse(sseDbRaw) : { etablissements: [] };
+            sseDb.etablissements = [...adminState.etablissements];
+            localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
+            localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(adminState.etablissements));
+          } catch(e) {}
+
+          isBackendActive = true;
+          activeApiBaseUrl = apiUrl;
+          updateCloudBadgeUI(true);
+          renderAdminViews();
+          success = true;
+          break;
         }
-
-        // Sauvegarder dans le stockage local du navigateur (Téléphone ou Ordinateur)
-        try {
-          let sseDbRaw = localStorage.getItem('sse_saas_database');
-          let sseDb = sseDbRaw ? JSON.parse(sseDbRaw) : { etablissements: [] };
-          sseDb.etablissements = [...adminState.etablissements];
-          localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
-          localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(adminState.etablissements));
-        } catch(e) {}
-
-        isBackendActive = true;
-        updateCloudBadgeUI(true);
-        renderAdminViews();
-        success = true;
+      } catch(fetchErr) {
+        console.warn("Échec contact API:", apiUrl, fetchErr?.message);
+        failedApiUrls.add(apiUrl);
       }
-
-      // Synchronisation bidirectionnelle : sauvegarder les écoles locales vers le cloud
-      if (Array.isArray(adminState.etablissements) && adminState.etablissements.length > 0) {
-        for (const localEtab of adminState.etablissements) {
-          if (!localEtab || !localEtab.name || isFakeDemoSchool(localEtab)) continue;
-          fetch(`${apiUrl}/api/saas/demandes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(localEtab)
-          }).catch(() => {});
-        }
-      }
-
-      if (success) {
-        activeApiBaseUrl = apiUrl;
-        break;
-      }
-    } catch(err) {
-      failedApiUrls.add(apiUrl);
     }
+  } catch(globalErr) {
+    console.error("syncCloudEstablishments error:", globalErr);
+  } finally {
+    isSyncingCloud = false;
   }
-
-  isSyncingCloud = false;
 }
 
 function promptImportMobileData() {
@@ -1067,22 +1085,11 @@ function validateEstablishmentHQ(idOrCode) {
   // Sauvegarder dans tous les stockages locaux pour synchronisation immédiate
   saveAllToStorage(etab);
 
-  // Synchroniser avec l'API backend si actif
+  // Synchroniser avec l'API Cloud (Netlify proxy + Render direct)
   try {
-    if (isBackendActive) {
-      const backendBaseUrl = getBackendBaseUrl();
-      fetch(`${backendBaseUrl}/api/saas/clients/${etab.id || etab.code}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statut: 'ACTIF', fraisAdhesionPayes: true })
-      }).catch(() => {});
-
-      fetch(`${backendBaseUrl}/api/admin/etablissements/${etab.id || etab.code}/validate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminEmail: 'sunuschoolexpress@gmail.com' })
-      }).catch(() => {});
-    }
+    sendToCloudBackend(`/api/saas/clients/${encodeURIComponent(etab.id || etab.code)}/status`, { statut: 'ACTIF', fraisAdhesionPayes: true });
+    sendToCloudBackend(`/api/admin/etablissements/${encodeURIComponent(etab.id || etab.code)}/validate`, { adminEmail: 'sunuschoolexpress@gmail.com' });
+    sendToCloudBackend(`/api/saas/demandes`, etab);
   } catch(e) {}
 
   renderAdminViews();
@@ -1347,6 +1354,10 @@ function purgeTestDemands() {
   } catch(e) {}
 
   renderAdminViews();
+  // Purger également du serveur Cloud
+  try {
+    sendToCloudBackend('/api/saas/demandes/purge', {}, 'DELETE');
+  } catch(e) {}
   alert(`🧹 Purge réussie ! ${pending.length} demandes de test ont été supprimées définitivement.`);
 }
 window.purgeTestDemands = purgeTestDemands;
@@ -2245,6 +2256,8 @@ Directeur Général & Responsable SSI — Diamil-Express
 document.addEventListener('DOMContentLoaded', checkAdminSession);
 
 // Exports explicites sur window
+window.adminState = adminState;
+window.syncCloudEstablishments = syncCloudEstablishments;
 window.handleMasterLogin = handleMasterLogin;
 window.checkAdminSession = checkAdminSession;
 window.logoutAdmin = logoutAdmin;

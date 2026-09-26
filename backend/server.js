@@ -1446,11 +1446,23 @@ app.post('/api/saas/demandes', (req, res) => {
     };
     db.etablissements.unshift(etab);
   } else {
-    etab = { ...etab, ...body };
+    Object.assign(etab, body);
   }
 
   saveDatabase(db);
   res.json({ success: true, message: `Demande enregistrée pour ${cleanSchool}`, data: etab });
+});
+
+app.delete('/api/saas/demandes/purge', (req, res) => {
+  db.etablissements = (db.etablissements || []).filter(e => {
+    if (!e) return false;
+    const st = (e.statut || '').toUpperCase();
+    const stAb = (e.statutAbonnement || '').toUpperCase();
+    const isPending = st.includes('ATTENTE') || stAb.includes('ATTENTE') || st === 'PENDING' || stAb === 'PENDING' || e.fraisAdhesionPayes === false || Boolean(e.requestedPlan);
+    return !isPending;
+  });
+  saveDatabase(db);
+  res.json({ success: true, message: 'Demandes en attente purgées du Cloud.' });
 });
 
 // Étape 3 : Webhook Réel PayDunya / InTouch (Notification Asynchrone Serveur à Serveur)
