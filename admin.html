@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="dashboard.css?v=3.9.8">
+  <link rel="stylesheet" href="dashboard.css?v=3.9.9">
   <script>
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -823,7 +823,7 @@
       <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #64748B;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
           <span>Version SaaS</span>
-          <strong style="color: #10B981; font-weight: 800;">v3.9.8 Cloud Sync</strong>
+          <strong style="color: #10B981; font-weight: 800;">v3.9.9 Cloud Direct</strong>
         </div>
         <button type="button" onclick="hardRefreshAdmin()" style="width: 100%; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); color: var(--gold-light); font-size: 0.72rem; padding: 0.45rem; border-radius: 6px; cursor: pointer; font-weight: 700; margin-bottom: 0.5rem; transition: background 0.2s;" title="Efface le cache du téléphone et recharge immédiatement">
           🔄 Vider Cache &amp; Recharger
@@ -922,10 +922,13 @@
                 </p>
               </div>
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button onclick="loadAdminData()" class="btn-action-reject" style="color: #94A3B8; border-color: rgba(255,255,255,0.2);">
-                  🔄 Actualiser
+                <button id="btnForceSyncCloud" onclick="forceSyncFromCloudUI()" class="btn-action-validate" style="font-weight: 800; background: linear-gradient(135deg, #00D2B4, #008775); border: none; color: #FFF; box-shadow: 0 2px 10px rgba(0,210,180,0.3); padding: 0.55rem 1rem; border-radius: 6px; cursor: pointer;" title="Interroge le serveur Cloud Render et télécharge immédiatement les demandes">
+                  ⚡ Synchroniser Cloud (Direct)
                 </button>
-                <button onclick="purgeTestDemands()" class="btn-action-reject" style="color: #EF4444; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.1);" title="Supprimer définitivement toutes les demandes de test non validées">
+                <button onclick="hardRefreshAdmin()" class="btn-action-reject" style="color: var(--gold-light); border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); padding: 0.55rem 0.9rem; border-radius: 6px; cursor: pointer; font-weight: 700;" title="Vider le cache du navigateur et recharger la dernière version">
+                  🔄 Vider Cache &amp; Recharger
+                </button>
+                <button onclick="purgeTestDemands()" class="btn-action-reject" style="color: #EF4444; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.1); padding: 0.55rem 0.9rem; border-radius: 6px; cursor: pointer;" title="Supprimer définitivement toutes les demandes de test non validées">
                   🧹 Purger les Demandes de Test
                 </button>
               </div>
@@ -1365,6 +1368,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=3.9.8"></script>
+  <script src="admin.js?v=3.9.9"></script>
 </body>
 </html>

@@ -2289,6 +2289,21 @@ window.exportEtabsCSV = exportEtabsCSV;
 window.exportFinanceCSV = exportFinanceCSV;
 window.toggleAdminSidebar = toggleAdminSidebar;
 
+window.forceSyncFromCloudUI = async function() {
+  const btn = document.getElementById('btnForceSyncCloud');
+  const oldText = btn ? btn.innerHTML : '';
+  if (btn) btn.innerHTML = '⏳ Synchronisation Cloud...';
+  try {
+    failedApiUrls.clear();
+    await syncCloudEstablishments();
+    const pending = (adminState.etablissements || []).filter(isPendingEtab);
+    alert(`✅ Synchronisation Cloud réussie !\n\n${pending.length} demande(s) d'adhésion Wave trouvée(s) et actualisée(s) sur cet écran.`);
+  } catch(e) {
+    alert("Erreur de synchronisation Cloud: " + (e?.message || e));
+  } finally {
+    if (btn) btn.innerHTML = oldText;
+  }
+};
 
 window.hardRefreshAdmin = async function() {
   try {
