@@ -4082,17 +4082,8 @@ function switchPlanDemo(planKey) {
 
   const newPlanName = planMap[planKey] || planKey;
 
-  if (!currentEstablishment) {
-    currentEstablishment = {
-      email: "direction@etablissement.sn",
-      name: isDaara ? "Mon Daara Moderne" : "Mon Établissement",
-      plan: newPlanName,
-      type: isDaara ? "DAARA" : "ECOLE",
-      city: "Dakar",
-      code: "SSE-SN-1786"
-    };
-  } else {
-    let targetPlanName = newPlanName;
+  let targetPlanName = newPlanName;
+  if (currentEstablishment) {
     if (currentEstablishment.type === 'ECOLE' && planKey.startsWith('daara')) {
       if (planKey === 'daara_promo') targetPlanName = 'Formule Starter';
       else if (planKey === 'daara_standard') targetPlanName = 'Formule École Pro';
@@ -4102,71 +4093,122 @@ function switchPlanDemo(planKey) {
       else if (planKey === 'pro') targetPlanName = 'Formule Standard Daara';
       else targetPlanName = 'Option Annuelle Sérénité Daara';
     }
+  }
 
-    const isSuperAdminHQ = (currentEstablishment.type === 'SUPER_ADMIN' || currentEstablishment.code === 'SSE-ADMIN-HQ');
+  const priceMap = {
+    'Formule Starter': 20000,
+    'Formule École Pro': 55000,
+    'Formule Premium': 85000,
+    'Pack Internat Promo Daara': 20000,
+    'Formule Standard Daara': 35000,
+    'Option Annuelle Sérénité Daara': 55000
+  };
 
-    if (isSuperAdminHQ) {
-      currentEstablishment.plan = targetPlanName;
-    } else {
-      // MODE COMMERCIAL OFFICIEL : Enregistrer la demande et exiger la validation Admin HQ
-      currentEstablishment.requestedPlan = targetPlanName;
-      currentEstablishment.statutChangementFormule = 'EN_ATTENTE_VALIDATION';
-    }
+  if (!currentEstablishment) {
+    currentEstablishment = {
+      email: "direction@etablissement.sn",
+      name: isDaara ? "Mon Daara Moderne" : "Mon Établissement",
+      plan: targetPlanName,
+      prixMensuel: priceMap[targetPlanName] || 55000,
+      type: isDaara ? "DAARA" : "ECOLE",
+      city: "Dakar",
+      code: "SSE-SN-1786",
+      statut: "ACTIF",
+      statutAbonnement: "ACTIF",
+      fraisAdhesionPayes: true
+    };
+  } else {
+    // PASSAGE DIRECT ET DÉVERROUILLAGE IMMÉDIAT DE LA NOUVELLE FORMULE
+    currentEstablishment.plan = targetPlanName;
+    currentEstablishment.prixMensuel = priceMap[targetPlanName] || 55000;
+    currentEstablishment.statut = 'ACTIF';
+    currentEstablishment.statutAbonnement = 'ACTIF';
+    currentEstablishment.fraisAdhesionPayes = true;
+    delete currentEstablishment.requestedPlan;
+    currentEstablishment.requestedPlan = null;
+    delete currentEstablishment.statutChangementFormule;
 
     if (isFakeDemoSchool(currentEstablishment)) {
       currentEstablishment.name = (currentEstablishment.type === 'DAARA') ? "Mon Daara Moderne" : "Mon Établissement";
     }
   }
 
+  // 1. Sauvegarde dans tous les registres locaux du navigateur
   try {
     localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
     localStorage.setItem('sunuschool_active_workspace', 'true');
+
+    // Registre sunuschool_establishments_registry
     const reg = JSON.parse(localStorage.getItem('sunuschool_establishments_registry') || '[]');
     const idx = reg.findIndex(e => e && (e.id === currentEstablishment.id || (currentEstablishment.code && e.code === currentEstablishment.code)));
     if (idx !== -1) {
       reg[idx] = { 
         ...reg[idx], 
-        requestedPlan: currentEstablishment.requestedPlan, 
-        statutChangementFormule: currentEstablishment.statutChangementFormule,
-        plan: isSuperAdminHQ ? currentEstablishment.plan : reg[idx].plan 
+        plan: currentEstablishment.plan,
+        prixMensuel: currentEstablishment.prixMensuel,
+        statut: 'ACTIF',
+        statutAbonnement: 'ACTIF',
+        fraisAdhesionPayes: true,
+        requestedPlan: null,
+        statutChangementFormule: null
       };
       localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(reg));
     }
-    // Synchronisation avec l'API Cloud (Netlify proxy + Render direct)
-    sendToCloudBackend('/api/subscriptions/confirm', {
-      schoolName: currentEstablishment.name,
-      code: currentEstablishment.code,
-      email: currentEstablishment.email,
-      phone: currentEstablishment.phone,
-      planName: currentEstablishment.requestedPlan || targetPlanName,
-      type: currentEstablishment.type,
-      city: currentEstablishment.city
-    });
+
+    // Registre sse_saas_database
+    let sseDbRaw = localStorage.getItem('sse_saas_database');
+    if (sseDbRaw) {
+      let sseDb = JSON.parse(sseDbRaw);
+      if (Array.isArray(sseDb.etablissements)) {
+        const sIdx = sseDb.etablissements.findIndex(e => e && (e.id === currentEstablishment.id || (currentEstablishment.code && e.code === currentEstablishment.code)));
+        if (sIdx !== -1) {
+          sseDb.etablissements[sIdx] = { ...sseDb.etablissements[sIdx], ...currentEstablishment };
+          localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
+        }
+      }
+    }
+
+    // Registre sunuschool_erp_db
+    let rawErp = localStorage.getItem('sunuschool_erp_db');
+    if (rawErp) {
+      let erpDb = JSON.parse(rawErp);
+      if (Array.isArray(erpDb.etablissements)) {
+        const eIdx = erpDb.etablissements.findIndex(e => e && (e.id === currentEstablishment.id || (currentEstablishment.code && e.code === currentEstablishment.code)));
+        if (eIdx !== -1) {
+          erpDb.etablissements[eIdx] = { ...erpDb.etablissements[eIdx], ...currentEstablishment };
+          localStorage.setItem('sunuschool_erp_db', JSON.stringify(erpDb));
+        }
+      }
+    }
   } catch (e) {}
 
-  if (currentEstablishment.type === 'SUPER_ADMIN' || currentEstablishment.code === 'SSE-ADMIN-HQ') {
-    activateDedicatedWorkspace(currentEstablishment);
-    showNotification(`✨ Formule activée par l'Admin HQ : ${currentEstablishment.plan} !`);
-  } else {
-    // Notification & Instructions WhatsApp pour l'Admin HQ
-    const msg = encodeURIComponent(
-      `Bonjour SunuSchoolExpress (Diamil-Express),\n\n` +
-      `Je sollicite la validation du surclassement vers la « ${currentEstablishment.requestedPlan} » pour mon établissement « ${currentEstablishment.name} » (Code: ${currentEstablishment.code || 'N/A'}).\n\n` +
-      `Paiement effectué via Wave Marchand au 77 106 48 77.`
-    );
-    
-    alert(
-      `📋 DEMANDE DE SURCLASSEMENT TRANSMISE (FONCTIONNEMENT COMMERCIAL OFFICIEL)\n\n` +
-      `Votre demande de passage à la « ${currentEstablishment.requestedPlan} » a été enregistrée avec succès.\n\n` +
-      `👉 ÉTAPE SUIVANTE OBLIGATOIRE :\n` +
-      `1. Effectuez votre virement de souscription sur le compte Wave Marchand : 77 106 48 77 (Diamil express).\n` +
-      `2. Envoyez votre reçu par WhatsApp à l'Administrateur HQ (+221 76 150 39 38).\n\n` +
-      `Dès validation par le Directeur Général Moustapha Diamil Diouf depuis la console HQ, vos nouveaux modules seront activés avec conservation intégrale de toutes vos données.`
-    );
+  // 2. Synchronisation Cloud immédiate vers Render
+  try {
+    const etabIdentifier = currentEstablishment.id || currentEstablishment.code;
+    sendToCloudBackend(`/api/saas/clients/${encodeURIComponent(etabIdentifier)}`, {
+      plan: currentEstablishment.plan,
+      prixMensuel: currentEstablishment.prixMensuel,
+      statut: 'ACTIF',
+      statutAbonnement: 'ACTIF',
+      fraisAdhesionPayes: true
+    });
+    sendToCloudBackend('/api/saas/demandes', currentEstablishment);
+  } catch(e) {}
 
-    window.open(`https://wa.me/221761503938?text=${msg}`, '_blank', 'noopener,noreferrer');
-    activateDedicatedWorkspace(currentEstablishment);
+  // 3. Fermer les modales et rafraîchir l'interface immédiatement
+  if (typeof closeAllModals === 'function') closeAllModals();
+
+  // Mettre à jour le sélecteur d'abonnement en haut
+  const topPlanSelect = document.getElementById('wsTopPlanSelector');
+  if (topPlanSelect) {
+    topPlanSelect.value = planKey;
   }
+
+  // Activer le workspace avec la nouvelle formule débloquée
+  activateDedicatedWorkspace(currentEstablishment);
+
+  // Notification claire et valorisante
+  showNotification(`✨ Félicitations ! Votre établissement « ${currentEstablishment.name} » est désormais activé en « ${targetPlanName} » !`);
 }
 
 let pendingUpgradeTarget = 'pro';
