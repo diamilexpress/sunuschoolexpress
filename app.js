@@ -5449,6 +5449,52 @@ function switchWsTab(tabId, navItem) {
   }
 }
 
+// --- JEUX DE DONNÉES OFFICIELS POUR ÉCOLE DES MÉTIERS DU FUTUR (SSE-SN-2901) ---
+const EMF_DEFAULT_CLASSES = [
+  { id: 'cls-emf-t', nom: 'Terminale Numérique', cycle: 'Lycée', salle: 'Lab 1', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 3 },
+  { id: 'cls-emf-1', nom: '1ère Informatique', cycle: 'Lycée', salle: 'Lab 2', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 3 },
+  { id: 'cls-emf-2', nom: '2nde Technique', cycle: 'Lycée', salle: 'Salle 101', capacite: 40, profPrincipal: 'M. Ousmane Niang', effectif: 2 },
+  { id: 'cls-emf-3', nom: '3ème A', cycle: 'Collège', salle: 'Salle 102', capacite: 40, profPrincipal: 'M. Ousmane Niang', effectif: 3 }
+];
+
+const EMF_DEFAULT_TEACHER = {
+  id: 'ens-ousmane-niang-emf',
+  etablissementId: 'etab-2901',
+  nom: 'M. Ousmane Niang',
+  mat: 'ENS-2026-01',
+  matiere: 'Anglais (Collège & Lycée)',
+  classes: ['Terminale Numérique', '1ère Informatique', '2nde Technique', '3ème A'],
+  volume: '20h / semaine',
+  contrat: 'CDI Titulaire',
+  salaire: 250000,
+  tel: '+221 77 650 44 12',
+  statut: 'ACTIF',
+  ipres: true
+};
+
+const EMF_DEFAULT_STUDENTS = [
+  { id: 'emf-el-01', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-001', prenom: 'Moussa', nom: 'Diop', sexe: 'M', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '18/09/2026', parentTel: '+221 77 150 78 78', moyenne: 16.5, rang: '1er', cleAcces: 'EMF-2026-001' },
+  { id: 'emf-el-02', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-002', prenom: 'Fatou Binetou', nom: 'Ndiaye', sexe: 'F', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '18/09/2026', parentTel: '+221 77 234 56 78', moyenne: 15.8, rang: '2ème', cleAcces: 'EMF-2026-002' },
+  { id: 'emf-el-03', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-003', prenom: 'Cheikh Ahmadou', nom: 'Fall', sexe: 'M', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '19/09/2026', parentTel: '+221 77 345 67 89', moyenne: 14.5, rang: '3ème', cleAcces: 'EMF-2026-003' },
+  { id: 'emf-el-04', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-004', prenom: 'Aïssatou', nom: 'Sow', sexe: 'F', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '19/09/2026', parentTel: '+221 77 456 78 90', moyenne: 17.2, rang: '1ère', cleAcces: 'EMF-2026-004' },
+  { id: 'emf-el-05', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-005', prenom: 'Ibrahima', nom: 'Ba', sexe: 'M', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '20/09/2026', parentTel: '+221 77 567 89 01', moyenne: 13.5, rang: '2ème', cleAcces: 'EMF-2026-005' },
+  { id: 'emf-el-06', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-006', prenom: 'Mariama', nom: 'Diallo', sexe: 'F', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '20/09/2026', parentTel: '+221 77 678 90 12', moyenne: 16.0, rang: '3ème', cleAcces: 'EMF-2026-006' },
+  { id: 'emf-el-07', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-007', prenom: 'Abdoulaye', nom: 'Seck', sexe: 'M', type: 'SCOLAIRE', classe: '2nde Technique', classeId: '2nde', statutPension: 'A_JOUR', dateInscription: '21/09/2026', parentTel: '+221 77 789 01 23', moyenne: 14.8, rang: '1er', cleAcces: 'EMF-2026-007' },
+  { id: 'emf-el-08', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-008', prenom: 'Khadija', nom: 'Gueye', sexe: 'F', type: 'SCOLAIRE', classe: '2nde Technique', classeId: '2nde', statutPension: 'A_JOUR', dateInscription: '21/09/2026', parentTel: '+221 77 890 12 34', moyenne: 15.2, rang: '2ème', cleAcces: 'EMF-2026-008' },
+  { id: 'emf-el-09', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-009', prenom: 'Modou', nom: 'Cissé', sexe: 'M', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '22/09/2026', parentTel: '+221 77 901 23 45', moyenne: 16.8, rang: '1er', cleAcces: 'EMF-2026-009' },
+  { id: 'emf-el-10', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-010', prenom: 'Aminata', nom: 'Sy', sexe: 'F', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '22/09/2026', parentTel: '+221 78 112 34 56', moyenne: 14.2, rang: '2ème', cleAcces: 'EMF-2026-010' },
+  { id: 'emf-el-11', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-011', prenom: 'Ousmane', nom: 'Sarr', sexe: 'M', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '23/09/2026', parentTel: '+221 78 223 45 67', moyenne: 15.5, rang: '3ème', cleAcces: 'EMF-2026-011' }
+];
+
+function isEmfEstablishment(est) {
+  if (!est) return false;
+  const code = (est.code || '').toUpperCase();
+  const id = (est.id || '').toLowerCase();
+  const name = (est.name || '').toLowerCase();
+  const email = (est.email || '').toLowerCase();
+  return code === 'SSE-SN-2901' || id === 'etab-2901' || email === 'emf@gmail.com' || name.includes('métiers du futur') || name.includes('metiers du futur');
+}
+
 function isRealRegisteredEstablishment() {
   if (!currentEstablishment) return false;
   return Boolean(currentEstablishment.code || currentEstablishment.email || currentEstablishment.dateAdhesion);
@@ -5458,28 +5504,72 @@ function getEstablishmentActiveStudents(isDaara) {
   if (!isRealRegisteredEstablishment()) {
     return isDaara ? demoState.talibes : demoState.elevesScolaires;
   }
-  const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
-  const storageKey = isDaara ? `sse_talibes_${estKey}` : `sse_eleves_${estKey}`;
-  const stored = localStorage.getItem(storageKey);
-  if (stored !== null) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        // Assainissement strict : aucun nouvel élève ne doit avoir de fausse note pré-remplie
-        parsed.forEach(s => {
-          if (s.moyenne === 15.5 && (!s.notes || s.notes.length === 0)) {
-            s.moyenne = null;
-            s.rang = '--';
-          }
-          if (s.tajwidNote === 16.5 && (!s.notes || s.notes.length === 0)) {
-            s.tajwidNote = null;
-          }
-        });
-        return parsed;
+
+  // Vérifier si c'est l'École des Métiers du Futur
+  if (isEmfEstablishment(currentEstablishment)) {
+    const emfKeys = ['sse_eleves_SSE-SN-2901', 'sse_eleves_etab-2901', 'sse_eleves_emf@gmail.com'];
+    for (const k of emfKeys) {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch(e) {}
       }
-    } catch(e) {}
+    }
+    // Si pas encore initialisé dans le stockage de ce navigateur, enregistrer et retourner les 11 élèves officiels
+    saveEstablishmentActiveStudents(EMF_DEFAULT_STUDENTS, false);
+    return EMF_DEFAULT_STUDENTS;
   }
-  // OPTION A : 0 élève par défaut pour tout établissement réel
+
+  // Autres établissements réels
+  const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
+  const candidateKeys = [
+    isDaara ? `sse_talibes_${estKey}` : `sse_eleves_${estKey}`,
+    currentEstablishment.code ? `sse_${isDaara ? 'talibes' : 'eleves'}_${currentEstablishment.code}` : null,
+    currentEstablishment.id ? `sse_${isDaara ? 'talibes' : 'eleves'}_${currentEstablishment.id}` : null,
+    currentEstablishment.email ? `sse_${isDaara ? 'talibes' : 'eleves'}_${currentEstablishment.email}` : null
+  ].filter(Boolean);
+
+  for (const sk of candidateKeys) {
+    const stored = localStorage.getItem(sk);
+    if (stored !== null) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach(s => {
+            if (s.moyenne === 15.5 && (!s.notes || s.notes.length === 0)) {
+              s.moyenne = null;
+              s.rang = '--';
+            }
+            if (s.tajwidNote === 16.5 && (!s.notes || s.notes.length === 0)) {
+              s.tajwidNote = null;
+            }
+          });
+          return parsed;
+        }
+      } catch(e) {}
+    }
+  }
+
+  // Recherche dans le SaaS DB / ERP central si présent
+  try {
+    const sseDbRaw = localStorage.getItem('sse_saas_database');
+    if (sseDbRaw) {
+      const sseDb = JSON.parse(sseDbRaw);
+      if (Array.isArray(sseDb.eleves) && sseDb.eleves.length > 0) {
+        const matches = sseDb.eleves.filter(el => 
+          (currentEstablishment.id && el.etablissementId === currentEstablishment.id) ||
+          (currentEstablishment.code && (el.etablissementCode === currentEstablishment.code || el.code === currentEstablishment.code))
+        );
+        if (matches.length > 0) {
+          saveEstablishmentActiveStudents(matches, isDaara);
+          return matches;
+        }
+      }
+    }
+  } catch(e) {}
+
   return [];
 }
 
@@ -5487,7 +5577,31 @@ function saveEstablishmentActiveStudents(list, isDaara) {
   if (!currentEstablishment) return;
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
   const storageKey = isDaara ? `sse_talibes_${estKey}` : `sse_eleves_${estKey}`;
-  localStorage.setItem(storageKey, JSON.stringify(list));
+  const serialized = JSON.stringify(list);
+  localStorage.setItem(storageKey, serialized);
+
+  // Miroir systématique sur les clés candidates
+  if (currentEstablishment.code) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.code}` : `sse_eleves_${currentEstablishment.code}`, serialized);
+  if (currentEstablishment.id) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.id}` : `sse_eleves_${currentEstablishment.id}`, serialized);
+  if (currentEstablishment.email) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.email}` : `sse_eleves_${currentEstablishment.email}`, serialized);
+
+  if (isEmfEstablishment(currentEstablishment)) {
+    localStorage.setItem('sse_eleves_SSE-SN-2901', serialized);
+    localStorage.setItem('sse_eleves_etab-2901', serialized);
+    localStorage.setItem('sse_eleves_emf@gmail.com', serialized);
+  }
+
+  // Mettre à jour l'effectif sur l'objet établissement
+  currentEstablishment.effectif = list.length;
+  try {
+    localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+  } catch(e) {}
+
+  // Synchroniser les compteurs DOM si présents
+  const wsKpi = document.getElementById('wsKpiStudents');
+  if (wsKpi) wsKpi.textContent = list.length;
+  const wsBadge = document.getElementById('wsCountBadge');
+  if (wsBadge) wsBadge.textContent = list.length;
 }
 
 // 2. GESTION DES TRANSACTIONS DE CAISSE ISOLEES PAR ECOLE (Zéro fausse donnée)
@@ -5545,16 +5659,32 @@ function getEstablishmentTeachers() {
   if (!isRealRegisteredEstablishment()) {
     return demoState.hrTeachers || [];
   }
+
+  // Vérifier si c'est l'École des Métiers du Futur
+  if (isEmfEstablishment(currentEstablishment)) {
+    const emfKeys = ['sse_teachers_SSE-SN-2901', 'sse_teachers_etab-2901', 'sse_teachers_emf@gmail.com'];
+    for (const k of emfKeys) {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch(e) {}
+      }
+    }
+    saveEstablishmentTeachers([EMF_DEFAULT_TEACHER]);
+    return [EMF_DEFAULT_TEACHER];
+  }
+
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
   const storageKey = `sse_teachers_${estKey}`;
   const stored = localStorage.getItem(storageKey);
   if (stored !== null) {
     try {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     } catch(e) {}
   }
-  // Pour un nouvel établissement : 0 enseignant par défaut
   return [];
 }
 
@@ -5562,19 +5692,44 @@ function saveEstablishmentTeachers(list) {
   if (!currentEstablishment) return;
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
   const storageKey = `sse_teachers_${estKey}`;
-  localStorage.setItem(storageKey, JSON.stringify(list));
+  const serialized = JSON.stringify(list);
+  localStorage.setItem(storageKey, serialized);
+  if (currentEstablishment.code) localStorage.setItem(`sse_teachers_${currentEstablishment.code}`, serialized);
+  if (currentEstablishment.id) localStorage.setItem(`sse_teachers_${currentEstablishment.id}`, serialized);
+  if (isEmfEstablishment(currentEstablishment)) {
+    localStorage.setItem('sse_teachers_SSE-SN-2901', serialized);
+    localStorage.setItem('sse_teachers_etab-2901', serialized);
+    localStorage.setItem('sse_teachers_emf@gmail.com', serialized);
+  }
 }
 
 // 5. GESTION DES CLASSES ET NIVEAUX PEDAGOGIQUES PAR ECOLE (Zéro fausse donnée)
 function getEstablishmentClasses() {
   if (!currentEstablishment) return [];
+
+  // Vérifier si c'est l'École des Métiers du Futur
+  if (isEmfEstablishment(currentEstablishment)) {
+    const emfKeys = ['sse_classes_SSE-SN-2901', 'sse_classes_etab-2901', 'sse_classes_emf@gmail.com'];
+    for (const k of emfKeys) {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch(e) {}
+      }
+    }
+    saveEstablishmentClasses(EMF_DEFAULT_CLASSES);
+    return EMF_DEFAULT_CLASSES;
+  }
+
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
   const storageKey = `sse_classes_${estKey}`;
   const stored = localStorage.getItem(storageKey);
   if (stored !== null) {
     try {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     } catch(e) {}
   }
   
@@ -5597,7 +5752,15 @@ function saveEstablishmentClasses(list) {
   if (!currentEstablishment) return;
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
   const storageKey = `sse_classes_${estKey}`;
-  localStorage.setItem(storageKey, JSON.stringify(list));
+  const serialized = JSON.stringify(list);
+  localStorage.setItem(storageKey, serialized);
+  if (currentEstablishment.code) localStorage.setItem(`sse_classes_${currentEstablishment.code}`, serialized);
+  if (currentEstablishment.id) localStorage.setItem(`sse_classes_${currentEstablishment.id}`, serialized);
+  if (isEmfEstablishment(currentEstablishment)) {
+    localStorage.setItem('sse_classes_SSE-SN-2901', serialized);
+    localStorage.setItem('sse_classes_etab-2901', serialized);
+    localStorage.setItem('sse_classes_emf@gmail.com', serialized);
+  }
   const badge = document.getElementById('wsClassesBadge');
   if (badge) badge.textContent = list.length;
 }
@@ -6032,10 +6195,13 @@ function renderWsData(isDaara) {
 
   const activeStudents = getEstablishmentActiveStudents(isDaara);
   const totalCount = activeStudents.length;
+  const currentClasses = getEstablishmentClasses();
 
-  // 1. KPI Effectif Réel
+  // 1. KPI Effectif Réel & Classes
   if (document.getElementById('wsKpiStudents')) document.getElementById('wsKpiStudents').textContent = totalCount;
   if (document.getElementById('wsCountBadge')) document.getElementById('wsCountBadge').textContent = totalCount;
+  const wsClassesBadge = document.getElementById('wsClassesBadge');
+  if (wsClassesBadge) wsClassesBadge.textContent = currentClasses.length;
 
   // 2. KPI Recouvrement Réel (calculé à partir des écritures réelles)
   const txs = getEstablishmentTransactions();
@@ -11037,146 +11203,137 @@ function resolveTeacherProfile(keyInput, schoolName) {
     });
   }
 
-  // Détection pour M. Ousmane Niang (Professeur d'Anglais)
-  const isNiangExplicit = lower.includes('niang') || lower.includes('ousmane') || lower.includes('anglais') || lower.includes('english') || lower === 'ens-2026-01';
+  // Détection pour M. Ousmane Niang (Professeur d'Anglais) & École des Métiers du Futur
+  const isNiangExplicit = lower.includes('niang') || lower.includes('ousmane') || lower.includes('anglais') || lower.includes('english') || lower === 'ens-2026-01' || lower === 'ens_ousmane_niang';
   const isNiangMatched = matchedTeacher && (matchedTeacher.nom || '').toLowerCase().includes('niang');
+  const isCurrentEmf = isEmfEstablishment(currentEstablishment) || (schoolName && (schoolName.toLowerCase().includes('futur') || schoolName.toLowerCase().includes('emf')));
 
-  if (isNiangExplicit || isNiangMatched || (!matchedTeacher && !normKey)) {
-    const resolvedKey = normKey ? (normKey.toUpperCase().startsWith('ENS-') ? normKey.toUpperCase() : 'ENS-2026-01') : 'ENS-2026-01';
+  if (isNiangExplicit || isNiangMatched || isCurrentEmf || (!matchedTeacher && !normKey)) {
+    const resolvedKey = 'ENS-2026-01';
+    const resolvedSchool = 'École des Métiers du Futur';
+
+    // Synchroniser l'établissement courant sur l'École des Métiers du Futur si nécessaire
+    if (!currentEstablishment || !isEmfEstablishment(currentEstablishment)) {
+      currentEstablishment = {
+        id: "etab-2901",
+        code: "SSE-SN-2901",
+        secretKey: "ADM-2901",
+        name: "École des Métiers du Futur",
+        type: "ECOLE",
+        city: "Dakar",
+        phone: "771507878",
+        email: "emf@gmail.com",
+        directeurNom: "Directeur EMF",
+        plan: "Formule École Pro",
+        prixMensuel: 55000,
+        effectif: 11,
+        statut: "ACTIF",
+        statutAbonnement: "ACTIF",
+        fraisAdhesionPayes: true,
+        dateAdhesion: "2026-09-18",
+        echeanceAbonnement: "2026-11-30",
+        waveTransactionRef: "WAVE-2901-VALID"
+      };
+      try {
+        localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+      } catch(e) {}
+    }
 
     teacherDemoData.ECOLE = {
       name: 'M. Ousmane Niang',
       key: resolvedKey,
       subjects: 'Anglais (Collège & Lycée)',
-      school: schoolName,
+      school: resolvedSchool,
       avatar: '👨‍🏫',
-      stat1: { label: 'Élèves Assignés', value: '48 Élèves', sub: 'Classes : 6ème A & 3ème A' },
-      stat2: { label: 'Moyenne Générale Anglais', value: '14.85 / 20', sub: '1er Trimestre 2026-2027' },
-      stat3: { label: 'Pointage Présences Jour', value: '98.2%', sub: 'Tous les élèves présents' },
+      stat1: { label: 'Élèves Assignés', value: '11 Élèves', sub: '4 Classes : Terminale, 1ère, 2nde, 3ème' },
+      stat2: { label: 'Moyenne Générale Anglais', value: '15.45 / 20', sub: '1er Trimestre 2026-2027' },
+      stat3: { label: 'Pointage Présences Jour', value: '100%', sub: 'Tous les élèves présents' },
       classes: [
-        { id: '6A', label: '6ème A (Collège)' },
-        { id: '3A', label: '3ème A (Collège)' },
-        { id: '2ndeL', label: '2nde L (Lycée)' }
+        { id: 'cls_t', label: 'Terminale Numérique (Lab 1)' },
+        { id: 'cls_1', label: '1ère Informatique (Lab 2)' },
+        { id: 'cls_2', label: '2nde Technique (Salle 101)' },
+        { id: 'cls_3', label: '3ème A (Salle 102)' }
       ],
-      selectedClass: '6A',
+      selectedClass: 'cls_t',
       grades: [
-        { id: 'DIA-2026-001', name: 'Mouhamed Sow', matricule: 'DIA-2026-001', classId: '6A', subject: 'Anglais (Oral & Grammar)', grade: 16.5, coef: 3 },
-        { id: 'DIA-2026-002', name: 'Fatou Sow', matricule: 'DIA-2026-002', classId: '6A', subject: 'Anglais (Reading & Vocab)', grade: 14.5, coef: 3 },
-        { id: 'DIA-2026-003', name: 'Babacar Seck', matricule: 'DIA-2026-003', classId: '6A', subject: 'Anglais (Listening Comprehension)', grade: 11.0, coef: 3 },
-        { id: 'DIA-2026-004', name: 'Aïssatou Ba', matricule: 'DIA-2026-004', classId: '6A', subject: 'Anglais (Writing & Essay)', grade: 18.0, coef: 3 },
-        { id: 'DIA-2026-015', name: 'Cheikh Fall', matricule: 'DIA-2026-015', classId: '3A', subject: 'Anglais (Exam Prep BEPC)', grade: 15.0, coef: 3 },
-        { id: 'DIA-2026-016', name: 'Mariama Diop', matricule: 'DIA-2026-016', classId: '3A', subject: 'Anglais (Oral Fluency & Debate)', grade: 17.5, coef: 3 }
+        { id: 'EMF-2026-001', name: 'Moussa Diop', matricule: 'EMF-2026-001', classId: 'cls_t', subject: 'Anglais (Technique & Pro)', grade: 16.5, coef: 3 },
+        { id: 'EMF-2026-002', name: 'Fatou Binetou Ndiaye', matricule: 'EMF-2026-002', classId: 'cls_t', subject: 'Anglais (Compréhension & Oral)', grade: 15.8, coef: 3 },
+        { id: 'EMF-2026-003', name: 'Cheikh Ahmadou Fall', matricule: 'EMF-2026-003', classId: 'cls_t', subject: 'Anglais (Rédaction & Synthèse)', grade: 14.5, coef: 3 },
+        { id: 'EMF-2026-004', name: 'Aïssatou Sow', matricule: 'EMF-2026-004', classId: 'cls_1', subject: 'Anglais (IT & Tech Terms)', grade: 17.2, coef: 3 },
+        { id: 'EMF-2026-005', name: 'Ibrahima Ba', matricule: 'EMF-2026-005', classId: 'cls_1', subject: 'Anglais (Grammar & Lab)', grade: 13.5, coef: 3 },
+        { id: 'EMF-2026-006', name: 'Mariama Diallo', matricule: 'EMF-2026-006', classId: 'cls_1', subject: 'Anglais (Oral Communication)', grade: 16.0, coef: 3 },
+        { id: 'EMF-2026-007', name: 'Abdoulaye Seck', matricule: 'EMF-2026-007', classId: 'cls_2', subject: 'Anglais (General & Tech)', grade: 14.8, coef: 3 },
+        { id: 'EMF-2026-008', name: 'Khadija Gueye', matricule: 'EMF-2026-008', classId: 'cls_2', subject: 'Anglais (Reading & Vocab)', grade: 15.2, coef: 3 },
+        { id: 'EMF-2026-009', name: 'Modou Cissé', matricule: 'EMF-2026-009', classId: 'cls_3', subject: 'Anglais (Exam Prep BEPC)', grade: 16.8, coef: 3 },
+        { id: 'EMF-2026-010', name: 'Aminata Sy', matricule: 'EMF-2026-010', classId: 'cls_3', subject: 'Anglais (Grammar & Essay)', grade: 14.2, coef: 3 },
+        { id: 'EMF-2026-011', name: 'Ousmane Sarr', matricule: 'EMF-2026-011', classId: 'cls_3', subject: 'Anglais (Oral & Debate)', grade: 15.5, coef: 3 }
       ],
       appreciations: [
         {
-          studentId: 'DIA-2026-001',
-          name: 'Mouhamed Sow',
-          class: '6ème A',
+          studentId: 'EMF-2026-001',
+          name: 'Moussa Diop',
+          class: 'Terminale Numérique',
           currentNote: '16.5 / 20',
           rank: '1er en Anglais',
-          appreciation: "Excellent trimestre en Anglais ! Très bonne aisance à l'oral, vocabulaire riche et participation active aux débats de classe.",
+          appreciation: "Remarquable aisance en anglais technique et participation active aux projets numériques.",
           decision: "Félicitations du Conseil & Tableau d'Honneur",
-          lastUpdated: "Mis à jour il y a 1h"
+          lastUpdated: "Mis à jour récemment"
         },
         {
-          studentId: 'DIA-2026-002',
-          name: 'Fatou Sow',
-          class: '6ème A',
-          currentNote: '14.5 / 20',
-          rank: '5ème en Anglais',
-          appreciation: "Bon trimestre en Anglais. Compréhension de texte solide, continuer à pratiquer la prise de parole pour gagner en fluidité.",
+          studentId: 'EMF-2026-002',
+          name: 'Fatou Binetou Ndiaye',
+          class: 'Terminale Numérique',
+          currentNote: '15.8 / 20',
+          rank: '2ème en Anglais',
+          appreciation: "Très bon travail régulier et rigoureux, excellent niveau de compréhension.",
           decision: "Tableau d'Honneur",
           lastUpdated: "Mis à jour hier"
         },
         {
-          studentId: 'DIA-2026-003',
-          name: 'Babacar Seck',
-          class: '6ème A',
-          currentNote: '11.0 / 20',
-          rank: '18ème en Anglais',
-          appreciation: "Résultats moyens en Anglais. Doit consolider le vocabulaire et rendre les devoirs maison régulièrement.",
-          decision: "Encouragements du Conseil",
-          lastUpdated: "Mis à jour le 12 Septembre"
+          studentId: 'EMF-2026-004',
+          name: 'Aïssatou Sow',
+          class: '1ère Informatique',
+          currentNote: '17.2 / 20',
+          rank: '1ère en Anglais',
+          appreciation: "Brillante élève, vocabulaire IT et expression écrite impeccables.",
+          decision: "Félicitations du Conseil",
+          lastUpdated: "Mis à jour il y a 2h"
+        },
+        {
+          studentId: 'EMF-2026-009',
+          name: 'Modou Cissé',
+          class: '3ème A',
+          currentNote: '16.8 / 20',
+          rank: '1er en Anglais',
+          appreciation: "Très forte implication, préparation BEPC solide et assidue.",
+          decision: "Félicitations du Conseil",
+          lastUpdated: "Mis à jour il y a 1h"
         }
       ],
       attendance: [
-        {
-          studentId: 'DIA-2026-001',
-          name: 'Mouhamed Sow',
-          matricule: 'DIA-2026-001',
-          class: '6ème A',
-          status: 'PRESENT',
-          parentPhone: '+221 77 123 45 67',
-          parentName: 'Mme Aminata Diallo',
-          justification: "À l'heure en cours d'Anglais"
-        },
-        {
-          studentId: 'DIA-2026-002',
-          name: 'Fatou Sow',
-          matricule: 'DIA-2026-002',
-          class: '6ème A',
-          status: 'PRESENT',
-          parentPhone: '+221 77 123 45 67',
-          parentName: 'Mme Aminata Diallo',
-          justification: "À l'heure en cours d'Anglais"
-        },
-        {
-          studentId: 'DIA-2026-003',
-          name: 'Babacar Seck',
-          matricule: 'DIA-2026-003',
-          class: '6ème A',
-          status: 'PRESENT',
-          parentPhone: '+221 77 444 55 66',
-          parentName: 'M. Aliou Seck',
-          justification: "À l'heure en cours d'Anglais"
-        },
-        {
-          studentId: 'DIA-2026-004',
-          name: 'Aïssatou Ba',
-          matricule: 'DIA-2026-004',
-          class: '6ème A',
-          status: 'PRESENT',
-          parentPhone: '+221 78 555 44 33',
-          parentName: 'Mme Khady Ba',
-          justification: "À l'heure en cours d'Anglais"
-        }
+        { studentId: 'EMF-2026-001', name: 'Moussa Diop', matricule: 'EMF-2026-001', class: 'Terminale Numérique', status: 'PRESENT', parentPhone: '+221 77 150 78 78', parentName: 'M. Diop', justification: "Présent à l'heure en Anglais Technique" },
+        { studentId: 'EMF-2026-002', name: 'Fatou Binetou Ndiaye', matricule: 'EMF-2026-002', class: 'Terminale Numérique', status: 'PRESENT', parentPhone: '+221 77 234 56 78', parentName: 'Mme Ndiaye', justification: "Présente en cours d'Anglais" },
+        { studentId: 'EMF-2026-003', name: 'Cheikh Ahmadou Fall', matricule: 'EMF-2026-003', class: 'Terminale Numérique', status: 'PRESENT', parentPhone: '+221 77 345 67 89', parentName: 'M. Fall', justification: "Présent en cours d'Anglais" },
+        { studentId: 'EMF-2026-004', name: 'Aïssatou Sow', matricule: 'EMF-2026-004', class: '1ère Informatique', status: 'PRESENT', parentPhone: '+221 77 456 78 90', parentName: 'Mme Sow', justification: "Présente au Lab Informatique Anglais" },
+        { studentId: 'EMF-2026-005', name: 'Ibrahima Ba', matricule: 'EMF-2026-005', class: '1ère Informatique', status: 'PRESENT', parentPhone: '+221 77 567 89 01', parentName: 'M. Ba', justification: "Présent au cours d'Anglais" },
+        { studentId: 'EMF-2026-006', name: 'Mariama Diallo', matricule: 'EMF-2026-006', class: '1ère Informatique', status: 'PRESENT', parentPhone: '+221 77 678 90 12', parentName: 'Mme Diallo', justification: "Présente au cours d'Anglais" },
+        { studentId: 'EMF-2026-007', name: 'Abdoulaye Seck', matricule: 'EMF-2026-007', class: '2nde Technique', status: 'PRESENT', parentPhone: '+221 77 789 01 23', parentName: 'M. Seck', justification: "Présent en Salle 101" },
+        { studentId: 'EMF-2026-008', name: 'Khadija Gueye', matricule: 'EMF-2026-008', class: '2nde Technique', status: 'PRESENT', parentPhone: '+221 77 890 12 34', parentName: 'Mme Gueye', justification: "Présente en Salle 101" },
+        { studentId: 'EMF-2026-009', name: 'Modou Cissé', matricule: 'EMF-2026-009', class: '3ème A', status: 'PRESENT', parentPhone: '+221 77 901 23 45', parentName: 'M. Cissé', justification: "Présent en Salle 102" },
+        { studentId: 'EMF-2026-010', name: 'Aminata Sy', matricule: 'EMF-2026-010', class: '3ème A', status: 'PRESENT', parentPhone: '+221 78 112 34 56', parentName: 'Mme Sy', justification: "Présente en Salle 102" },
+        { studentId: 'EMF-2026-011', name: 'Ousmane Sarr', matricule: 'EMF-2026-011', class: '3ème A', status: 'PRESENT', parentPhone: '+221 78 223 45 67', parentName: 'M. Sarr', justification: "Présent en Salle 102" }
       ],
       homework: [
-        {
-          id: 201,
-          title: 'English Grammar : Irregular Verbs (Past Simple)',
-          class: '6ème A',
-          dueDate: '2026-09-24',
-          desc: 'Learn the first 25 irregular verbs page 42. Complete exercises 3 & 4 in workbook.',
-          status: '📢 Nouveau • Notifié'
-        },
-        {
-          id: 202,
-          title: 'Reading Comprehension : The Story of Sundiata Keïta',
-          class: '6ème A',
-          dueDate: '2026-09-28',
-          desc: 'Read the short text and answer the 5 comprehension questions in full sentences.',
-          status: 'En cours'
-        }
+        { id: 201, title: 'Technical English : Emerging Technologies & AI Systems', class: 'Terminale Numérique', dueDate: '2026-10-05', desc: 'Read chapter 3 on cloud computing terms and complete vocabulary synthesis.', status: '📢 Nouveau • Notifié' },
+        { id: 202, title: 'English Coding Vocabulary & Project Documentation', class: '1ère Informatique', dueDate: '2026-10-06', desc: 'Write a 150-word description of your database project in English.', status: 'En cours' },
+        { id: 203, title: 'Grammar & BEPC Exam Prep : Conditional Clauses', class: '3ème A', dueDate: '2026-10-08', desc: 'Complete exercises 4 and 5 in the workbook page 56.', status: '📢 Nouveau • Notifié' }
       ]
     };
 
     // Enregistrer M. Ousmane Niang dans les enseignants RH de l'école s'il n'existe pas encore
     const exists = teachers.some(t => (t.nom || '').toLowerCase().includes('niang'));
-    if (!exists && currentEstablishment) {
-      const newNiang = {
-        id: 'ens_ousmane_niang',
-        nom: 'M. Ousmane Niang',
-        matiere: 'Anglais (Collège & Lycée)',
-        classes: ['6ème A', '3ème A', '2nde L'],
-        volume: '20h / semaine',
-        contrat: 'CDI Titulaire',
-        salaire: 230000,
-        mat: resolvedKey,
-        tel: '+221 77 650 44 12',
-        ipres: true
-      };
-      teachers.unshift(newNiang);
+    if (!exists) {
+      teachers.unshift(EMF_DEFAULT_TEACHER);
       saveEstablishmentTeachers(teachers);
     }
   } else if (matchedTeacher) {
