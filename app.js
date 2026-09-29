@@ -406,6 +406,21 @@ function getBackendBaseUrl() {
 }
 
 function sendToCloudBackend(endpoint, payload) {
+  // 1. Synchronisation directe immédiate vers Supabase Cloud (Zero latence, disponible 24/7)
+  if (window.SSE_SUPABASE) {
+    try {
+      if (endpoint.includes('/clients/')) {
+        const parts = endpoint.split('/clients/')[1].split('/')[0];
+        window.SSE_SUPABASE.updateEtablissement(decodeURIComponent(parts), payload);
+      } else if ((endpoint.includes('/demandes') || endpoint.includes('/subscriptions')) && payload && payload.name) {
+        window.SSE_SUPABASE.saveEtablissement(payload);
+      }
+    } catch(errSup) {
+      console.warn('[App] Erreur Supabase:', errSup);
+    }
+  }
+
+  // 2. Synchronisation parallèle avec les API Netlify proxy et Render
   const base = getBackendBaseUrl();
   const urls = [];
   if (base) urls.push(`${base}${endpoint}`);

@@ -427,6 +427,32 @@ async function syncCloudEstablishments() {
   if (isSyncingCloud) return;
   isSyncingCloud = true;
 
+  // 0. SYNCHRONISATION PRIORITAIRE CLOUD SUPABASE (PostgreSQL En Ligne 24/7)
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getEtablissements === 'function') {
+    try {
+      const supaList = await window.SSE_SUPABASE.getEtablissements();
+      if (Array.isArray(supaList) && supaList.length > 0) {
+        supaList.forEach(be => {
+          if (!be || !be.name || isFakeDemoSchool(be)) return;
+          const idx = adminState.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
+          if (idx === -1) {
+            adminState.etablissements.unshift(be);
+          } else {
+            adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...be };
+          }
+        });
+        adminState.etablissements = adminState.etablissements.filter(e => 
+          e && e.name && !isFakeDemoSchool(e) && e.type !== 'SUPER_ADMIN' && e.code !== 'SSE-ADMIN-HQ'
+        );
+        isBackendActive = true;
+        updateCloudBadgeUI(true, 'Supabase Cloud (En Ligne)');
+        renderAdminViews();
+      }
+    } catch(errSup) {
+      console.warn('[Admin] Sync Supabase:', errSup);
+    }
+  }
+
   try {
     const base = getBackendBaseUrl();
     const urls = [];
@@ -1218,6 +1244,13 @@ function deleteEstablishmentHQ(idOrCode) {
   const etabCode = etab.code;
   const etabName = etab.name;
 
+  // Supprimer immédiatement de Supabase Cloud
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.deleteEtablissement === 'function') {
+    try {
+      window.SSE_SUPABASE.deleteEtablissement(etabId || etabCode);
+    } catch(errSup) {}
+  }
+
   // 1. Supprimer de l'état mémoire local de l'admin
   adminState.etablissements = adminState.etablissements.filter(e => 
     (etabId ? e.id !== etabId : true) && (etabCode ? e.code !== etabCode : true)
@@ -1488,6 +1521,15 @@ function saveAllToStorage(updatedEtab) {
       }
       localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
     } catch(e) {}
+
+    // 5. Sauvegarde immédiate dans Supabase Cloud (PostgreSQL 24/7)
+    if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.saveEtablissement === 'function') {
+      try {
+        window.SSE_SUPABASE.saveEtablissement(updatedEtab);
+      } catch(errSup) {
+        console.warn('[Admin] Erreur save Supabase:', errSup);
+      }
+    }
   } catch(e) {
     console.error("Erreur sauvegarde stockage:", e);
   }

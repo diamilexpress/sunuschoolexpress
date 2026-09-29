@@ -3,7 +3,7 @@
  * Cache-First Strategy pour fonctionnement 100% autonome sans Internet
  */
 
-const CACHE_NAME = 'sunuschool-pwa-v4.0.1';
+const CACHE_NAME = 'sunuschool-pwa-v4.0.2';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -13,8 +13,9 @@ const ASSETS_TO_CACHE = [
   './dashboard.css',
   './styles.css',
   './dashboard.js',
-  './app.js?v=4.0.1',
-  './admin.js?v=4.0.1',
+  './supabase-client.js',
+  './app.js?v=4.0.2',
+  './admin.js?v=4.0.2',
   './manifest.json',
   './assets/icons/favicon.svg',
   './assets/icons/app-download.png',

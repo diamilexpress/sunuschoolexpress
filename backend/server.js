@@ -31,6 +31,8 @@ if (fs.existsSync(envFile)) {
   }
 }
 
+const supabaseService = require('./supabaseService.js');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -1217,7 +1219,20 @@ app.get('/api/utilisateurs', (req, res) => {
 });
 
 // --- 8. SUPER ADMIN SAAS (SUIVI DES CLIENTS & ABONNEMENTS) ---
-app.get('/api/saas/clients', (req, res) => {
+app.get('/api/saas/clients', async (req, res) => {
+  try {
+    const cloudEtabs = await supabaseService.fetchEtablissementsFromSupabase();
+    if (Array.isArray(cloudEtabs) && cloudEtabs.length > 0) {
+      cloudEtabs.forEach(be => {
+        if (!be || !be.name) return;
+        const idx = db.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
+        if (idx === -1) db.etablissements.push(be);
+        else db.etablissements[idx] = { ...db.etablissements[idx], ...be };
+      });
+      saveDatabase(db);
+    }
+  } catch (err) {}
+
   const mrr = db.etablissements.reduce((acc, e) => acc + (Number(e.prixMensuel) || 0), 0);
   res.json({
     success: true,
@@ -1242,6 +1257,11 @@ app.post('/api/saas/clients/:id/status', (req, res) => {
     etab.fraisAdhesionPayes = true;
   }
   saveDatabase(db);
+
+  try {
+    supabaseService.updateEtablissementInSupabase(id, { statut, fraisAdhesionPayes: etab.fraisAdhesionPayes });
+  } catch (err) {}
+
   res.json({ success: true, message: `Statut mis à jour : ${statut}`, data: etab });
 });
 
@@ -1282,6 +1302,11 @@ const updateClientHandler = (req, res) => {
   });
 
   saveDatabase(db);
+
+  try {
+    supabaseService.updateEtablissementInSupabase(id, updates);
+  } catch (err) {}
+
   res.json({ success: true, message: 'Établissement mis à jour avec succès.', data: etab });
 };
 
@@ -1297,6 +1322,11 @@ app.delete('/api/saas/clients/:id', (req, res) => {
     db.eleves = db.eleves.filter(el => el.etablissementId !== id && el.etablissementCode !== id);
   }
   saveDatabase(db);
+
+  try {
+    supabaseService.deleteEtablissementFromSupabase(id);
+  } catch(err) {}
+
   res.json({ success: true, message: `Établissement ${id} supprimé du backend`, deletedCount: initialLength - db.etablissements.length });
 });
 
