@@ -2976,6 +2976,388 @@ html[data-theme="light"] .p-item-desc {
 }
 
 /* ==========================================================================
+   OFFICIAL SENEGAL MEN REPORT CARD (BULLETIN SENEGALAIS OFFICIEL 1:1)
+   ========================================================================== */
+.senegal-official-sheet {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 11px;
+  line-height: 1.3;
+  width: 100%;
+}
+
+.senegal-bulletin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 4px;
+}
+
+.senegal-header-flag {
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.senegal-header-center {
+  text-align: center;
+  flex: 1;
+  padding: 0 10px;
+}
+
+.senegal-hdr-republique {
+  font-size: 12px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.2;
+}
+
+.senegal-hdr-ministere {
+  font-size: 11px;
+  color: #111;
+  line-height: 1.2;
+}
+
+.senegal-hdr-etab {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000;
+  margin: 2px 0;
+  letter-spacing: 0.3px;
+}
+
+.senegal-hdr-annee {
+  font-size: 11px;
+  font-weight: 800;
+  color: #000;
+}
+
+.senegal-header-logo {
+  width: 90px;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.senegal-header-divider {
+  width: 100%;
+  height: 2px;
+  background: #000000;
+  margin: 6px 0 8px 0;
+}
+
+.senegal-id-section {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 14px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+}
+
+.senegal-id-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+}
+
+.senegal-id-row {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  color: #000;
+}
+
+.senegal-id-lbl {
+  font-weight: 500;
+  color: #222;
+  min-width: max-content;
+}
+
+.senegal-student-frame {
+  position: relative;
+  padding: 6px 12px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.senegal-student-frame .corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #000000;
+  border-style: solid;
+}
+
+.senegal-student-frame .corner-tl {
+  top: 0;
+  left: 0;
+  border-width: 1.5px 0 0 1.5px;
+}
+
+.senegal-student-frame .corner-tr {
+  top: 0;
+  right: 0;
+  border-width: 1.5px 1.5px 0 0;
+}
+
+.senegal-student-frame .corner-bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 1.5px 1.5px;
+}
+
+.senegal-student-frame .corner-br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.senegal-student-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+}
+
+.senegal-stud-line-split {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.senegal-title-banner {
+  width: 100%;
+  background: #C4C4C4 !important;
+  color: #000000 !important;
+  font-weight: 900;
+  text-align: center;
+  padding: 5px 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 8px 0;
+  border-radius: 0;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.senegal-bulletin-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 11px !important;
+  margin-bottom: 6px !important;
+  color: #000000 !important;
+}
+
+.senegal-bulletin-table th {
+  background: #C4C4C4 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  padding: 3.5px 5px !important;
+  border: 1px solid #777777 !important;
+  font-size: 11px !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.senegal-bulletin-table td {
+  padding: 3px 5px !important;
+  border: 1px solid #777777 !important;
+  color: #000000 !important;
+  font-size: 11px !important;
+}
+
+.senegal-table-totals-row td {
+  background: #C4C4C4 !important;
+  font-weight: 900 !important;
+  border: 1px solid #777777 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.senegal-summary-banner {
+  width: 100%;
+  background: #C4C4C4 !important;
+  color: #000000 !important;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.senegal-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 14px;
+  margin-bottom: 8px;
+  align-items: start;
+}
+
+.senegal-decisions-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 10px !important;
+}
+
+.senegal-decisions-table td {
+  border: 1px solid #777777 !important;
+  padding: 2.5px 4px !important;
+  color: #000000 !important;
+}
+
+.senegal-decisions-table .dec-lbl {
+  width: 40%;
+  text-align: left;
+}
+
+.senegal-decisions-table .dec-chk {
+  width: 10%;
+  text-align: center;
+  font-weight: 900;
+  font-family: monospace;
+  font-size: 12px;
+  color: #000;
+}
+
+.senegal-obs-box {
+  border: 1px solid #777777;
+  padding: 4px 8px;
+  min-height: 60px;
+  margin-bottom: 6px;
+  background: #FFFFFF;
+}
+
+.senegal-obs-header {
+  font-size: 10.5px;
+  font-weight: 800;
+  margin-bottom: 3px;
+  color: #000;
+}
+
+.senegal-obs-content {
+  font-size: 10px;
+  color: #111;
+  line-height: 1.35;
+}
+
+.senegal-signature-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.senegal-sig-title {
+  font-size: 11px;
+  font-weight: 900;
+  margin-bottom: 4px;
+  color: #000;
+}
+
+.senegal-official-stamp-circle {
+  border: 2px solid #1E40AF;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transform: rotate(-6deg);
+  color: #1E40AF;
+  font-size: 6.5px;
+  font-weight: 800;
+  line-height: 1.15;
+  padding: 4px;
+  background: rgba(30, 64, 175, 0.03);
+}
+
+.senegal-official-stamp-circle .stamp-txt-top {
+  font-size: 6px;
+  letter-spacing: 0.3px;
+}
+
+.senegal-official-stamp-circle .stamp-txt-mid {
+  font-size: 7px;
+  font-weight: 900;
+  margin: 2px 0;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.senegal-official-stamp-circle .stamp-txt-bot {
+  font-size: 6px;
+}
+
+.senegal-official-stamp-circle .stamp-check {
+  font-size: 6.5px;
+  color: #DC2626;
+  font-weight: 900;
+  margin-top: 2px;
+}
+
+.senegal-bulletin-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 6px;
+  padding-top: 4px;
+}
+
+.senegal-qr-block {
+  text-align: center;
+  font-size: 8.5px;
+  font-weight: 600;
+  color: #000;
+}
+
+.senegal-qr-label {
+  margin-bottom: 2px;
+}
+
+.senegal-qr-img {
+  width: 75px;
+  height: 75px;
+  display: block;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+}
+
+.senegal-nb-block {
+  flex: 1;
+  padding: 0 12px;
+  text-align: left;
+  font-size: 9px;
+  line-height: 1.35;
+  color: #000000;
+}
+
+.senegal-edition-strip {
+  width: 100%;
+  background: #C4C4C4 !important;
+  color: #000000 !important;
+  text-align: right;
+  font-size: 9px;
+  padding: 2.5px 8px;
+  margin-top: 6px;
+  font-weight: 600;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* ==========================================================================
    SIMULATEUR WHATSAPP & SMS EN DIRECT
    ========================================================================== */
 .whatsapp-sim-wrapper {
@@ -5017,47 +5399,83 @@ html[data-theme="light"] .ws-etab-selector {
     print-color-adjust: exact !important;
   }
 
-  /* 5. Mise en page spécifique : Bulletin Trimestriel Scolaire */
+  /* 5. Mise en page spécifique : Bulletin Officiel Sénégalais (MEN 1:1) */
   #bulletinModal.active .modal-card,
   body.printing-bulletin #bulletinModal .modal-card {
-    border: 2px solid #0A192F !important;
-    border-radius: 8px !important;
-    padding: 1.4rem !important;
-    margin: 0 auto !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    background: #FFFFFF !important;
     page-break-inside: avoid !important;
   }
 
-  #bulletinModal.active table,
-  body.printing-bulletin #bulletinModal table {
+  #bulletinModal.active #bulletinFullContent,
+  body.printing-bulletin #bulletinModal #bulletinFullContent {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  #bulletinModal.active .senegal-title-banner,
+  body.printing-bulletin #bulletinModal .senegal-title-banner,
+  #bulletinModal.active .senegal-summary-banner,
+  body.printing-bulletin #bulletinModal .senegal-summary-banner,
+  #bulletinModal.active .senegal-edition-strip,
+  body.printing-bulletin #bulletinModal .senegal-edition-strip {
+    background: #C4C4C4 !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #bulletinModal.active .senegal-bulletin-table,
+  body.printing-bulletin #bulletinModal .senegal-bulletin-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 1.2rem !important;
+    margin-bottom: 6px !important;
   }
 
-  #bulletinModal.active th,
-  body.printing-bulletin #bulletinModal th {
-    background: #0A192F !important;
-    color: #FFFFFF !important;
-    border: 1px solid #0A192F !important;
-    padding: 0.55rem 0.75rem !important;
+  #bulletinModal.active .senegal-bulletin-table th,
+  body.printing-bulletin #bulletinModal .senegal-bulletin-table th {
+    background: #C4C4C4 !important;
+    color: #000000 !important;
+    border: 1px solid #777777 !important;
+    padding: 3px 5px !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  #bulletinModal.active td,
-  body.printing-bulletin #bulletinModal td {
-    border: 1px solid #CBD5E1 !important;
-    padding: 0.5rem 0.75rem !important;
-    color: #1A1A1A !important;
+  #bulletinModal.active .senegal-bulletin-table td,
+  body.printing-bulletin #bulletinModal .senegal-bulletin-table td {
+    border: 1px solid #777777 !important;
+    padding: 2.5px 5px !important;
+    color: #000000 !important;
   }
 
-  #bulletinModal.active .bulletin-official-stamp,
-  body.printing-bulletin #bulletinModal .bulletin-official-stamp {
-    border: 2px solid #D4AF37 !important;
-    background: rgba(212, 175, 55, 0.05) !important;
-    box-shadow: none !important;
+  #bulletinModal.active .senegal-table-totals-row td,
+  body.printing-bulletin #bulletinModal .senegal-table-totals-row td {
+    background: #C4C4C4 !important;
+    color: #000000 !important;
+    font-weight: 900 !important;
+    border: 1px solid #777777 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  #bulletinModal.active .senegal-decisions-table td,
+  body.printing-bulletin #bulletinModal .senegal-decisions-table td {
+    border: 1px solid #777777 !important;
+    padding: 2.5px 4px !important;
+    color: #000000 !important;
+  }
+
+  #bulletinModal.active #bulletinPublishedBadgeRow,
+  body.printing-bulletin #bulletinModal #bulletinPublishedBadgeRow {
+    display: none !important;
   }
 
   /* 6. Mise en page spécifique : Emploi du Temps Officiel Imprimable */

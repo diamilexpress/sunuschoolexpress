@@ -2185,10 +2185,10 @@
     </div>
   </div>
 
-  <!-- Modal 3 : Bulletin de Notes Scolaire Officiel Personnalisé -->
+  <!-- Modal 3 : Bulletin de Notes Scolaire Officiel Sénégalais (Conforme MEN & SIMEN) -->
   <div id="bulletinModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 720px; background: #FFF; color: #1A1A1A;">
-      <button class="modal-close-btn" style="background: #E2E8F0; color: #1A1A1A;" onclick="closeAllModals()">✕</button>
+    <div class="modal-card" style="max-width: 820px; background: #FFFFFF; color: #000000; padding: 1.5rem; border-radius: 6px; box-shadow: 0 10px 35px rgba(0,0,0,0.35);">
+      <button class="modal-close-btn no-print" style="background: #E2E8F0; color: #1A1A1A;" onclick="closeAllModals()">✕</button>
 
       <!-- Vue Verrouillée pour Élève / Parent (Avant la date officielle de publication) -->
       <div id="bulletinLockedNotice" class="bulletin-locked-screen" style="display: none;">
@@ -2216,150 +2216,238 @@
         </div>
       </div>
 
-      <!-- Contenu Complet du Bulletin Officiel (Débloqué) -->
+      <!-- Contenu Complet du Bulletin Officiel (Débloqué - Conforme MEN Sénégal 1:1) -->
       <div id="bulletinFullContent">
-        <!-- Bannière Statut Publication -->
-        <div id="bulletinPublishedBadgeRow" style="display: flex; justify-content: space-between; align-items: center; background: #ECFDF5; border: 1px solid #10B981; padding: 0.5rem 0.9rem; border-radius: 6px; margin-bottom: 0.9rem; font-size: 0.82rem; color: #065F46; font-weight: 700;">
-          <span>✅ Bulletin Officiellement Publié &amp; Accessible aux Familles</span>
-          <span style="font-size: 0.76rem; color: #047857;" id="bulletinPublishedDateLabel">Publication autorisée</span>
+        <!-- Bannière Statut Publication (Interface écran uniquement) -->
+        <div id="bulletinPublishedBadgeRow" class="no-print" style="display: flex; justify-content: space-between; align-items: center; background: #ECFDF5; border: 1px solid #10B981; padding: 0.45rem 0.85rem; border-radius: 4px; margin-bottom: 0.8rem; font-size: 0.8rem; color: #065F46; font-weight: 700;">
+          <span>✅ Bulletin Officiellement Publié &amp; Conforme Ministère de l'Éducation Nationale (Sénégal)</span>
+          <span style="font-size: 0.75rem; color: #047857;" id="bulletinPublishedDateLabel">Publication autorisée</span>
         </div>
 
-        <!-- En-tête Officiel avec Nom & Logo Personnalisés de l'Établissement -->
-        <div style="border-bottom: 2px solid #0A192F; padding-bottom: 1.1rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
-          <div style="display: flex; gap: 0.9rem; align-items: center;">
-            <div style="font-size: 2.4rem; line-height: 1;" id="bulletinSchoolLogo">🏫</div>
+        <div class="senegal-official-sheet">
+          <!-- 1. En-tête Officiel Sénégal (3 Colonnes + Filet Noir) -->
+          <div class="senegal-bulletin-header">
+            <!-- Drapeau national du Sénégal -->
+            <div class="senegal-header-flag">
+              <svg width="84" height="54" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" style="border: 1px solid #999; display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
+                <rect width="300" height="600" fill="#00853F"/>
+                <rect x="300" width="300" height="600" fill="#FDEF42"/>
+                <rect x="600" width="300" height="600" fill="#E31B23"/>
+                <polygon points="450,210 479,300 574,300 497,356 526,446 450,390 374,446 403,356 326,300 421,300" fill="#00853F"/>
+              </svg>
+            </div>
+
+            <!-- Textes Centraux du Ministère et de l'Établissement -->
+            <div class="senegal-header-center">
+              <div class="senegal-hdr-republique">République du Sénégal</div>
+              <div class="senegal-hdr-ministere" id="bulletinSchoolMinistry">Ministère de l'Education nationale</div>
+              <div class="senegal-hdr-etab" id="bulletinSchoolName">LYCEE DOUMGA OURO ALPHA</div>
+              <div class="senegal-hdr-annee">ANNEE SCOLAIRE: <span id="bulletinSchoolYear">2025-2026</span></div>
+            </div>
+
+            <!-- Logo Officiel MEN / SIMEN -->
+            <div class="senegal-header-logo">
+              <svg width="84" height="64" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="border: 1.2px solid #000; padding: 2px; background: #FFF;">
+                <!-- Silhouette profil humain tête rouge (MEN Sénégal) -->
+                <path d="M 12 78 C 14 62 18 50 25 40 C 32 30 40 20 48 18 C 55 16 62 18 67 22 C 72 26 73 34 71 40 C 69 46 64 48 64 54 C 64 58 70 61 74 65 C 76 67 78 72 79 78" stroke="#E31B23" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <!-- Cahier / Livre rayé bleu à droite -->
+                <rect x="85" y="16" width="24" height="60" fill="none" stroke="#1D4ED8" stroke-width="1.8"/>
+                <line x1="88" y1="23" x2="106" y2="23" stroke="#1D4ED8" stroke-width="1.5"/>
+                <line x1="88" y1="30" x2="106" y2="30" stroke="#1D4ED8" stroke-width="1.5"/>
+                <line x1="88" y1="37" x2="106" y2="37" stroke="#1D4ED8" stroke-width="1.5"/>
+                <line x1="88" y1="44" x2="106" y2="44" stroke="#1D4ED8" stroke-width="1.5"/>
+                <line x1="88" y1="51" x2="106" y2="51" stroke="#1D4ED8" stroke-width="1.5"/>
+                <line x1="88" y1="58" x2="106" y2="58" stroke="#1D4ED8" stroke-width="1.5"/>
+                <line x1="88" y1="65" x2="106" y2="65" stroke="#1D4ED8" stroke-width="1.5"/>
+                <line x1="88" y1="71" x2="106" y2="71" stroke="#1D4ED8" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="senegal-header-divider"></div>
+
+          <!-- 2. Bloc Identification (Établissement à gauche & Élève avec crochets à droite) -->
+          <div class="senegal-id-section">
+            <div class="senegal-id-left">
+              <div class="senegal-id-row"><span class="senegal-id-lbl">Tel:</span> <strong id="bulletinSchoolPhone">338763102</strong></div>
+              <div class="senegal-id-row"><span class="senegal-id-lbl">Email:</span> <strong id="bulletinSchoolEmail">lyceedoa2@yahoo.com</strong></div>
+              <div class="senegal-id-row"><span class="senegal-id-lbl">Niveau:</span> <strong id="bulletinNiveau">SECONDE</strong></div>
+              <div class="senegal-id-row"><span class="senegal-id-lbl">Série:</span> <strong id="bulletinSerie">S</strong></div>
+              <div class="senegal-id-row"><span class="senegal-id-lbl">Effectif:</span> <strong id="bulletinEffectif">8</strong></div>
+              <div class="senegal-id-row"><span class="senegal-id-lbl">Moyenne classe:</span> <strong id="bulletinMoyenneClasse">14.97</strong></div>
+            </div>
+
+            <div class="senegal-student-frame">
+              <div class="corner corner-tl"></div>
+              <div class="corner corner-tr"></div>
+              <div class="corner corner-bl"></div>
+              <div class="corner corner-br"></div>
+              <div class="senegal-student-content">
+                <div class="senegal-stud-line-split">
+                  <div><span class="senegal-id-lbl">IEN:</span> <strong id="bulletinIEN">T_6C7PG</strong></div>
+                  <div><span class="senegal-id-lbl">SEXE:</span> <strong id="bulletinSexe">FEMININ</strong></div>
+                </div>
+                <div class="senegal-id-row"><span class="senegal-id-lbl">Classe:</span> <strong id="bulletinClasse">2S</strong></div>
+                <div class="senegal-id-row"><span class="senegal-id-lbl">Classe doublée:</span> <strong id="bulletinClasseDoublee">NEANT</strong></div>
+                <div class="senegal-id-row"><span class="senegal-id-lbl">Prénom(s):</span> <strong id="bulletinStudentPrenom">AMINATA</strong></div>
+                <div class="senegal-id-row"><span class="senegal-id-lbl">Nom:</span> <strong id="bulletinStudentNom">KANE</strong></div>
+                <div class="senegal-id-row"><span class="senegal-id-lbl">Né(e) le:</span> <strong id="bulletinBirthDate">04-09-2009</strong> à <strong id="bulletinBirthPlace">DOUMGA OURO ALPHA</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Daara Moderne (Optionnelle selon type d'établissement) -->
+          <div id="bulletinDaaraSpecialBox" style="display: none; background: #F8FAFC; border: 1px dashed #008775; padding: 4px 8px; margin-bottom: 6px; font-size: 10px;">
+            <div style="font-weight: 800; color: #008775;">🕌 VOLET SPÉCIFIQUE CURRICULUM CORANIQUE &amp; INTERNAT DAARA :</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 4px; margin-top: 2px;">
+              <div>Hizb : <strong id="bulletinDaaraHizb">Hizb 38 (Al-Ahqaf)</strong></div>
+              <div>Planche (Allwa) : <strong id="bulletinDaaraAllwa">Validée avec Distinction</strong></div>
+              <div>Prières &amp; Fajr : <strong id="bulletinDaaraPrayers">100% Assidu</strong></div>
+              <div>Internat : <strong id="bulletinDaaraDorm">Dortoir 2</strong></div>
+            </div>
+          </div>
+
+          <!-- 3. Bandeau Titre Officiel Gris -->
+          <div class="senegal-title-banner" id="bulletinTitleBanner">
+            BULLETIN DU PREMIER SEMESTRE
+          </div>
+
+          <!-- 4. Tableau des 8 Colonnes Officielles Conforme Sénégal -->
+          <table class="senegal-bulletin-table">
+            <thead>
+              <tr>
+                <th style="text-align: left; width: 33%;">Disciplines</th>
+                <th style="text-align: center; width: 9%;">Devoirs</th>
+                <th style="text-align: center; width: 9%;">Compos</th>
+                <th style="text-align: center; width: 9%;">Moy</th>
+                <th style="text-align: center; width: 8%;">Coeff</th>
+                <th style="text-align: center; width: 10%;">MoyxCoef</th>
+                <th style="text-align: center; width: 7%;">Rang</th>
+                <th style="text-align: left; width: 15%;">Appréciations</th>
+              </tr>
+            </thead>
+            <tbody id="bulletinGradesTableBody">
+              <!-- Rempli dynamiquement -->
+            </tbody>
+            <tfoot id="bulletinGradesTableFoot">
+              <tr class="senegal-table-totals-row">
+                <td colspan="4" style="font-weight: 800; text-align: left; padding-left: 6px;">Totaux</td>
+                <td id="bulletinTotalCoeff" style="text-align: center; font-weight: 800;">27</td>
+                <td id="bulletinTotalMoyxCoef" style="text-align: center; font-weight: 800;">313.25</td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- 5. Bandeau Résumé Moyenne & Assiduité -->
+          <div class="senegal-summary-banner">
+            <div>Moyenne: <strong id="bulletinMoyenne">11.60</strong></div>
+            <div>Rang: <strong id="bulletinRang">8</strong></div>
+            <div>Retards: <strong id="bulletinRetards">0 heure(s) 0 minute(s)</strong></div>
+            <div>Absences: <strong id="bulletinAbsences">0 dont 0 justifiée(s)</strong></div>
+          </div>
+
+          <!-- 6. Bloc Décisions (Checklist) & Observations du Conseil -->
+          <div class="senegal-bottom-grid">
+            <!-- Grille des Décisions avec cases cochées [x] -->
             <div>
-              <h3 style="color: #0A192F; font-size: 1.2rem; line-height: 1.2; margin-bottom: 0.2rem;">RÉPUBLIQUE DU SÉNÉGAL</h3>
-              <div style="font-size: 0.76rem; color: #475569;" id="bulletinSchoolMinistry">Ministère de l'Éducation Nationale • Inspection d'Académie</div>
-              <div style="font-weight: 800; font-size: 1.15rem; color: #008775; margin-top: 0.25rem;" id="bulletinSchoolName">Mon Établissement</div>
-              <div style="font-size: 0.72rem; color: #64748B;" id="bulletinSchoolDetails">Dakar • Code : SSE-SN-1786 • Année Scolaire 2026-2027</div>
+              <table class="senegal-decisions-table">
+                <tbody>
+                  <tr>
+                    <td class="dec-lbl">Travail excellent</td>
+                    <td class="dec-chk" id="chkTravailExcellent"></td>
+                    <td class="dec-lbl">Félicitations</td>
+                    <td class="dec-chk" id="chkFelicitations"></td>
+                  </tr>
+                  <tr>
+                    <td class="dec-lbl">Satisfaisant doit continuer</td>
+                    <td class="dec-chk" id="chkSatisfaisant"></td>
+                    <td class="dec-lbl">Encouragements</td>
+                    <td class="dec-chk" id="chkEncouragements"></td>
+                  </tr>
+                  <tr>
+                    <td class="dec-lbl">Peut mieux faire</td>
+                    <td class="dec-chk" id="chkPeutMieuxFaire">x</td>
+                    <td class="dec-lbl">Tableau d'honneur</td>
+                    <td class="dec-chk" id="chkTableauHonneur"></td>
+                  </tr>
+                  <tr>
+                    <td class="dec-lbl">Insuffisant</td>
+                    <td class="dec-chk" id="chkInsuffisant"></td>
+                    <td class="dec-lbl">Passable</td>
+                    <td class="dec-chk" id="chkPassable">x</td>
+                  </tr>
+                  <tr>
+                    <td class="dec-lbl">Risque de redoubler</td>
+                    <td class="dec-chk" id="chkRisqueRedoubler"></td>
+                    <td class="dec-lbl">Doit redoubler d'effort</td>
+                    <td class="dec-chk" id="chkDoitRedoublerEffort"></td>
+                  </tr>
+                  <tr>
+                    <td class="dec-lbl">Risque l'exclusion</td>
+                    <td class="dec-chk" id="chkRisqueExclusion"></td>
+                    <td class="dec-lbl">Avertissement</td>
+                    <td class="dec-chk" id="chkAvertissement"></td>
+                  </tr>
+                  <tr>
+                    <td class="dec-lbl"></td>
+                    <td class="dec-chk"></td>
+                    <td class="dec-lbl">Blâme</td>
+                    <td class="dec-chk" id="chkBlame"></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-          <div style="text-align: right; flex-shrink: 0;">
-            <div style="font-weight: 800; color: #B45309; font-size: 0.95rem;" id="bulletinDocTypeTitle">BULLETIN TRIMESTRIEL</div>
-            <div style="font-size: 0.76rem; color: #64748B;" id="bulletinDocPeriodTitle">1er Trimestre 2026-2027</div>
-            <div style="margin-top: 0.35rem;"><span class="badge-tag badge-excellent" id="bulletinDocBadge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;">DOCUMENT OFFICIEL</span></div>
-          </div>
-        </div>
 
-        <!-- Informations de l'Élève -->
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.85rem 1.1rem; margin-bottom: 1.2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; font-size: 0.88rem;">
-          <div>Élève : <strong id="bulletinStudentName" style="color: #0A192F;">Aïssatou Diop</strong></div>
-          <div>Matricule : <strong id="bulletinMatricule" style="color: #008775;">EXC-2026-015</strong></div>
-          <div>Classe : <strong id="bulletinClasse">CM2 A</strong></div>
-          <div>Effectif total : <strong>38 Élèves</strong></div>
-        </div>
-
-        <!-- Encadré Spécifique Daara Moderne & Internat (Hifz, Allwa, Prières, Dortoir) -->
-        <div id="bulletinDaaraSpecialBox" style="display: none; background: linear-gradient(135deg, rgba(0, 210, 180, 0.08), rgba(212, 175, 55, 0.08)); border: 1.5px solid rgba(0, 210, 180, 0.35); border-radius: 8px; padding: 0.9rem 1.1rem; margin-bottom: 1.2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px dashed rgba(0, 210, 180, 0.25); padding-bottom: 0.4rem; flex-wrap: wrap; gap: 0.4rem;">
-            <div style="font-weight: 800; color: #008775; font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem;">
-              <span>🕌</span> SUIVI SPÉCIALISÉ CORANIQUE &amp; INTERNAT DAARA MODERNE
-            </div>
-            <span class="badge-tag" style="background: rgba(212, 175, 55, 0.15); color: #B45309; font-size: 0.72rem;">Curriculum Hifz, Tajwîd &amp; Franco-Arabe</span>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.7rem; font-size: 0.82rem;">
+            <!-- Observations et Signature / Cachet -->
             <div>
-              <span style="color: #64748B;">Progression Coranique :</span><br>
-              <strong style="color: #0A192F;" id="bulletinDaaraHizb">Hizb 38 (Al-Ahqaf) • Tajwîd A+</strong>
+              <div class="senegal-obs-box">
+                <div class="senegal-obs-header"><u>Observations du conseil des professeurs</u></div>
+                <div class="senegal-obs-content" id="bulletinCouncilRemarks">
+                  Élève sérieuse et investie. Doit intensifier ses efforts dans les disciplines scientifiques pour progresser.
+                </div>
+              </div>
+              <div class="senegal-signature-area">
+                <div class="senegal-sig-title"><u>Le Chef d'établissement</u></div>
+                <div class="senegal-official-stamp-circle">
+                  <div class="stamp-txt-top">RÉPUBLIQUE DU SÉNÉGAL</div>
+                  <div class="stamp-txt-mid" id="bulletinStampName">LYCEE DOUMGA OURO ALPHA</div>
+                  <div class="stamp-txt-bot" id="bulletinStampRole">LE CHEF D'ÉTABLISSEMENT</div>
+                  <div class="stamp-check">★ VISA &amp; SCEAU ★</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <span style="color: #64748B;">Évaluation Planche (Allwa) :</span><br>
-              <strong style="color: #008775;" id="bulletinDaaraAllwa">Validée avec Distinction (Rasm Uthmâni)</strong>
+          </div>
+
+          <!-- 7. Pied de Page Officiel avec QR Codes et Mention Légale -->
+          <div class="senegal-bulletin-footer">
+            <div class="senegal-qr-block">
+              <div class="senegal-qr-label">Informations Elève</div>
+              <img id="bulletinStudentQr" class="senegal-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=85x85&amp;data=ELEVE-INFO" alt="QR Code Informations Elève" onerror="this.src='https://quickchart.io/qr?text=ELEVE-INFO&amp;size=85';">
             </div>
-            <div>
-              <span style="color: #64748B;">Assiduité Prières &amp; Fajr :</span><br>
-              <strong style="color: #10B981;" id="bulletinDaaraPrayers">100% (0 retard, 0 absence aux cercles)</strong>
+
+            <div class="senegal-nb-block">
+              <strong>N.B.:</strong> Ce bulletin n'est délivré qu'une seule fois. Toute demande de duplicata pourrait faire l'objet d'une contrepartie financière.
             </div>
-            <div>
-              <span style="color: #64748B;">Régime &amp; Hébergement :</span><br>
-              <strong style="color: #B45309;" id="bulletinDaaraDorm">Internat Complet • Dortoir 2 (Chambre Al-Azhar)</strong>
+
+            <div class="senegal-qr-block">
+              <div class="senegal-qr-label">Ouvrir le bulletin</div>
+              <img id="bulletinDocQr" class="senegal-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=85x85&amp;data=BULLETIN-VERIF" alt="QR Code Ouvrir le bulletin" onerror="this.src='https://quickchart.io/qr?text=BULLETIN-VERIF&amp;size=85';">
             </div>
+          </div>
+
+          <!-- Bandeau Date et Heure d'Édition -->
+          <div class="senegal-edition-strip">
+            Ce bulletin est édité le <span id="bulletinEditDate">04-05-2026 à 08:51:55</span>
           </div>
         </div>
 
-        <!-- Relevé des Notes par Matière -->
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 1.2rem;">
-          <thead>
-            <tr style="background: #0A192F; color: #FFF;">
-              <th style="padding: 0.65rem 0.8rem; text-align: left;" id="bulletinTableDisciplineHeader">Discipline</th>
-              <th style="padding: 0.65rem 0.6rem; text-align: center;">Coef</th>
-              <th style="padding: 0.65rem 0.6rem; text-align: center;">Note / 20</th>
-              <th style="padding: 0.65rem 0.6rem; text-align: center;">Rang</th>
-              <th style="padding: 0.65rem 0.8rem; text-align: left;">Appréciation de l'Enseignant</th>
-            </tr>
-          </thead>
-          <tbody id="bulletinGradesTableBody">
-            <tr style="border-bottom: 1px solid #E2E8F0;">
-              <td style="padding: 0.55rem 0.8rem; font-weight: 600;">Français &amp; Expression Écrite</td>
-              <td style="text-align: center;">3</td>
-              <td style="text-align: center; font-weight: 800; color: #0A192F;">17.5</td>
-              <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1ère</span></td>
-              <td style="color: #334155;">Très bonne maîtrise de la syntaxe et de la grammaire</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #E2E8F0;">
-              <td style="padding: 0.55rem 0.8rem; font-weight: 600;">Mathématiques &amp; Calcul</td>
-              <td style="text-align: center;">3</td>
-              <td style="text-align: center; font-weight: 800; color: #0A192F;">18.5</td>
-              <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1ère</span></td>
-              <td style="color: #334155;">Excellent esprit logique, raisonnements rigoureux</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #E2E8F0;">
-              <td style="padding: 0.55rem 0.8rem; font-weight: 600;">Arabe &amp; Éducation Islamique</td>
-              <td style="text-align: center;">2</td>
-              <td style="text-align: center; font-weight: 800; color: #0A192F;">19.0</td>
-              <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1ère</span></td>
-              <td style="color: #334155;">Macha Allah, récitation coranique et adab impeccables</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #E2E8F0;">
-              <td style="padding: 0.55rem 0.8rem; font-weight: 600;">Histoire, Géographie &amp; Initiation</td>
-              <td style="text-align: center;">2</td>
-              <td style="text-align: center; font-weight: 800; color: #0A192F;">16.5</td>
-              <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-              <td style="color: #334155;">Très bon travail régulier et participation active</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Résumé Moyenne Générale -->
-        <div style="background: #F1F5F9; border-radius: 8px; padding: 1rem 1.4rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
-          <div>
-            <div style="font-size: 0.78rem; color: #64748B; font-weight: 700;">MOYENNE GÉNÉRALE DU TRIMESTRE</div>
-            <div style="font-size: 1.9rem; font-weight: 900; color: #0A192F;" id="bulletinMoyenne">17.85 / 20</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 0.78rem; color: #64748B; font-weight: 700;">RANG DANS LA CLASSE</div>
-            <div style="font-size: 1.3rem; font-weight: 800; color: #D4AF37;" id="bulletinRang">1ère sur 38 élèves</div>
-          </div>
-        </div>
-
-        <!-- Avis du Conseil des Maîtres & Cachet Numérique Officiel Personnalisé -->
-        <div style="display: grid; grid-template-columns: 1fr 240px; gap: 1.2rem; border-top: 1px dashed #CBD5E1; padding-top: 1rem; margin-bottom: 1.4rem; align-items: center;">
-          <div style="font-size: 0.82rem; color: #334155; line-height: 1.5;">
-            <div style="font-weight: 700; color: #0A192F; margin-bottom: 0.35rem;" id="bulletinCouncilLabel">Avis du Conseil des Enseignants :</div>
-            <div style="background: #F0FDF4; border-left: 3px solid #10B981; padding: 0.55rem 0.85rem; border-radius: 4px; font-style: italic; color: #065F46;" id="bulletinCouncilRemarks">
-              « Travail remarquable et constant. Félicitations unanimes du Conseil et Tableau d'Honneur décerné. »
-            </div>
-            <div style="font-size: 0.72rem; color: #64748B; margin-top: 0.5rem;">
-              Plateforme technique certifiée : <strong style="color: #00A884;">SunuSchoolExpress 🇸🇳</strong>
-            </div>
-          </div>
-
-          <!-- Cachet Numérique Certifié au Nom Spécifique de l'Établissement -->
-          <div class="bulletin-official-stamp">
-            <div class="bulletin-stamp-republique">RÉPUBLIQUE DU SÉNÉGAL</div>
-            <div class="bulletin-stamp-name" id="bulletinStampName">Mon Établissement</div>
-            <div class="bulletin-stamp-role" id="bulletinStampRole">DIRECTION DES ÉTUDES</div>
-            <div class="bulletin-stamp-badge">✓ CERTIFIÉ &amp; VALIDÉ</div>
-            <div class="bulletin-stamp-date" id="bulletinStampDate">Dakar, Session 2026-2027</div>
-          </div>
-        </div>
-
-        <div class="bulletin-actions-footer no-print" style="display: flex; gap: 1rem;">
-          <button class="btn btn-outline" style="flex: 1; border-color: #0A192F; color: #0A192F;" onclick="window.print()">
+        <div class="bulletin-actions-footer no-print" style="display: flex; gap: 1rem; margin-top: 1.2rem;">
+          <button class="btn btn-outline" style="flex: 1; border-color: #0A192F; color: #0A192F; font-weight: 700;" onclick="window.print()">
             🖨️ Télécharger / Imprimer Bulletin PDF
           </button>
-          <button class="btn btn-primary" style="flex: 1;" onclick="closeAllModals()">
+          <button class="btn btn-primary" style="flex: 1; font-weight: 700;" onclick="closeAllModals()">
             Fermer
           </button>
         </div>
@@ -5735,6 +5823,6 @@
 
   <!-- Script d'interaction & Supabase Cloud Sync -->
   <script src="supabase-client.js"></script>
-  <script src="app.js?v=4.0.6"></script>
+  <script src="app.js?v=4.0.7"></script>
 </body>
 </html>

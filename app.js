@@ -2565,336 +2565,204 @@ function renderSchoolStudents() {
   });
 }
 
+function updateBulletinChecklist(moyenne) {
+  const chkIds = [
+    'chkTravailExcellent', 'chkFelicitations', 'chkSatisfaisant', 'chkEncouragements',
+    'chkPeutMieuxFaire', 'chkTableauHonneur', 'chkInsuffisant', 'chkPassable',
+    'chkRisqueRedoubler', 'chkDoitRedoublerEffort', 'chkRisqueExclusion', 'chkAvertissement', 'chkBlame'
+  ];
+  chkIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+
+  const m = parseFloat(moyenne) || 0;
+  const mark = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = 'x';
+  };
+
+  if (m >= 16) {
+    mark('chkTravailExcellent');
+    mark('chkFelicitations');
+    mark('chkTableauHonneur');
+  } else if (m >= 14) {
+    mark('chkSatisfaisant');
+    mark('chkEncouragements');
+    mark('chkTableauHonneur');
+  } else if (m >= 12) {
+    mark('chkSatisfaisant');
+    mark('chkEncouragements');
+  } else if (m >= 10) {
+    mark('chkPeutMieuxFaire');
+    mark('chkPassable');
+  } else if (m >= 8) {
+    mark('chkInsuffisant');
+    mark('chkDoitRedoublerEffort');
+  } else {
+    mark('chkInsuffisant');
+    mark('chkAvertissement');
+    mark('chkRisqueRedoubler');
+  }
+}
+
 function renderBulletinGradesTable(isDaara, studentName, studentKey, studentObj) {
   const tbody = document.getElementById('bulletinGradesTableBody');
+  const tfoot = document.getElementById('bulletinGradesTableFoot');
   const daaraBox = document.getElementById('bulletinDaaraSpecialBox');
-  const docTypeTitle = document.getElementById('bulletinDocTypeTitle');
-  const docPeriodTitle = document.getElementById('bulletinDocPeriodTitle');
-  const docBadge = document.getElementById('bulletinDocBadge');
-  const councilLabel = document.getElementById('bulletinCouncilLabel');
+  const titleBanner = document.getElementById('bulletinTitleBanner');
   const councilRemarks = document.getElementById('bulletinCouncilRemarks');
-  const stampRole = document.getElementById('bulletinStampRole');
-  const discHeader = document.getElementById('bulletinTableDisciplineHeader');
+  const stampName = document.getElementById('bulletinStampName');
 
-  // Si l'élève est un élève réel nouvellement inscrit sans note
+  if (!tbody) return;
+
+  // Si l'élève est nouvellement inscrit sans note
   const isRealPending = studentObj && (!studentObj.notes || studentObj.notes.length === 0) && (!studentObj.moyenne || studentObj.moyenne === '--');
   if (isRealPending) {
-    if (docTypeTitle) docTypeTitle.textContent = isDaara ? 'DOSSIER PÉDAGOGIQUE & CORANIQUE' : 'BULLETIN DE NOTES DU 1ER TRIMESTRE';
-    if (docPeriodTitle) docPeriodTitle.textContent = `Année Scolaire 2026-2027 • Classe : ${studentObj.classe || 'Inscrit'}`;
-    if (docBadge) {
-      docBadge.textContent = 'DOSSIER RÉEL • EN ATTENTE D\'ÉVALUATION';
-      docBadge.className = 'badge-tag badge-info';
-    }
+    if (titleBanner) titleBanner.textContent = isDaara ? 'DOSSIER PÉDAGOGIQUE & CORANIQUE' : 'BULLETIN DU PREMIER SEMESTRE';
     if (daaraBox) daaraBox.style.display = isDaara ? 'block' : 'none';
-    if (councilLabel) councilLabel.textContent = isDaara ? 'Note de la Direction du Daara :' : 'Avis de la Direction des Études :';
     if (councilRemarks) {
-      councilRemarks.innerHTML = `« L'apprenant(e) <strong>${studentName}</strong> est régulièrement inscrit(e) au titre de l'année scolaire 2026-2027. Les notes officielles, moyennes pondérées et appréciations du conseil des professeurs seront consignées à l'issue des compositions du 1er Trimestre. »`;
+      councilRemarks.textContent = `Élève nouvellement inscrit(e) au titre de l'année scolaire. Les notes officielles et délibérations du conseil des professeurs seront consignées à l'issue des compositions du 1er semestre.`;
     }
-    if (tbody) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align: center; padding: 2.8rem 1.5rem; background: #F8FAFC; color: #475569;">
-            <div style="font-size: 2.4rem; margin-bottom: 0.6rem;">📋</div>
-            <div style="font-size: 1.1rem; font-weight: 700; color: #0F172A; margin-bottom: 0.35rem;">
-              Dossier Vierge • Aucune évaluation saisie
-            </div>
-            <p style="font-size: 0.88rem; color: #64748B; max-width: 500px; margin: 0 auto; line-height: 1.5;">
-              Cet élève vient d'être inscrit. Ses notes de devoirs et de compositions s'afficheront ici automatiquement au fur et à mesure de leur saisie par ses professeurs.
-            </p>
-          </td>
-        </tr>
-      `;
-    }
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 2.2rem 1rem; background: #FAFAFA; color: #444;">
+          <div style="font-size: 1.8rem; margin-bottom: 0.4rem;">📋</div>
+          <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem;">Dossier Vierge • En attente des premières évaluations</div>
+          <div style="font-size: 0.8rem; color: #666;">Les notes des devoirs et compositions s'afficheront ici automatiquement dès leur saisie.</div>
+        </td>
+      </tr>
+    `;
+    const totCoeffEl = document.getElementById('bulletinTotalCoeff');
+    const totMoyxCoefEl = document.getElementById('bulletinTotalMoyxCoef');
+    if (totCoeffEl) totCoeffEl.textContent = '--';
+    if (totMoyxCoefEl) totMoyxCoefEl.textContent = '--';
+    updateBulletinChecklist(0);
     return;
   }
 
   const isFatou = (studentKey === 'fatou') || (studentName && studentName.toLowerCase().includes('fatou'));
+  const isAminata = !isFatou && (!studentObj || !studentObj.notes || studentObj.notes.length === 0);
 
-  if (isDaara) {
-    if (docTypeTitle) docTypeTitle.textContent = isFatou ? 'BULLETIN OFFICIEL DAARA MODERNE' : 'BULLETIN OFFICIEL DAARA MODERNE & INTERNAT';
-    if (docPeriodTitle) docPeriodTitle.textContent = isFatou ? 'Curriculum Coranique & Académique CM2 - 2026/2027' : 'Suivi Coranique & Académique 6ème - 2026/2027';
-    if (docBadge) {
-      docBadge.textContent = 'DOCUMENT OFFICIEL DAARA';
-      docBadge.className = 'badge-tag badge-gold';
-    }
-    if (daaraBox) daaraBox.style.display = 'block';
-    if (discHeader) discHeader.textContent = 'Discipline Coranique / Académique';
-    if (councilLabel) councilLabel.textContent = 'Avis du Conseil des Oustazs & Direction du Daara :';
+  if (daaraBox) daaraBox.style.display = isDaara ? 'block' : 'none';
 
-    if (isFatou) {
-      if (document.getElementById('bulletinDaaraHizb')) document.getElementById('bulletinDaaraHizb').textContent = 'Hizb 24 (Sourate Al-Furqân) • Tajwîd A';
-      if (document.getElementById('bulletinDaaraAllwa')) document.getElementById('bulletinDaaraAllwa').textContent = 'Validée avec Mention Bien (Rasm Uthmâni)';
-      if (document.getElementById('bulletinDaaraPrayers')) document.getElementById('bulletinDaaraPrayers').textContent = '100% (Assidue aux prières collectives & cercles)';
-      if (document.getElementById('bulletinDaaraDorm')) document.getElementById('bulletinDaaraDorm').textContent = 'Demi-pension Daara Moderne (Section Féminine Keur Massar)';
-      if (councilRemarks) {
-        councilRemarks.innerHTML = `« Qu'Allah préserve <strong>Fatou Sow</strong> ! Élève brillante et assidue au Daara Moderne Partenaire. Progrès continus en Hifz Coranique (Hizb 24 validé) et grand sérieux dans le module passerelle. Tableau d'Honneur décerné. »`;
-      }
-    } else {
-      if (document.getElementById('bulletinDaaraHizb')) document.getElementById('bulletinDaaraHizb').textContent = 'Hizb 38 (Al-Ahqaf) • Tajwîd A+';
-      if (document.getElementById('bulletinDaaraAllwa')) document.getElementById('bulletinDaaraAllwa').textContent = 'Validée avec Distinction (Rasm Uthmâni)';
-      if (document.getElementById('bulletinDaaraPrayers')) document.getElementById('bulletinDaaraPrayers').textContent = '100% (0 manquement aux 5 prières & Fajr)';
-      if (document.getElementById('bulletinDaaraDorm')) document.getElementById('bulletinDaaraDorm').textContent = 'Internat Complet • Dortoir 2 (Chambre Al-Azhar)';
-      if (councilRemarks) {
-        councilRemarks.innerHTML = `« Macha Allah, <strong>Mouhamed Bachir Sow</strong> fait l'honneur du Daara. Récitation limpide, respect scrupuleux du Tajwîd et assiduité sans faille aux heures de prière et d'internat. Félicitations spéciales et Tableau d'Honneur. »`;
-      }
-    }
+  let rowsData = [];
 
-    if (stampRole) stampRole.textContent = 'CONSEIL PÉDAGOGIQUE DU DAARA';
-
-    if (tbody) {
-      if (isFatou) {
-        tbody.innerHTML = `
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">📖 Hifz &amp; Mémorisation du Noble Coran</td>
-            <td style="text-align: center; font-weight: 700;">4</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">18.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">3ème</span></td>
-            <td style="color: #334155;">Macha Allah, Hizb 24 validé avec une excellente diction et bonne révision régulière</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">🎙️ Tajwîd &amp; Règles de Récitation (Ahkâm)</td>
-            <td style="text-align: center; font-weight: 700;">3</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">17.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Bonne maîtrise des règles de Noon Sâkinah, Al-Madd et prononciation soignée</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">📜 Calligraphie Coranique &amp; Planche (Allwa)</td>
-            <td style="text-align: center;">3</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">18.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1ère</span></td>
-            <td style="color: #334155;">Écriture Rasm Uthmâni très harmonieuse, propreté irréprochable de la planche</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🕌 Langue Arabe &amp; Vocabulaire Coranique</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">4ème</span></td>
-            <td style="color: #334155;">Bonne compréhension du sens des versets et vocabulaire solide en langue arabe</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🤲 Éducation Islamique, Fiqh &amp; Adab</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">18.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Comportement pieux et noble (Adab), excellente pratique des ablutions et prières</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">📚 Français &amp; Expression Écrite (Passerelle)</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Très bonne expression écrite, lecture fluide et travail méthodique</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🔢 Mathématiques &amp; Calcul Pratique</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">15.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">4ème</span></td>
-            <td style="color: #334155;">Bonnes aptitudes en calcul et logique mathématique appliquée</td>
-          </tr>
-        `;
-      } else {
-        // Mouhamed Sow
-        tbody.innerHTML = `
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">📖 Hifz &amp; Mémorisation du Noble Coran</td>
-            <td style="text-align: center; font-weight: 700;">4</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">19.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1er</span></td>
-            <td style="color: #334155;">Macha Allah, Hizb 38 validé sans hésitation, excellente rétention en cercle de Murâja'ah</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">🎙️ Tajwîd &amp; Règles de Récitation (Ahkâm)</td>
-            <td style="text-align: center; font-weight: 700;">3</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">19.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1er</span></td>
-            <td style="color: #334155;">Respect rigoureux des Makhârij et Sifât des lettres, récitation posée et mélodieuse (Tarteel)</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">📜 Calligraphie Coranique &amp; Planche (Allwa)</td>
-            <td style="text-align: center;">3</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">17.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Écriture Rasm Uthmâni très soignée à l'encre traditionnelle, propreté et régularité</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🕌 Langue Arabe &amp; Vocabulaire Coranique</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">17.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Bonne compréhension des versets et excellente expression orale en langue arabe</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🤲 Éducation Islamique, Fiqh &amp; Adab</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">18.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1er</span></td>
-            <td style="color: #334155;">Maîtrise des ablutions, des 5 prières et comportement fraternel exemplaire à l'internat</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">📚 Français &amp; Expression Écrite (Passerelle)</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">15.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">3ème</span></td>
-            <td style="color: #334155;">Bonne lecture fluide et participation sérieuse au module passerelle scolaire</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🔢 Mathématiques &amp; Calcul Pratique</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Calcul mental rapide et esprit d'analyse logique très développé</td>
-          </tr>
-        `;
-      }
-    }
+  if (studentObj && Array.isArray(studentObj.notes) && studentObj.notes.length > 0) {
+    // Notes réelles fournies par l'établissement
+    rowsData = studentObj.notes.map(n => ({
+      discipline: n.matiere || n.discipline || 'Matière',
+      devoirs: parseFloat(n.devoir !== undefined ? n.devoir : (n.note || 12)),
+      compos: parseFloat(n.compo !== undefined ? n.compo : (n.note || 12)),
+      moy: parseFloat(n.moy !== undefined ? n.moy : (n.note || 12)),
+      coeff: parseInt(n.coeff || n.coef || 2, 10),
+      rang: n.rang || '1er',
+      appreciation: n.appreciation || (n.note >= 16 ? 'Très Bien' : n.note >= 14 ? 'Bien' : n.note >= 12 ? 'Assez Bien' : n.note >= 10 ? 'Passable' : 'Insuffisant')
+    }));
+  } else if (isDaara) {
+    // Daara Moderne sénégalais conforme
+    if (titleBanner) titleBanner.textContent = 'BULLETIN DU PREMIER SEMESTRE (CYCLE CORANIQUE & FRANCO-ARABE)';
+    rowsData = [
+      { discipline: "Hifz & Mémorisation du Noble Coran", devoirs: 18.50, compos: 19.00, moy: 18.75, coeff: 4, rang: "1er", appreciation: "Très Bien" },
+      { discipline: "Tajwîd & Règles de Récitation (Ahkâm)", devoirs: 17.50, compos: 18.00, moy: 17.75, coeff: 3, rang: "2ème", appreciation: "Très Bien" },
+      { discipline: "Calligraphie Coranique & Planche (Allwa)", devoirs: 18.00, compos: 17.50, moy: 17.75, coeff: 3, rang: "1ère", appreciation: "Très Bien" },
+      { discipline: "Langue Arabe & Vocabulaire", devoirs: 16.50, compos: 17.00, moy: 16.75, coeff: 3, rang: "2ème", appreciation: "Bien" },
+      { discipline: "Éducation Islamique, Fiqh & Adab", devoirs: 18.00, compos: 18.50, moy: 18.25, coeff: 2, rang: "1er", appreciation: "Très Bien" },
+      { discipline: "Français & Expression Écrite (Passerelle)", devoirs: 15.50, compos: 16.00, moy: 15.75, coeff: 2, rang: "3ème", appreciation: "Bien" },
+      { discipline: "Mathématiques & Calcul Pratique", devoirs: 16.00, compos: 16.50, moy: 16.25, coeff: 2, rang: "2ème", appreciation: "Bien" },
+      { discipline: "Éducation Civique & EPS", devoirs: 16.00, compos: 16.00, moy: 16.00, coeff: 1, rang: "2ème", appreciation: "Bien" }
+    ];
+  } else if (isFatou) {
+    // Cas Fatou Sow (Élève excellente)
+    if (titleBanner) titleBanner.textContent = 'BULLETIN DU PREMIER SEMESTRE';
+    rowsData = [
+      { discipline: "Français", devoirs: 16.50, compos: 17.00, moy: 16.75, coeff: 4, rang: "2ème", appreciation: "Très Bien" },
+      { discipline: "Mathématiques", devoirs: 18.00, compos: 18.50, moy: 18.25, coeff: 4, rang: "1ère", appreciation: "Très Bien" },
+      { discipline: "Anglais", devoirs: 17.00, compos: 17.00, moy: 17.00, coeff: 3, rang: "2ème", appreciation: "Très Bien" },
+      { discipline: "Histoire Geographie", devoirs: 16.00, compos: 16.50, moy: 16.25, coeff: 2, rang: "2ème", appreciation: "Très Bien" },
+      { discipline: "Sciences de la Vie et de la Terre", devoirs: 17.00, compos: 17.50, moy: 17.25, coeff: 3, rang: "1ère", appreciation: "Très Bien" },
+      { discipline: "Sciences Physiques", devoirs: 16.50, compos: 17.00, moy: 16.75, coeff: 3, rang: "2ème", appreciation: "Très Bien" },
+      { discipline: "Éducation Civique & Morale", devoirs: 18.00, compos: 18.00, moy: 18.00, coeff: 2, rang: "1ère", appreciation: "Très Bien" },
+      { discipline: "Education Physique et Sportive", devoirs: 16.00, compos: 16.00, moy: 16.00, coeff: 1, rang: "3ème", appreciation: "Bien" }
+    ];
   } else {
-    // École classique / Privée
-    if (docTypeTitle) docTypeTitle.textContent = "BULLETIN TRIMESTRIEL D'ÉVALUATION";
-    if (docPeriodTitle) docPeriodTitle.textContent = isFatou ? '1er Trimestre • Cycle Primaire CM2 (2026-2027)' : '1er Trimestre • Cycle Moyen 6ème (2026-2027)';
-    if (docBadge) {
-      docBadge.textContent = 'DOCUMENT OFFICIEL';
-      docBadge.className = 'badge-tag badge-excellent';
-    }
-    if (daaraBox) daaraBox.style.display = 'none';
-    if (discHeader) discHeader.textContent = 'Discipline & Assiduité';
-    if (councilLabel) councilLabel.textContent = isFatou ? 'Avis du Conseil des Maîtres :' : 'Avis du Conseil de Classe :';
-    if (councilRemarks) {
-      if (isFatou) {
-        councilRemarks.innerHTML = `« Travail très remarquable et constant de <strong>Fatou Sow</strong>. Élève assidue, participation active et excellent esprit d'équipe. Félicitations du Conseil des Maîtres et Tableau d'Honneur décerné. »`;
-      } else {
-        councilRemarks.innerHTML = `« Trimestre d'excellence pour <strong>Mouhamed Bachir Sow</strong>. Travail rigoureux, esprit d'analyse remarquable en sciences et mathématiques, participation active et exemplaire. Félicitations du Conseil de Classe et Tableau d'Honneur. »`;
-      }
-    }
-    if (stampRole) stampRole.textContent = 'DIRECTION DES ÉTUDES';
+    // Cas Standard Officiel Conforme 1:1 au Modèle Scanné du Sénégal (Lycée Doumga Ouro Alpha)
+    if (titleBanner) titleBanner.textContent = 'BULLETIN DU PREMIER SEMESTRE';
+    rowsData = [
+      { discipline: "Français", devoirs: 13.50, compos: 13.50, moy: 13.50, coeff: 3, rang: "7", appreciation: "Assez Bien" },
+      { discipline: "Mathématiques", devoirs: 9.50, compos: 9.50, moy: 9.50, coeff: 5, rang: "5ex", appreciation: "Insuffisant" },
+      { discipline: "Anglais", devoirs: 13.00, compos: 13.00, moy: 13.00, coeff: 3, rang: "8", appreciation: "Assez Bien" },
+      { discipline: "Histoire Geographie", devoirs: 16.00, compos: 16.00, moy: 16.00, coeff: 2, rang: "6", appreciation: "Très Bien" },
+      { discipline: "Sciences de la Vie et de la Terre", devoirs: 11.25, compos: 11.25, moy: 11.25, coeff: 5, rang: "8", appreciation: "Passable" },
+      { discipline: "Sciences Physiques", devoirs: 8.50, compos: 8.50, moy: 8.50, coeff: 5, rang: "8", appreciation: "Insuffisant" },
+      { discipline: "Espagnol", devoirs: 15.50, compos: 15.50, moy: 15.50, coeff: 3, rang: "6ex", appreciation: "Bien" },
+      { discipline: "Education Physique et Sportive", devoirs: 8.00, compos: 10.00, moy: 9.00, coeff: 1, rang: "8", appreciation: "Insuffisant" }
+    ];
+  }
 
-    if (tbody) {
-      if (isFatou) {
-        tbody.innerHTML = `
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">📚 Français (Lecture, Expression &amp; Vocabulaire)</td>
-            <td style="text-align: center; font-weight: 700;">4</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">3ème</span></td>
-            <td style="color: #334155;">Excellente compréhension de texte, orthographe soignée et lecture fluide</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">🔢 Mathématiques (Opérations, Géométrie &amp; Problèmes)</td>
-            <td style="text-align: center; font-weight: 700;">4</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">3ème</span></td>
-            <td style="color: #334155;">Bonne maîtrise des 4 opérations et raisonnement structuré sur les problèmes</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🔬 Éveil Scientifique &amp; Technologique</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">17.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Grande curiosité d'esprit, démarche scientifique bien acquise</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🌍 Histoire, Géographie &amp; Vivre Ensemble</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">15.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">4ème</span></td>
-            <td style="color: #334155;">Bonne assimilation des repères historiques et géographiques du Sénégal</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">⚖️ Éducation Civique, Morale &amp; Santé</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Élève respectueuse des règles, esprit de groupe et bonne hygiène</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🕌 Langue Arabe &amp; Initiation Religieuse</td>
-            <td style="text-align: center;">1</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">15.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">5ème</span></td>
-            <td style="color: #334155;">Bonne prononciation et respect du travail scolaire</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🎨 Éducation Artistique &amp; Dessin</td>
-            <td style="text-align: center;">1</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">3ème</span></td>
-            <td style="color: #334155;">Créative, dessins soignés et précis</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🏃 Éducation Physique et Sportive (EPS)</td>
-            <td style="text-align: center;">1</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">15.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">4ème</span></td>
-            <td style="color: #334155;">Bonne participation aux activités d'endurance et jeux d'équipe</td>
-          </tr>
-        `;
-      } else {
-        tbody.innerHTML = `
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">📚 Français (Grammaire, Rédaction &amp; Texte)</td>
-            <td style="text-align: center; font-weight: 700;">4</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Remarquable aisance rédactionnelle, syntaxe riche et excellente analyse de texte</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0; background: rgba(0, 210, 180, 0.04);">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 700; color: #008775;">🔢 Mathématiques (Algèbre &amp; Géométrie)</td>
-            <td style="text-align: center; font-weight: 700;">4</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">17.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1er</span></td>
-            <td style="color: #334155;">Excellent esprit mathématique, démonstrations rigoureuses et calcul très sûr</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🔬 Sciences de la Vie et de la Terre (SVT)</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">3ème</span></td>
-            <td style="color: #334155;">Très bonne compréhension des cycles biologiques et dessins d'observation nets</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🌍 Histoire &amp; Géographie</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">15.5</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">4ème</span></td>
-            <td style="color: #334155;">Bonne culture générale et sens critique dans les dissertations historiques</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🇬🇧 Anglais (LV1)</td>
-            <td style="text-align: center;">2</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">17.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">2ème</span></td>
-            <td style="color: #334155;">Excellente prononciation, vocabulaire riche et participation orale très active</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">💻 Informatique &amp; Culture Numérique</td>
-            <td style="text-align: center;">1</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">18.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">1er</span></td>
-            <td style="color: #334155;">Très grande dextérité informatique, logique algorithmique et autonomie</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">⚖️ Éducation Civique</td>
-            <td style="text-align: center;">1</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">16.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">3ème</span></td>
-            <td style="color: #334155;">Comportement civique irréprochable et esprit de conciliation</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="padding: 0.55rem 0.8rem; font-weight: 600;">🏃 Éducation Physique et Sportive (EPS)</td>
-            <td style="text-align: center;">1</td>
-            <td style="text-align: center; font-weight: 800; color: #0A192F;">15.0</td>
-            <td style="text-align: center;"><span style="color: #B45309; font-weight: 700;">5ème</span></td>
-            <td style="color: #334155;">Dynamique et motivé dans toutes les épreuves collectives</td>
-          </tr>
-        `;
-      }
+  let totalCoeff = 0;
+  let totalMoyxCoef = 0;
+  let html = '';
+
+  rowsData.forEach(row => {
+    const devStr = Number(row.devoirs).toFixed(2);
+    const compStr = Number(row.compos).toFixed(2);
+    const moyStr = Number(row.moy).toFixed(2);
+    const coeffNum = Number(row.coeff);
+    const moyxcoefNum = (row.moy * coeffNum);
+    const moyxcoefStr = moyxcoefNum.toFixed(2);
+
+    totalCoeff += coeffNum;
+    totalMoyxCoef += moyxcoefNum;
+
+    html += `
+      <tr>
+        <td style="font-weight: 500; text-align: left;">${row.discipline}</td>
+        <td style="text-align: center;">${devStr}</td>
+        <td style="text-align: center;">${compStr}</td>
+        <td style="text-align: center; font-weight: 700;">${moyStr}</td>
+        <td style="text-align: center;">${coeffNum}</td>
+        <td style="text-align: center;">${moyxcoefStr}</td>
+        <td style="text-align: center;">${row.rang}</td>
+        <td style="text-align: left;">${row.appreciation}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+
+  // Totaux
+  const totCoeffEl = document.getElementById('bulletinTotalCoeff');
+  const totMoyxCoefEl = document.getElementById('bulletinTotalMoyxCoef');
+  if (totCoeffEl) totCoeffEl.textContent = totalCoeff;
+  if (totMoyxCoefEl) totMoyxCoefEl.textContent = totalMoyxCoef.toFixed(2);
+
+  const calcMoyenne = totalCoeff > 0 ? (totalMoyxCoef / totalCoeff).toFixed(2) : '11.60';
+  const moyEl = document.getElementById('bulletinMoyenne');
+  if (moyEl) moyEl.textContent = calcMoyenne;
+
+  // Mise à jour de la grille des décisions
+  updateBulletinChecklist(calcMoyenne);
+
+  // Observations du Conseil
+  if (councilRemarks) {
+    const m = parseFloat(calcMoyenne);
+    if (m >= 16) {
+      councilRemarks.textContent = "Trimestre remarquable et constant. Félicitations unanimes du conseil des professeurs pour l'excellence du travail et l'assiduité.";
+    } else if (m >= 14) {
+      councilRemarks.textContent = "Très bon travail d'ensemble. Élève sérieuse et investie. Tableau d'honneur et encouragements du conseil.";
+    } else if (m >= 12) {
+      councilRemarks.textContent = "Travail satisfaisant. Doit continuer sur cette lancée pour consolider ses acquis au second semestre.";
+    } else if (m >= 10) {
+      councilRemarks.textContent = "Élève sérieuse et investie. Doit intensifier ses efforts dans les disciplines scientifiques pour progresser au second semestre.";
+    } else {
+      councilRemarks.textContent = "Résultats insuffisants. Doit redoubler d'efforts, faire preuve de rigueur et participer davantage.";
     }
   }
 }
 
 function previewBulletin(eleveId, customSchoolName, forcePublishOverride, forceLockedPreview) {
-  const isDaaraSchool = (currentEstablishment && currentEstablishment.type === 'DAARA');
+  const isDaaraSchool = Boolean(currentEstablishment && currentEstablishment.type === 'DAARA');
   const activeStudents = getEstablishmentActiveStudents(isDaaraSchool);
   let eleve = activeStudents.find(e => e.id === eleveId || e.matricule === eleveId);
   if (!eleve && !isRealRegisteredEstablishment()) {
@@ -2904,56 +2772,130 @@ function previewBulletin(eleveId, customSchoolName, forcePublishOverride, forceL
 
   currentBulletinStudentId = eleve.id;
 
-  // Déterminer l'établissement actif (priorité à l'établissement inscrit ou actif)
+  // Déterminer l'établissement actif
   let schoolName = customSchoolName;
-  let schoolLogo = "🏫";
-  let schoolDetails = "Dakar • Année Scolaire 2026-2027";
-  let schoolMinistry = "Ministère de l'Éducation Nationale • Inspection d'Académie";
+  let schoolPhone = "338763102";
+  let schoolEmail = "contact@sunuschool.sn";
+  let schoolMinistry = "Ministère de l'Education nationale";
+  let schoolYear = "2025-2026";
 
   if (!schoolName && currentEstablishment && currentEstablishment.name) {
     schoolName = currentEstablishment.name;
-    schoolLogo = currentEstablishment.type === 'DAARA' ? '🕌' : '🏫';
-    schoolDetails = `${currentEstablishment.city || 'Dakar'} • Code : ${currentEstablishment.code || 'SSE-SN-8419'} • Année Scolaire 2026-2027`;
+    schoolPhone = currentEstablishment.phone || "338763102";
+    schoolEmail = currentEstablishment.email || "lyceedoa2@yahoo.com";
+    schoolYear = currentEstablishment.anneeScolaire || "2025-2026";
     if (currentEstablishment.type === 'DAARA') {
-      schoolMinistry = "Inspection Régionale de l'Enseignement Arabe & Daaras Modernes";
+      schoolMinistry = "Inspection Régionale de l'Enseignement Arabe & Daaras";
     }
   } else if (!schoolName) {
-    schoolName = "Mon Établissement";
-    schoolLogo = "🏫";
-    schoolDetails = "Dakar • Inspection d'Académie • Code : SSE-SN-1786";
+    schoolName = "LYCEE DOUMGA OURO ALPHA";
+    schoolPhone = "338763102";
+    schoolEmail = "lyceedoa2@yahoo.com";
+    schoolYear = "2025-2026";
   }
 
-  // Mettre à jour l'en-tête du bulletin
+  // Mettre à jour l'en-tête officiel
   const nameEl = document.getElementById('bulletinSchoolName');
-  if (nameEl) nameEl.textContent = schoolName;
-
-  const logoEl = document.getElementById('bulletinSchoolLogo');
-  if (logoEl) logoEl.textContent = schoolLogo;
+  if (nameEl) nameEl.textContent = schoolName.toUpperCase();
 
   const minEl = document.getElementById('bulletinSchoolMinistry');
   if (minEl) minEl.textContent = schoolMinistry;
 
-  const detEl = document.getElementById('bulletinSchoolDetails');
-  if (detEl) detEl.textContent = schoolDetails;
+  const yearEl = document.getElementById('bulletinSchoolYear');
+  if (yearEl) yearEl.textContent = schoolYear;
 
-  // Mettre à jour le cachet officiel personnalisé du bulletin
+  // Mettre à jour le cachet officiel
   const stampNameEl = document.getElementById('bulletinStampName');
-  if (stampNameEl) stampNameEl.textContent = schoolName;
+  if (stampNameEl) stampNameEl.textContent = schoolName.toUpperCase();
 
-  const stampDateEl = document.getElementById('bulletinStampDate');
-  if (stampDateEl) stampDateEl.textContent = `${currentEstablishment?.city || 'Dakar'}, Session 2026-2027`;
+  // Mettre à jour les données de l'établissement (colonne gauche)
+  const phoneEl = document.getElementById('bulletinSchoolPhone');
+  if (phoneEl) phoneEl.textContent = schoolPhone;
 
-  // Mettre à jour les données de l'élève
-  const hasGrades = Boolean(eleve.moyenne !== null && eleve.moyenne !== undefined && eleve.moyenne !== '' && eleve.moyenne !== '--');
-  if (document.getElementById('bulletinStudentName')) document.getElementById('bulletinStudentName').textContent = `${eleve.prenom} ${eleve.nom}`;
-  if (document.getElementById('bulletinMatricule')) document.getElementById('bulletinMatricule').textContent = eleve.matricule;
-  if (document.getElementById('bulletinClasse')) document.getElementById('bulletinClasse').textContent = eleve.classe || 'Inscrit';
-  if (document.getElementById('bulletinMoyenne')) document.getElementById('bulletinMoyenne').textContent = hasGrades ? `${eleve.moyenne} / 20` : `-- / 20 (Non évalué)`;
-  if (document.getElementById('bulletinRang')) document.getElementById('bulletinRang').textContent = hasGrades ? `${eleve.rang} sur ${activeStudents.length || 38} élèves` : `En attente d'évaluation`;
-  
+  const emailEl = document.getElementById('bulletinSchoolEmail');
+  if (emailEl) emailEl.textContent = schoolEmail;
+
+  const niveauEl = document.getElementById('bulletinNiveau');
+  if (niveauEl) {
+    const niv = eleve.niveau || (eleve.classe?.includes('S') ? 'SECONDE' : eleve.classe?.includes('T') ? 'TERMINALE' : isDaaraSchool ? 'PRIMAIRE' : 'SECONDAIRE');
+    niveauEl.textContent = niv.toUpperCase();
+  }
+
+  const serieEl = document.getElementById('bulletinSerie');
+  if (serieEl) {
+    const ser = eleve.serie || (eleve.classe?.includes('S') ? 'S' : eleve.classe?.includes('L') ? 'L' : 'Générale');
+    serieEl.textContent = ser;
+  }
+
+  const effectifEl = document.getElementById('bulletinEffectif');
+  if (effectifEl) effectifEl.textContent = (activeStudents.length || 8).toString();
+
+  const moyClasseEl = document.getElementById('bulletinMoyenneClasse');
+  if (moyClasseEl) moyClasseEl.textContent = eleve.moyenneClasse || "14.97";
+
+  // Mettre à jour le cadre d'identification de l'élève (avec crochets officiels)
+  const ienEl = document.getElementById('bulletinIEN');
+  if (ienEl) ienEl.textContent = eleve.matricule || 'T_6C7PG';
+
+  const sexeEl = document.getElementById('bulletinSexe');
+  if (sexeEl) {
+    const isFem = eleve.sexe ? eleve.sexe.toUpperCase().startsWith('F') : (eleve.prenom?.toLowerCase().includes('fatou') || eleve.prenom?.toLowerCase().includes('aminata') || eleve.prenom?.toLowerCase().includes('aissatou'));
+    sexeEl.textContent = isFem ? 'FEMININ' : 'MASCULIN';
+  }
+
+  const classeEl = document.getElementById('bulletinClasse');
+  if (classeEl) classeEl.textContent = eleve.classe || '2S';
+
+  const classeDblEl = document.getElementById('bulletinClasseDoublee');
+  if (classeDblEl) classeDblEl.textContent = eleve.classeDoublee || 'NEANT';
+
+  const prenomEl = document.getElementById('bulletinStudentPrenom');
+  if (prenomEl) prenomEl.textContent = (eleve.prenom || 'AMINATA').toUpperCase();
+
+  const nomEl = document.getElementById('bulletinStudentNom');
+  if (nomEl) nomEl.textContent = (eleve.nom || 'KANE').toUpperCase();
+
+  const birthDateEl = document.getElementById('bulletinBirthDate');
+  if (birthDateEl) birthDateEl.textContent = eleve.dateNaissance || '04-09-2009';
+
+  const birthPlaceEl = document.getElementById('bulletinBirthPlace');
+  if (birthPlaceEl) birthPlaceEl.textContent = (eleve.lieuNaissance || 'DOUMGA OURO ALPHA').toUpperCase();
+
+  // Rang, Retards et Absences
+  const rangEl = document.getElementById('bulletinRang');
+  if (rangEl) rangEl.textContent = eleve.rang ? eleve.rang.toString().replace(/[^0-9]/g, '') || '8' : '8';
+
+  const retardsEl = document.getElementById('bulletinRetards');
+  if (retardsEl) retardsEl.textContent = eleve.retards || '0 heure(s) 0 minute(s)';
+
+  const absEl = document.getElementById('bulletinAbsences');
+  if (absEl) absEl.textContent = eleve.absences || '0 dont 0 justifiée(s)';
+
+  // QR Codes Officiels (scannables avec fallback)
+  const studQr = document.getElementById('bulletinStudentQr');
+  if (studQr) {
+    const qrData = encodeURIComponent(`ELEVE:${eleve.matricule || 'T_6C7PG'}|NOM:${eleve.nom || 'KANE'}|PRENOM:${eleve.prenom || 'AMINATA'}|CLASSE:${eleve.classe || '2S'}`);
+    studQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=95x95&data=${qrData}`;
+  }
+
+  const docQr = document.getElementById('bulletinDocQr');
+  if (docQr) {
+    const qrDocData = encodeURIComponent(`BULLETIN_MEN_SN|ETAB:${schoolName}|ANNEE:${schoolYear}|MAT:${eleve.matricule || 'T_6C7PG'}`);
+    docQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=95x95&data=${qrDocData}`;
+  }
+
+  // Date et heure d'édition dynamique (format: 04-05-2026 à 08:51:55)
+  const editDateEl = document.getElementById('bulletinEditDate');
+  if (editDateEl) {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    editDateEl.textContent = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
+  // Rendu de la grille des 8 notes
   renderBulletinGradesTable(isDaaraSchool, `${eleve.prenom} ${eleve.nom}`, null, eleve);
-  
-  // 4️⃣ Vérification logique de publication des bulletins
+
+  // Logique de verrouillage / publication des bulletins
   const lockedNotice = document.getElementById('bulletinLockedNotice');
   const fullContent = document.getElementById('bulletinFullContent');
   const lockedDateBadge = document.getElementById('bulletinLockedDate');
@@ -2967,11 +2909,9 @@ function previewBulletin(eleveId, customSchoolName, forcePublishOverride, forceL
   if (lockedPhone) lockedPhone.textContent = eleve.parentTel || '+221 77 000 11 22';
 
   if (forceLockedPreview || (!isUnlocked && currentRole !== 'ADMIN')) {
-    // Vue Élève / Parent avant la date fixée : affichage "Bulletin en attente jusqu'au [date]"
     if (lockedNotice) lockedNotice.style.display = 'block';
     if (fullContent) fullContent.style.display = 'none';
   } else {
-    // Vue débloquée ou vue Directeur
     if (lockedNotice) lockedNotice.style.display = 'none';
     if (fullContent) fullContent.style.display = 'block';
     const pubBadge = document.getElementById('bulletinPublishedDateLabel');
@@ -12410,29 +12350,54 @@ function parentViewBulletin(studentKey) {
     schoolDetails = "Campus Almadies, Dakar • Autorisation MEN N° 00482 • Session 2026-2027";
   }
 
-  if (document.getElementById('bulletinSchoolLogo')) document.getElementById('bulletinSchoolLogo').textContent = schoolLogo;
-  if (document.getElementById('bulletinSchoolName')) document.getElementById('bulletinSchoolName').textContent = schoolName;
+  if (document.getElementById('bulletinSchoolName')) document.getElementById('bulletinSchoolName').textContent = schoolName.toUpperCase();
   if (document.getElementById('bulletinSchoolMinistry')) document.getElementById('bulletinSchoolMinistry').textContent = schoolMinistry;
-  if (document.getElementById('bulletinSchoolDetails')) document.getElementById('bulletinSchoolDetails').textContent = schoolDetails;
-  if (document.getElementById('bulletinStampName')) document.getElementById('bulletinStampName').textContent = schoolName;
-  if (document.getElementById('bulletinStampDate')) document.getElementById('bulletinStampDate').textContent = 'Dakar, Session 2026-2027';
+  if (document.getElementById('bulletinSchoolYear')) document.getElementById('bulletinSchoolYear').textContent = '2025-2026';
+  if (document.getElementById('bulletinSchoolPhone')) document.getElementById('bulletinSchoolPhone').textContent = '338763102';
+  if (document.getElementById('bulletinSchoolEmail')) document.getElementById('bulletinSchoolEmail').textContent = 'contact@sunuschool.sn';
+  if (document.getElementById('bulletinNiveau')) document.getElementById('bulletinNiveau').textContent = isDaara ? 'CYCLE CORANIQUE' : 'MOYEN';
+  if (document.getElementById('bulletinSerie')) document.getElementById('bulletinSerie').textContent = 'Générale';
+  if (document.getElementById('bulletinEffectif')) document.getElementById('bulletinEffectif').textContent = '38';
+  if (document.getElementById('bulletinMoyenneClasse')) document.getElementById('bulletinMoyenneClasse').textContent = '14.50';
 
-  if (isMouhamed) {
-    if (document.getElementById('bulletinStudentName')) document.getElementById('bulletinStudentName').textContent = 'Mouhamed Bachir Sow';
-    if (document.getElementById('bulletinMatricule')) document.getElementById('bulletinMatricule').textContent = 'MAT-2026-042';
-    if (document.getElementById('bulletinClasse')) {
-      document.getElementById('bulletinClasse').textContent = isDaara ? '6ème A (Option Internat Daara Moderne)' : '6ème A (Cycle Moyen / Collège Privé)';
-    }
-    if (document.getElementById('bulletinMoyenne')) document.getElementById('bulletinMoyenne').textContent = '16.45 / 20';
-    if (document.getElementById('bulletinRang')) document.getElementById('bulletinRang').textContent = '2ème sur 38 élèves';
-  } else {
-    if (document.getElementById('bulletinStudentName')) document.getElementById('bulletinStudentName').textContent = 'Fatou Sow';
-    if (document.getElementById('bulletinMatricule')) document.getElementById('bulletinMatricule').textContent = 'MAT-2026-088';
-    if (document.getElementById('bulletinClasse')) {
-      document.getElementById('bulletinClasse').textContent = isDaara ? 'CM2 B (Daara Moderne & Hifz Filles)' : 'CM2 B (Cycle Primaire d\'Excellence)';
-    }
-    if (document.getElementById('bulletinMoyenne')) document.getElementById('bulletinMoyenne').textContent = '15.80 / 20';
-    if (document.getElementById('bulletinRang')) document.getElementById('bulletinRang').textContent = '4ème sur 42 élèves';
+  if (document.getElementById('bulletinStampName')) document.getElementById('bulletinStampName').textContent = schoolName.toUpperCase();
+  if (document.getElementById('bulletinStampRole')) document.getElementById('bulletinStampRole').textContent = isDaara ? "DIRECTION DU DAARA" : "LE CHEF D'ÉTABLISSEMENT";
+
+  const studPrenom = isMouhamed ? 'MOUHAMED BACHIR' : 'FATOU';
+  const studNom = 'SOW';
+  const studMat = isMouhamed ? 'MAT-2026-042' : 'MAT-2026-088';
+  const studClasse = isMouhamed ? (isDaara ? '6ème Daara Moderne' : '6ème A') : (isDaara ? 'CM2 Daara Moderne' : 'CM2 B');
+  const studBirth = isMouhamed ? '12-05-2012' : '23-08-2014';
+  const studPlace = 'DAKAR';
+
+  if (document.getElementById('bulletinIEN')) document.getElementById('bulletinIEN').textContent = studMat;
+  if (document.getElementById('bulletinSexe')) document.getElementById('bulletinSexe').textContent = isMouhamed ? 'MASCULIN' : 'FEMININ';
+  if (document.getElementById('bulletinClasse')) document.getElementById('bulletinClasse').textContent = studClasse;
+  if (document.getElementById('bulletinClasseDoublee')) document.getElementById('bulletinClasseDoublee').textContent = 'NEANT';
+  if (document.getElementById('bulletinStudentPrenom')) document.getElementById('bulletinStudentPrenom').textContent = studPrenom;
+  if (document.getElementById('bulletinStudentNom')) document.getElementById('bulletinStudentNom').textContent = studNom;
+  if (document.getElementById('bulletinBirthDate')) document.getElementById('bulletinBirthDate').textContent = studBirth;
+  if (document.getElementById('bulletinBirthPlace')) document.getElementById('bulletinBirthPlace').textContent = studPlace;
+
+  const rangEl = document.getElementById('bulletinRang');
+  if (rangEl) rangEl.textContent = isMouhamed ? '2' : '4';
+  const retEl = document.getElementById('bulletinRetards');
+  if (retEl) retEl.textContent = '0 heure(s) 0 minute(s)';
+  const absEl = document.getElementById('bulletinAbsences');
+  if (absEl) absEl.textContent = '0 dont 0 justifiée(s)';
+
+  // QR Codes
+  const sQr = document.getElementById('bulletinStudentQr');
+  if (sQr) sQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=95x95&data=${encodeURIComponent('ELEVE:' + studMat + '|NOM:' + studNom + '|PRENOM:' + studPrenom)}`;
+  const dQr = document.getElementById('bulletinDocQr');
+  if (dQr) dQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=95x95&data=${encodeURIComponent('BULLETIN_OFFICIEL|ETAB:' + schoolName + '|MAT:' + studMat)}`;
+
+  // Date d'édition
+  const editEl = document.getElementById('bulletinEditDate');
+  if (editEl) {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    editEl.textContent = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
   // Rendu dynamique du curriculum (Daara ou École Privée selon le mode actif)
