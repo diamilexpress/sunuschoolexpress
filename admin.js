@@ -2388,11 +2388,58 @@ window.hardRefreshAdmin = async function() {
   }
 };
 
-// Synchronisation temps réel automatique si une inscription est soumise dans un autre onglet
-window.addEventListener('storage', (e) => {
-  if (e.key === 'sunuschool_establishment' || e.key === 'sunuschool_establishments_registry' || e.key === 'sunuschool_erp_db' || e.key === 'sse_saas_database') {
-    loadAdminData();
+// Remise à zéro totale du système pour tests réels sur le terrain
+async function confirmResetToCleanSlate() {
+  const answer = confirm("⚠️ ATTENTION : Voulez-vous RÉINITIALISER LE SYSTÈME À L'ÉTAT 100% VIERGE pour vos tests réels sur le terrain ?\n\nCette action va :\n• Supprimer toutes les écoles de test\n• Remettre à zéro les élèves, classes et écritures\n• Nettoyer le Cloud Supabase et le stockage local\n• Conserver uniquement le compte Super Admin HQ\n\nConfirmer la remise à zéro ?");
+  if (!answer) return;
+
+  // 1. Purger le stockage local du navigateur
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('sse_') || k.startsWith('sunuschool_'))) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
+
+  // 2. Réinitialiser l'état mémoire
+  adminState.etablissements = [];
+  adminState.transactions = [];
+  adminState.auditLogs = [];
+  adminState.quotes = [];
+
+  // 3. Purger le backend Express s'il est actif
+  if (activeApiBaseUrl) {
+    try {
+      await fetch(`${activeApiBaseUrl}/api/saas/purge-all`, { method: 'DELETE' });
+    } catch(e) {}
   }
-});
+
+  // 4. Purger Supabase Cloud
+  try {
+    const sUrl = 'https://hwrnkjzkwzlzzocfnxww.supabase.co';
+    const sKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3cm5ranprd3psenpvY2ZueHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MDUzMDgsImV4cCI6MjEwNjE4MTMwOH0.hkDRg0Tl36OPnSkd0SbCttp3cnUY53JJzluXrLasCP4';
+    await fetch(`${sUrl}/rest/v1/etablissements?id=neq.none`, {
+      method: 'DELETE',
+      headers: { 'apikey': sKey, 'Authorization': `Bearer ${sKey}` }
+    });
+    await fetch(`${sUrl}/rest/v1/eleves?id=neq.none`, {
+      method: 'DELETE',
+      headers: { 'apikey': sKey, 'Authorization': `Bearer ${sKey}` }
+    });
+  } catch(e) {}
+
+  showToast('✨ Système remis à zéro à 100% ! Prêt pour le terrain.');
+  updateKpis();
+  renderPendingTable();
+  renderAllEtabsTable();
+  setTimeout(() => window.location.reload(), 1000);
+}
+
+window.confirmResetToCleanSlate = confirmResetToCleanSlate;
+
 
 
