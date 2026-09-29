@@ -5565,6 +5565,67 @@ function saveEstablishmentActiveStudents(list, isDaara) {
   if (wsBadge) wsBadge.textContent = list.length;
 }
 
+function deleteStudent(studentId) {
+  if (!studentId) return;
+
+  const isDaara = Boolean(currentEstablishment && currentEstablishment.type === 'DAARA');
+  const typeLabel = isDaara ? 'talibé' : 'élève';
+
+  let list = getEstablishmentActiveStudents(isDaara);
+  const target = list.find(s => s.id === studentId || s.matricule === studentId);
+  const studentName = target ? `${target.prenom} ${target.nom}` : 'cet apprenant';
+  const mat = target?.matricule || studentId;
+
+  const confirmMsg = `⚠️ CONFIRMATION DE SUPPRESSION :\n\nÊtes-vous sûr de vouloir supprimer définitivement ${typeLabel === 'talibé' ? 'le talibé' : "l'élève"} « ${studentName} » (Matricule: ${mat}) ?\n\nCette action va le retirer de la liste officielle de l'établissement, des bulletins et mettra à jour l'effectif immédiatement.`;
+  if (!confirm(confirmMsg)) return;
+
+  const filtered = list.filter(s => s.id !== studentId && s.matricule !== studentId);
+
+  // 1. Sauvegarder dans le stockage de l'établissement
+  if (isRealRegisteredEstablishment()) {
+    saveEstablishmentActiveStudents(filtered, isDaara);
+
+    // Si présent dans le SaaS ERP centralisé
+    try {
+      const sseDbRaw = localStorage.getItem('sse_saas_database');
+      if (sseDbRaw) {
+        const sseDb = JSON.parse(sseDbRaw);
+        if (Array.isArray(sseDb.eleves)) {
+          sseDb.eleves = sseDb.eleves.filter(el => el.id !== studentId && el.matricule !== studentId);
+          localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
+        }
+      }
+    } catch(e) {}
+  } else {
+    // Mode démo / visiteur
+    if (isDaara) {
+      demoState.talibes = demoState.talibes.filter(s => s.id !== studentId && s.matricule !== studentId);
+    } else {
+      demoState.elevesScolaires = demoState.elevesScolaires.filter(s => s.id !== studentId && s.matricule !== studentId);
+    }
+  }
+
+  // 2. Synchroniser le Cloud Supabase si présent
+  if (typeof window.supabaseClient !== 'undefined' && window.supabaseClient.from) {
+    window.supabaseClient.from('eleves').delete().eq('id', studentId).then(() => {}).catch(() => {});
+  }
+
+  // 3. Fermer le bulletin s'il était ouvert pour cet élève
+  if (typeof currentBulletinStudentId !== 'undefined' && currentBulletinStudentId === studentId) {
+    closeAllModals();
+  }
+
+  // 4. Re-rendre le tableau de bord de l'établissement
+  renderWsData(isDaara);
+
+  // 5. Notification & Journal d'Audit
+  showNotification(`🗑️ ${typeLabel === 'talibé' ? 'Le talibé' : "L'élève"} « ${studentName} » a été supprimé(e) avec succès. Nouvel effectif : ${filtered.length} apprenant(s).`);
+  if (typeof logAuditEvent === 'function') {
+    logAuditEvent('Suppression Élève', `${isDaara ? 'Talibé' : 'Élève'} ${studentName} (${mat}) supprimé(e) de l'établissement`);
+  }
+}
+window.deleteStudent = deleteStudent;
+
 // 2. GESTION DES TRANSACTIONS DE CAISSE ISOLEES PAR ECOLE (Zéro fausse donnée)
 function getEstablishmentTransactions() {
   if (!isRealRegisteredEstablishment()) {
@@ -6241,13 +6302,14 @@ function renderWsData(isDaara) {
         <th>Date d'inscription</th>
         <th>Téléphone Parent</th>
         <th>Statut</th>
+        <th style="text-align: center; width: 110px;">Action</th>
       `;
     }
 
     if (activeStudents.length === 0) {
       const emptyRow = document.createElement('tr');
       emptyRow.innerHTML = `
-        <td colspan="7" style="text-align: center; padding: 2.8rem 1rem; color: var(--gris-400);">
+        <td colspan="8" style="text-align: center; padding: 2.8rem 1rem; color: var(--gris-400);">
           <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🕌</div>
           <div style="font-weight: 700; font-size: 1.05rem; color: #FFF; margin-bottom: 0.3rem;">Aucun talibé inscrit pour le moment</div>
           <div style="font-size: 0.85rem; color: var(--gris-400); margin-bottom: 1.2rem;">Votre effectif actif est actuellement vierge (0 talibé). Cliquez ci-dessous pour inscrire votre premier talibé ou importer votre liste.</div>
@@ -6290,8 +6352,9 @@ function renderWsData(isDaara) {
           <td><span class="badge-tag badge-excellent">${t.mensualiteStatut || 'PAYE'}</span></td>
           <td>
             <div style="display: flex; gap: 0.35rem; align-items: center;">
-              <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="openEvaluationModal('${t.id}')">✏️ Noter Hizb</button>
+              <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="openEvaluationModal('${t.id}')">✏️ Noter</button>
               <button class="btn btn-outline" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; border-color: rgba(0, 210, 180, 0.4); color: var(--turquoise-400);" onclick="openChangeRoomModal('${t.id}')" title="Changer de chambre / dortoir">🛏️</button>
+              <button class="btn btn-outline" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; color: #EF4444; border-color: rgba(239, 68, 68, 0.4);" onclick="deleteStudent('${t.id}')" title="Supprimer définitivement ce talibé">🗑️</button>
             </div>
           </td>
         `;
@@ -6311,6 +6374,11 @@ function renderWsData(isDaara) {
           <td>${t.dateInscription || new Date().toLocaleDateString('fr-FR')}</td>
           <td>${t.parentTel || '+221 77 999 88 77'}</td>
           <td><span class="badge-tag badge-excellent">INSCRIT</span></td>
+          <td style="text-align: center;">
+            <button class="btn btn-outline" style="padding: 0.28rem 0.65rem; font-size: 0.75rem; color: #EF4444; border-color: rgba(239, 68, 68, 0.4); display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.12)'; this.style.borderColor='#EF4444';" onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(239,68,68,0.4)';" onclick="deleteStudent('${t.id}')" title="Supprimer définitivement ce talibé">
+              <span>🗑️</span> <span>Supprimer</span>
+            </button>
+          </td>
         `;
         fullBody.appendChild(trFull);
 
@@ -6367,13 +6435,14 @@ function renderWsData(isDaara) {
         <th>Date d'inscription</th>
         <th>Téléphone Parent</th>
         <th>Statut</th>
+        <th style="text-align: center; width: 110px;">Action</th>
       `;
     }
 
     if (activeStudents.length === 0) {
       const emptyRow = document.createElement('tr');
       emptyRow.innerHTML = `
-        <td colspan="6" style="text-align: center; padding: 2.8rem 1rem; color: var(--gris-400);">
+        <td colspan="7" style="text-align: center; padding: 2.8rem 1rem; color: var(--gris-400);">
           <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🏫</div>
           <div style="font-weight: 700; font-size: 1.05rem; color: #FFF; margin-bottom: 0.3rem;">Aucun élève inscrit pour le moment</div>
           <div style="font-size: 0.85rem; color: var(--gris-400); margin-bottom: 1.2rem;">Votre effectif actif est actuellement vierge (0 élève). Cliquez ci-dessous pour inscrire votre premier élève ou importer votre liste.</div>
@@ -6405,7 +6474,12 @@ function renderWsData(isDaara) {
           <td><span style="font-size: 0.8rem; color: var(--gris-500);">${e.matricule}</span></td>
           <td><strong>${e.classe || 'CM2'}</strong></td>
           <td><strong class="text-turquoise">${hasGrades ? e.moyenne + '/20' : '<span style="color: var(--gris-400); font-size: 0.8rem;">-- / 20</span>'}</strong> <span style="font-size: 0.75rem; color: var(--gris-400);">${(e.rang && e.rang !== '--') ? '(' + e.rang + ')' : '(En attente)'}</span></td>
-          <td><button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="previewBulletin('${e.id}')">📄 Voir Bulletin</button></td>
+          <td>
+            <div style="display: flex; gap: 0.35rem; align-items: center;">
+              <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="previewBulletin('${e.id}')">📄 Voir Bulletin</button>
+              <button class="btn btn-outline" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; color: #EF4444; border-color: rgba(239, 68, 68, 0.4);" onclick="deleteStudent('${e.id}')" title="Supprimer cet élève">🗑️</button>
+            </div>
+          </td>
         `;
         tbody.appendChild(tr);
 
@@ -6417,6 +6491,11 @@ function renderWsData(isDaara) {
           <td>${e.dateInscription || new Date().toLocaleDateString('fr-FR')}</td>
           <td>${e.parentTel || '+221 77 000 11 22'}</td>
           <td><span class="badge-tag badge-excellent">INSCRIT</span></td>
+          <td style="text-align: center;">
+            <button class="btn btn-outline" style="padding: 0.28rem 0.65rem; font-size: 0.75rem; color: #EF4444; border-color: rgba(239, 68, 68, 0.4); display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.12)'; this.style.borderColor='#EF4444';" onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(239,68,68,0.4)';" onclick="deleteStudent('${e.id}')" title="Supprimer définitivement cet élève">
+              <span>🗑️</span> <span>Supprimer</span>
+            </button>
+          </td>
         `;
         fullBody.appendChild(trFull);
 
@@ -6426,7 +6505,12 @@ function renderWsData(isDaara) {
           <td>${e.classe || 'CM2 A'}</td>
           <td><strong class="text-turquoise">${hasGrades ? e.moyenne + ' / 20' : '<span style="color: var(--gris-400); font-size: 0.8rem;">-- / 20</span>'}</strong></td>
           <td><span class="badge-tag ${hasGrades ? 'badge-gold' : ''}" style="${!hasGrades ? 'background: rgba(255,255,255,0.06); color: var(--gris-400);' : ''}">${hasGrades ? e.rang : 'En attente'}</span></td>
-          <td><button class="btn btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="previewBulletin('${e.id}')">Imprimer</button></td>
+          <td>
+            <div style="display: flex; gap: 0.35rem; align-items: center;">
+              <button class="btn btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="previewBulletin('${e.id}')">Imprimer</button>
+              <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #EF4444; border-color: rgba(239, 68, 68, 0.4);" onclick="deleteStudent('${e.id}')" title="Supprimer cet élève">🗑️</button>
+            </div>
+          </td>
         `;
         gradesBody.appendChild(trG);
       });
