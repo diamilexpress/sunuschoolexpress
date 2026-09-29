@@ -149,6 +149,50 @@
         'DELETE'
       );
       return res !== null;
+    },
+
+    // 5. Récupérer les élèves depuis Supabase Cloud
+    async getEleves(etabIdOrCode) {
+      const query = etabIdOrCode 
+        ? `?or=(etablissement_id.eq.${encodeURIComponent(etabIdOrCode)},etablissement_code.eq.${encodeURIComponent(etabIdOrCode)})` 
+        : '';
+      const rows = await apiRequest(`/rest/v1/eleves${query}`);
+      if (!Array.isArray(rows)) return null;
+      return rows.map(r => ({
+        id: r.id,
+        etablissementId: r.etablissement_id,
+        etablissementCode: r.etablissement_code,
+        matricule: r.matricule,
+        prenom: r.prenom,
+        nom: r.nom,
+        sexe: r.sexe || 'M',
+        type: r.type || 'SCOLAIRE',
+        classe: r.classe_id,
+        classeId: r.classe_id,
+        statutPension: r.statut_pension || 'A_JOUR',
+        cleAcces: r.matricule
+      }));
+    },
+
+    // 6. Sauvegarder un élève dans Supabase Cloud
+    async saveEleve(el) {
+      if (!el || !el.matricule) return false;
+      const payload = {
+        id: el.id || `el-${Date.now()}`,
+        etablissement_id: el.etablissementId || null,
+        etablissement_code: el.etablissementCode || null,
+        matricule: el.matricule,
+        prenom: el.prenom,
+        nom: el.nom,
+        sexe: el.sexe || 'M',
+        type: el.type || 'SCOLAIRE',
+        classe_id: el.classeId || el.classe || null,
+        statut_pension: el.statutPension || 'A_JOUR'
+      };
+      const res = await apiRequest('/rest/v1/eleves', 'POST', payload, {
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      });
+      return !!res;
     }
   };
 
