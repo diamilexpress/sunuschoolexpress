@@ -316,6 +316,92 @@ function logoutAdmin() {
   if (errEl) errEl.style.display = 'none';
 }
 
+// --- DÉDUPLICATION STRICTE ET INTELLIGENTE DU PARC (ANTI-DOUBLONS) ---
+function findMatchingEtabIndex(list, r) {
+  if (!Array.isArray(list) || !r) return -1;
+  const rName = (r.name || '').toLowerCase().trim();
+  const rPhone = (r.phone || '').replace(/[^0-9]/g, '').slice(-9);
+  const rEmail = (r.email || '').toLowerCase().trim();
+  const rCode = (r.code || '').toUpperCase().trim();
+  const rId = r.id || '';
+
+  return list.findIndex(e => {
+    if (!e) return false;
+    // 1. Identifiant exact ou Code exact
+    if (rId && e.id && e.id === rId) return true;
+    if (rCode && e.code && e.code.toUpperCase() === rCode) return true;
+    
+    // 2. Même nom d'établissement (évite doublon si codes différents générés lors de la souscription)
+    const eName = (e.name || '').toLowerCase().trim();
+    if (rName && eName && rName === eName) return true;
+
+    // 3. Même téléphone (si au moins 7 chiffres comparables)
+    const ePhone = (e.phone || '').replace(/[^0-9]/g, '').slice(-9);
+    if (rPhone && ePhone && rPhone.length >= 7 && rPhone === ePhone) return true;
+
+    // 4. Même email (hors emails génériques ou plateforme)
+    const eEmail = (e.email || '').toLowerCase().trim();
+    if (rEmail && eEmail && !rEmail.includes('direction@ecole.sn') && !rEmail.includes('sunuschoolexpress@gmail.com') && rEmail === eEmail) return true;
+
+    return false;
+  });
+}
+
+function mergeEtabRecords(existing, incoming) {
+  if (!existing) return incoming;
+  if (!incoming) return existing;
+
+  // Statut : si l'un des deux a été validé (ACTIF), préserver le statut ACTIF
+  const isExistingActive = existing.statut === 'ACTIF' || existing.statutAbonnement === 'ACTIF';
+  const isIncomingActive = incoming.statut === 'ACTIF' || incoming.statutAbonnement === 'ACTIF';
+  const mergedStatut = (isExistingActive || isIncomingActive) ? 'ACTIF' : (incoming.statut || existing.statut || 'EN_ATTENTE_VALIDATION');
+  const mergedStatutAbo = (isExistingActive || isIncomingActive) ? 'ACTIF' : (incoming.statutAbonnement || existing.statutAbonnement || 'EN_ATTENTE_VALIDATION');
+  const mergedFrais = Boolean(existing.fraisAdhesionPayes || incoming.fraisAdhesionPayes);
+
+  // Preuve Wave : préférer une référence personnalisée
+  let bestWaveRef = incoming.waveTransactionRef || existing.waveTransactionRef;
+  if (existing.waveTransactionRef && (!incoming.waveTransactionRef || incoming.waveTransactionRef === '10 000 FCFA')) {
+    bestWaveRef = existing.waveTransactionRef;
+  }
+
+  // Nom directeur : préférer un nom complet plutôt que "Direction" par défaut
+  let bestDirecteur = incoming.directeurNom || existing.directeurNom;
+  if ((!bestDirecteur || bestDirecteur === 'Direction' || bestDirecteur === 'Direction Générale') && existing.directeurNom && existing.directeurNom !== 'Direction') {
+    bestDirecteur = existing.directeurNom;
+  }
+
+  return {
+    ...existing,
+    ...incoming,
+    id: existing.id || incoming.id,
+    code: existing.code || incoming.code,
+    secretKey: existing.secretKey || incoming.secretKey || (existing.code ? `ADM-${existing.code.replace(/[^0-9]/g, '')}` : null),
+    statut: mergedStatut,
+    statutAbonnement: mergedStatutAbo,
+    fraisAdhesionPayes: mergedFrais,
+    waveTransactionRef: bestWaveRef,
+    directeurNom: bestDirecteur,
+    phone: incoming.phone || existing.phone,
+    email: incoming.email || existing.email,
+    city: incoming.city || existing.city
+  };
+}
+
+function deduplicateEtabList(list) {
+  if (!Array.isArray(list)) return [];
+  const result = [];
+  list.forEach(item => {
+    if (!item || !item.name || isFakeDemoSchool(item)) return;
+    const idx = findMatchingEtabIndex(result, item);
+    if (idx === -1) {
+      result.push(item);
+    } else {
+      result[idx] = mergeEtabRecords(result[idx], item);
+    }
+  });
+  return result;
+}
+
 // --- CHARGEMENT DES DONNÉES GLOBALES ---
 function loadAdminData() {
   adminState.etablissements = [];
@@ -323,12 +409,22 @@ function loadAdminData() {
   adminState.auditLogs = [];
   adminState.quotes = [];
 
+  function addOrMergeEtab(item) {
+    if (!item || !item.name || isFakeDemoSchool(item)) return;
+    const idx = findMatchingEtabIndex(adminState.etablissements, item);
+    if (idx === -1) {
+      adminState.etablissements.unshift(item);
+    } else {
+      adminState.etablissements[idx] = mergeEtabRecords(adminState.etablissements[idx], item);
+    }
+  }
+
   // 1. Lire depuis la base ERP centrale (dashboard.js store)
   try {
     const rawDb = localStorage.getItem('sunuschool_erp_db');
     if (rawDb) {
       const db = JSON.parse(rawDb);
-      if (Array.isArray(db.etablissements)) adminState.etablissements = [...db.etablissements];
+      if (Array.isArray(db.etablissements)) db.etablissements.forEach(addOrMergeEtab);
       if (Array.isArray(db.transactions)) adminState.transactions = [...db.transactions];
       if (Array.isArray(db.auditLogs)) adminState.auditLogs = [...db.auditLogs];
       if (Array.isArray(db.quotes)) adminState.quotes = [...db.quotes];
@@ -340,17 +436,7 @@ function loadAdminData() {
     const rawReg = localStorage.getItem('sunuschool_establishments_registry');
     if (rawReg) {
       const reg = JSON.parse(rawReg);
-      if (Array.isArray(reg)) {
-        reg.forEach(r => {
-          if (!r || !r.name) return;
-          const idx = adminState.etablissements.findIndex(e => e.id === r.id || (r.code && e.code === r.code));
-          if (idx === -1) {
-            adminState.etablissements.unshift(r);
-          } else {
-            adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...r };
-          }
-        });
-      }
+      if (Array.isArray(reg)) reg.forEach(addOrMergeEtab);
     }
   } catch (e) {}
 
@@ -359,24 +445,7 @@ function loadAdminData() {
     const sseDbRaw = localStorage.getItem('sse_saas_database');
     if (sseDbRaw) {
       const sseDb = JSON.parse(sseDbRaw);
-      if (Array.isArray(sseDb.etablissements)) {
-        sseDb.etablissements.forEach(r => {
-          if (!r || !r.name) return;
-          const idx = adminState.etablissements.findIndex(e => (r.id && e.id === r.id) || (r.code && e.code === r.code));
-          if (idx === -1) {
-            adminState.etablissements.unshift(r);
-          } else {
-            const isCurPending = isPendingEtab(adminState.etablissements[idx]);
-            const isRPending = isPendingEtab(r);
-            if (!isCurPending && isRPending) {
-              // Si l'état local est déjà validé (ACTIF), préserver le statut actif local
-              adminState.etablissements[idx] = { ...r, ...adminState.etablissements[idx] };
-            } else {
-              adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...r };
-            }
-          }
-        });
-      }
+      if (Array.isArray(sseDb.etablissements)) sseDb.etablissements.forEach(addOrMergeEtab);
     }
   } catch (e) {}
 
@@ -401,20 +470,23 @@ function loadAdminData() {
     const rawCurrent = localStorage.getItem('sunuschool_establishment');
     if (rawCurrent) {
       const cur = JSON.parse(rawCurrent);
-      if (cur && cur.name && !isFakeDemoSchool(cur)) {
-        const idx = adminState.etablissements.findIndex(e => e.id === cur.id || (cur.code && e.code === cur.code));
-        if (idx === -1) {
-          adminState.etablissements.unshift(cur);
-        } else {
-          adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...cur };
-        }
-      }
+      addOrMergeEtab(cur);
     }
   } catch (e) {}
 
-  adminState.etablissements = adminState.etablissements.filter(e => 
+  // Passe de nettoyage final et déduplication garantie
+  adminState.etablissements = deduplicateEtabList(adminState.etablissements).filter(e => 
     e && e.name && !isFakeDemoSchool(e) && e.type !== 'SUPER_ADMIN' && e.code !== 'SSE-ADMIN-HQ'
   );
+
+  // Sauvegarder la version nettoyée dans les stockages locaux (élimine immédiatement les doublons enregistrés)
+  try {
+    localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(adminState.etablissements));
+    let sseDbRaw = localStorage.getItem('sse_saas_database');
+    let sseDb = sseDbRaw ? JSON.parse(sseDbRaw) : { etablissements: [] };
+    sseDb.etablissements = [...adminState.etablissements];
+    localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
+  } catch(e) {}
 
   renderAdminViews();
 
@@ -427,21 +499,23 @@ async function syncCloudEstablishments() {
   if (isSyncingCloud) return;
   isSyncingCloud = true;
 
+  function addOrMergeCloudEtab(item) {
+    if (!item || !item.name || isFakeDemoSchool(item)) return;
+    const idx = findMatchingEtabIndex(adminState.etablissements, item);
+    if (idx === -1) {
+      adminState.etablissements.unshift(item);
+    } else {
+      adminState.etablissements[idx] = mergeEtabRecords(adminState.etablissements[idx], item);
+    }
+  }
+
   // 0. SYNCHRONISATION PRIORITAIRE CLOUD SUPABASE (PostgreSQL En Ligne 24/7)
   if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getEtablissements === 'function') {
     try {
       const supaList = await window.SSE_SUPABASE.getEtablissements();
       if (Array.isArray(supaList) && supaList.length > 0) {
-        supaList.forEach(be => {
-          if (!be || !be.name || isFakeDemoSchool(be)) return;
-          const idx = adminState.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
-          if (idx === -1) {
-            adminState.etablissements.unshift(be);
-          } else {
-            adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...be };
-          }
-        });
-        adminState.etablissements = adminState.etablissements.filter(e => 
+        supaList.forEach(addOrMergeCloudEtab);
+        adminState.etablissements = deduplicateEtabList(adminState.etablissements).filter(e => 
           e && e.name && !isFakeDemoSchool(e) && e.type !== 'SUPER_ADMIN' && e.code !== 'SSE-ADMIN-HQ'
         );
         isBackendActive = true;
@@ -490,16 +564,7 @@ async function syncCloudEstablishments() {
         }
 
         if (fetchedList.length > 0 || fetchedQuotes.length > 0) {
-          fetchedList.forEach(be => {
-            if (!be || !be.name || isFakeDemoSchool(be)) return;
-            const idx = adminState.etablissements.findIndex(e => (be.id && e.id === be.id) || (be.code && e.code === be.code));
-            if (idx === -1) {
-              adminState.etablissements.unshift(be);
-            } else {
-              // Le serveur Cloud est la référence absolue partagée
-              adminState.etablissements[idx] = { ...adminState.etablissements[idx], ...be };
-            }
-          });
+          fetchedList.forEach(addOrMergeCloudEtab);
 
           if (fetchedQuotes.length > 0) {
             fetchedQuotes.forEach(bq => {
@@ -509,8 +574,8 @@ async function syncCloudEstablishments() {
             });
           }
 
-          // Nettoyer les faux doublons ou entrées démo
-          adminState.etablissements = adminState.etablissements.filter(e => 
+          // Nettoyer les faux doublons et appliquer la déduplication stricte
+          adminState.etablissements = deduplicateEtabList(adminState.etablissements).filter(e => 
             e && e.name && !isFakeDemoSchool(e) && e.type !== 'SUPER_ADMIN' && e.code !== 'SSE-ADMIN-HQ'
           );
 
@@ -1243,6 +1308,17 @@ function deleteEstablishmentHQ(idOrCode) {
   const etabId = etab.id;
   const etabCode = etab.code;
   const etabName = etab.name;
+  const normTargetName = (etab.name || '').toLowerCase().trim();
+  const cleanTargetPhone = (etab.phone || '').replace(/[^0-9]/g, '').slice(-9);
+
+  function matchesTarget(item) {
+    if (!item) return false;
+    if (etabId && item.id === etabId) return true;
+    if (etabCode && item.code === etabCode) return true;
+    if (normTargetName && item.name && item.name.toLowerCase().trim() === normTargetName) return true;
+    if (cleanTargetPhone && cleanTargetPhone.length >= 7 && item.phone && item.phone.replace(/[^0-9]/g, '').slice(-9) === cleanTargetPhone) return true;
+    return false;
+  }
 
   // Supprimer immédiatement de Supabase Cloud
   if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.deleteEtablissement === 'function') {
@@ -1252,9 +1328,7 @@ function deleteEstablishmentHQ(idOrCode) {
   }
 
   // 1. Supprimer de l'état mémoire local de l'admin
-  adminState.etablissements = adminState.etablissements.filter(e => 
-    (etabId ? e.id !== etabId : true) && (etabCode ? e.code !== etabCode : true)
-  );
+  adminState.etablissements = adminState.etablissements.filter(e => !matchesTarget(e));
 
   // 2. Supprimer du registre des souscriptions (sunuschool_establishments_registry)
   try {
@@ -1262,9 +1336,7 @@ function deleteEstablishmentHQ(idOrCode) {
     if (rawReg) {
       let reg = JSON.parse(rawReg);
       if (Array.isArray(reg)) {
-        reg = reg.filter(e => 
-          (etabId ? e.id !== etabId : true) && (etabCode ? e.code !== etabCode : true)
-        );
+        reg = reg.filter(e => !matchesTarget(e));
         localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(reg));
       }
     }
@@ -1276,9 +1348,7 @@ function deleteEstablishmentHQ(idOrCode) {
     if (rawDb) {
       const db = JSON.parse(rawDb);
       if (Array.isArray(db.etablissements)) {
-        db.etablissements = db.etablissements.filter(e => 
-          (etabId ? e.id !== etabId : true) && (etabCode ? e.code !== etabCode : true)
-        );
+        db.etablissements = db.etablissements.filter(e => !matchesTarget(e));
       }
       // Supprimer les élèves liés à cet établissement
       if (Array.isArray(db.eleves) && etabId) {
@@ -1294,9 +1364,7 @@ function deleteEstablishmentHQ(idOrCode) {
     if (sseDbRaw) {
       const sseDb = JSON.parse(sseDbRaw);
       if (Array.isArray(sseDb.etablissements)) {
-        sseDb.etablissements = sseDb.etablissements.filter(e => 
-          (etabId ? e.id !== etabId : true) && (etabCode ? e.code !== etabCode : true)
-        );
+        sseDb.etablissements = sseDb.etablissements.filter(e => !matchesTarget(e));
         localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
       }
     }
@@ -1317,7 +1385,7 @@ function deleteEstablishmentHQ(idOrCode) {
   // 4. Nettoyer la session active si c'était l'école en cours
   try {
     const cur = JSON.parse(localStorage.getItem('sunuschool_establishment') || '{}');
-    if (cur && ((etabId && cur.id === etabId) || (etabCode && cur.code === etabCode))) {
+    if (cur && matchesTarget(cur)) {
       localStorage.removeItem('sunuschool_establishment');
       localStorage.removeItem('sunuschool_active_workspace');
     }

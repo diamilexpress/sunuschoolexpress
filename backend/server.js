@@ -137,6 +137,28 @@ const initialSeedData = {
   ]
 };
 
+// Helper de déduplication universelle stricte (empêche les doubles créations d'écoles)
+function findMatchingBackendEtabIndex(list, target) {
+  if (!Array.isArray(list) || !target) return -1;
+  const tName = (target.name || target.schoolName || '').toLowerCase().trim();
+  const tPhone = (target.phone || '').replace(/[^0-9]/g, '').slice(-9);
+  const tEmail = (target.email || '').toLowerCase().trim();
+  const tCode = (target.code || '').toUpperCase().trim();
+  const tId = target.id || '';
+
+  return list.findIndex(e => {
+    if (!e) return false;
+    if (tId && e.id && e.id === tId) return true;
+    if (tCode && e.code && e.code.toUpperCase() === tCode) return true;
+    if (tName && e.name && e.name.toLowerCase().trim() === tName) return true;
+    const ePhone = (e.phone || '').replace(/[^0-9]/g, '').slice(-9);
+    if (tPhone && ePhone && tPhone.length >= 7 && tPhone === ePhone) return true;
+    const eEmail = (e.email || '').toLowerCase().trim();
+    if (tEmail && eEmail && !tEmail.includes('direction@ecole.sn') && !tEmail.includes('sunuschoolexpress@gmail.com') && tEmail === eEmail) return true;
+    return false;
+  });
+}
+
 // Fonction de chargement de la base persistante
 function loadDatabase() {
   try {
@@ -147,6 +169,27 @@ function loadDatabase() {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
       const loaded = JSON.parse(raw);
       let needsSave = false;
+
+      if (!Array.isArray(loaded.etablissements)) {
+        loaded.etablissements = [];
+        needsSave = true;
+      } else {
+        const deduplicated = [];
+        loaded.etablissements.forEach(item => {
+          if (!item || !item.name) return;
+          const idx = findMatchingBackendEtabIndex(deduplicated, item);
+          if (idx === -1) {
+            deduplicated.push(item);
+          } else {
+            deduplicated[idx] = { ...deduplicated[idx], ...item };
+            needsSave = true;
+          }
+        });
+        if (deduplicated.length !== loaded.etablissements.length) {
+          loaded.etablissements = deduplicated;
+          needsSave = true;
+        }
+      }
 
       if (!Array.isArray(loaded.classes)) {
         loaded.classes = [];
@@ -1261,20 +1304,23 @@ async function createPaydunyaInvoice({ schoolName, email, phone, montant, refTx 
 
 // Étape 1 : Initialisation de la session de paiement de souscription
 app.post('/api/subscriptions/checkout', async (req, res) => {
-  const { schoolName, email, phone, city, type, planName, planPrice, operator, payeurTel } = req.body;
-  const montant = Number(req.body.montant) || 100;
+  const { schoolName, email, phone, city, type, planName, planPrice, operator, payeurTel, code, id } = req.body;
+  const montant = Number(req.body.montant) || 10000;
   const op = operator || "WAVE";
   
   const refTx = `SSE-SUB-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
   const cleanSchool = (schoolName || 'Établissement Privé').trim();
   const cleanEmail = (email || `direction@${cleanSchool.toLowerCase().replace(/[^a-z0-9]/g, '')}.sn`).trim();
 
-  // Création ou repérage de l'établissement avec statut "EN_ATTENTE_PAIEMENT"
-  let etab = db.etablissements.find(e => e.email && e.email.toLowerCase() === cleanEmail.toLowerCase());
+  // Création ou repérage de l'établissement sans doublon (id, code, email, nom, ou téléphone)
+  const targetSearch = { id, code, schoolName: cleanSchool, email: cleanEmail, phone };
+  const existingIdx = findMatchingBackendEtabIndex(db.etablissements, targetSearch);
+  let etab = existingIdx >= 0 ? db.etablissements[existingIdx] : null;
+
   if (!etab) {
     etab = {
-      id: `etab-${Date.now()}`,
-      code: `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: id || `etab-${cleanSchool.toLowerCase().replace(/[^a-z0-9]/g, '') || Date.now()}`,
+      code: code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: cleanSchool,
       type: type || 'ECOLE',
       city: city || 'Dakar',
@@ -1282,12 +1328,20 @@ app.post('/api/subscriptions/checkout', async (req, res) => {
       email: cleanEmail,
       plan: planName || 'Formule École Pro',
       prixMensuel: planPrice || '55 000 FCFA/mois',
-      statut: 'EN_ATTENTE_PAIEMENT',
-      statutAbonnement: 'EN_ATTENTE_PAIEMENT',
+      statut: 'EN_ATTENTE_VALIDATION',
+      statutAbonnement: 'EN_ATTENTE_VALIDATION',
       dateDemande: new Date().toISOString(),
       currency: 'FCFA'
     };
     db.etablissements.unshift(etab);
+    saveDatabase(db);
+  } else {
+    if (code && (!etab.code || etab.code.startsWith('SSE-SN-') && code !== etab.code)) {
+      etab.code = code;
+    }
+    if (phone) etab.phone = phone;
+    if (city) etab.city = city;
+    if (planName) etab.plan = planName;
     saveDatabase(db);
   }
 
@@ -1338,20 +1392,18 @@ app.post('/api/subscriptions/checkout', async (req, res) => {
 
 // Étape 2 : Confirmation automatique du paiement et déblocage immédiat
 app.post('/api/subscriptions/confirm', (req, res) => {
-  const { reference, email, schoolName, planName, city, phone, type, code, operator, transactionId } = req.body;
+  const { reference, email, schoolName, planName, city, phone, type, code, id, operator, transactionId } = req.body;
   const cleanEmail = (email || '').toLowerCase().trim();
   const cleanSchool = (schoolName || '').trim();
   
-  let etab = db.etablissements.find(e => 
-    (cleanEmail && e.email && e.email.toLowerCase() === cleanEmail) ||
-    (code && e.code && e.code === code) ||
-    (cleanSchool && e.name && e.name.toLowerCase() === cleanSchool.toLowerCase())
-  );
+  const targetSearch = { id, code, schoolName: cleanSchool, email: cleanEmail, phone };
+  const existingIdx = findMatchingBackendEtabIndex(db.etablissements, targetSearch);
+  let etab = existingIdx >= 0 ? db.etablissements[existingIdx] : null;
 
   if (!etab) {
     const defaultName = cleanSchool || 'Nouvel Établissement Partenaire';
     etab = {
-      id: `etab-${Date.now()}`,
+      id: id || `etab-${Date.now()}`,
       code: code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: defaultName,
       type: type || (defaultName.toLowerCase().includes('daara') ? 'DAARA' : 'ECOLE'),
@@ -1370,6 +1422,7 @@ app.post('/api/subscriptions/confirm', (req, res) => {
     etab.statut = "EN_ATTENTE_VALIDATION";
     etab.statutAbonnement = "EN_ATTENTE_VALIDATION";
     etab.fraisAdhesionPayes = false;
+    if (code) etab.code = code;
   }
 
   const op = operator || "WAVE";
@@ -1452,10 +1505,14 @@ app.post('/api/saas/demandes', (req, res) => {
     return res.status(400).json({ success: false, message: "Le nom de l'établissement est obligatoire." });
   }
 
-  let etab = db.etablissements.find(e => 
-    (body.code && e.code && e.code === body.code) ||
-    (e.name && e.name.toLowerCase().trim() === cleanSchool.toLowerCase())
-  );
+  const existingIdx = findMatchingBackendEtabIndex(db.etablissements, {
+    id: body.id,
+    code: body.code,
+    schoolName: cleanSchool,
+    email: body.email,
+    phone: body.phone
+  });
+  let etab = existingIdx >= 0 ? db.etablissements[existingIdx] : null;
 
   if (!etab) {
     etab = {
@@ -1478,7 +1535,12 @@ app.post('/api/saas/demandes', (req, res) => {
     };
     db.etablissements.unshift(etab);
   } else {
+    // Fusionner les champs sans écraser le code ou l'id s'il est déjà existant
+    const originalCode = etab.code;
+    const originalId = etab.id;
     Object.assign(etab, body);
+    if (originalCode && !body.code) etab.code = originalCode;
+    if (originalId) etab.id = originalId;
   }
 
   saveDatabase(db);

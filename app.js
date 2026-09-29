@@ -3602,6 +3602,10 @@ function selectPaymentOperator(op) {
 }
 
 async function executeSubscriptionPayment() {
+  if (window._isExecutingPayment) return;
+  window._isExecutingPayment = true;
+  setTimeout(() => { window._isExecutingPayment = false; }, 3500);
+
   const nameEl = document.getElementById('regSchoolName');
   const planEl = document.getElementById('regPlanName');
   const priceEl = document.getElementById('regPlanPrice');
@@ -3639,27 +3643,44 @@ async function executeSubscriptionPayment() {
   }
   const type = (typeEl && typeEl.value.toLowerCase().includes('daara')) ? 'DAARA' : (isDaaraPlan ? 'DAARA' : 'ECOLE');
 
-  const generatedCode = 'SSE-SN-' + Math.floor(1000 + Math.random() * 9000);
+  // Détection & réutilisation d'un code existant si même école ou même téléphone (évite tout doublon de code)
+  const normSchoolName = schoolName.trim().toLowerCase();
+  const cleanPhoneNum = (phone || '').replace(/[^0-9]/g, '').slice(-9);
+
+  let existing = null;
+  const regList = (typeof getEstablishmentRegistry === 'function') ? getEstablishmentRegistry() : [];
+  if (Array.isArray(regList)) {
+    existing = regList.find(e => 
+      (e.name && e.name.trim().toLowerCase() === normSchoolName) ||
+      (cleanPhoneNum && cleanPhoneNum.length >= 7 && e.phone && e.phone.replace(/[^0-9]/g, '').slice(-9) === cleanPhoneNum)
+    );
+  }
+  if (!existing && currentEstablishment && currentEstablishment.name && currentEstablishment.name.trim().toLowerCase() === normSchoolName) {
+    existing = currentEstablishment;
+  }
+
+  const generatedCode = existing?.code || ('SSE-SN-' + Math.floor(1000 + Math.random() * 9000));
+  const etabId = existing?.id || `etab-${schoolName.toLowerCase().replace(/[^a-z0-9]/g, '') || Date.now()}`;
 
   // 1. CRÉATION IMMÉDIATE & PERSISTANCE LOCALE INFAILLIBLE
   const newEstablishment = {
-    id: `etab-${Date.now()}`,
+    id: etabId,
     email: email,
     name: schoolName,
     plan: planName,
     type: type,
     city: city,
     code: generatedCode,
-    secretKey: `ADM-${generatedCode.replace(/[^0-9]/g, '')}`,
-    password: `ADM-${generatedCode.replace(/[^0-9]/g, '')}`,
+    secretKey: existing?.secretKey || `ADM-${generatedCode.replace(/[^0-9]/g, '')}`,
+    password: existing?.password || `ADM-${generatedCode.replace(/[^0-9]/g, '')}`,
     phone: phone,
-    statut: 'EN_ATTENTE_VALIDATION',
-    statutAbonnement: 'EN_ATTENTE_VALIDATION',
-    dateAdhesion: new Date().toISOString().split('T')[0],
-    fraisAdhesionPayes: false,
+    statut: existing?.statut || 'EN_ATTENTE_VALIDATION',
+    statutAbonnement: existing?.statutAbonnement || 'EN_ATTENTE_VALIDATION',
+    dateAdhesion: existing?.dateAdhesion || new Date().toISOString().split('T')[0],
+    fraisAdhesionPayes: existing?.fraisAdhesionPayes || false,
     operateurPaiement: selectedPaymentOp,
     isUserCreated: true,
-    createdAt: new Date().toISOString()
+    createdAt: existing?.createdAt || new Date().toISOString()
   };
 
   currentEstablishment = newEstablishment;
@@ -3667,7 +3688,6 @@ async function executeSubscriptionPayment() {
     localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
     localStorage.removeItem('sunuschool_active_workspace'); // Accès bloqué tant que non validé par l'Admin
     saveEstablishmentToRegistry(currentEstablishment);
-    syncWithSaaSDatabase(currentEstablishment);
   } catch (storageErr) {
     console.warn('Erreur stockage local immédiat:', storageErr);
   }
@@ -3808,6 +3828,8 @@ function getBackendBaseUrl() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        id: currentEstablishment.id,
+        code: currentEstablishment.code,
         schoolName,
         email,
         phone,
@@ -3884,7 +3906,6 @@ function confirmOperatorPaymentSuccess() {
       localStorage.removeItem('sunuschool_active_workspace');
       localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
       saveEstablishmentToRegistry(currentEstablishment);
-      syncWithSaaSDatabase(currentEstablishment);
     } catch (e) {}
   }
 
