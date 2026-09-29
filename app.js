@@ -838,6 +838,49 @@ try {
   if (currentEstablishment && !currentEstablishment.email) {
     currentEstablishment.email = `direction@${currentEstablishment.name.toLowerCase().replace(/[^a-z0-9]/g, '') || 'etab'}.sn`;
   }
+
+  // Purge préventive immédiate de tout résidu de données fictives (EMF-2026-*, emf-el-*, etc.)
+  if (currentEstablishment) {
+    const isMock = (s) => (s && ((s.id && String(s.id).startsWith('emf-el-')) || (s.matricule && String(s.matricule).startsWith('EMF-2026-'))));
+    const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
+    const isDaara = currentEstablishment.type === 'DAARA';
+    const keysToCheck = [
+      isDaara ? `sse_talibes_${estKey}` : `sse_eleves_${estKey}`,
+      currentEstablishment.code ? `sse_${isDaara ? 'talibes' : 'eleves'}_${currentEstablishment.code}` : null,
+      currentEstablishment.id ? `sse_${isDaara ? 'talibes' : 'eleves'}_${currentEstablishment.id}` : null,
+      'sse_eleves_SSE-SN-2901', 'sse_eleves_etab-2901', 'sse_eleves_emf@gmail.com'
+    ].filter(Boolean);
+
+    keysToCheck.forEach(k => {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const cleaned = parsed.filter(s => !isMock(s));
+            if (cleaned.length !== parsed.length) {
+              localStorage.setItem(k, JSON.stringify(cleaned));
+            }
+          }
+        } catch(e) {}
+      }
+    });
+
+    // Recalculer l'effectif réel (0 si vierge)
+    const activeRaw = localStorage.getItem(isDaara ? `sse_talibes_${estKey}` : `sse_eleves_${estKey}`);
+    if (activeRaw) {
+      try {
+        const parsed = JSON.parse(activeRaw);
+        if (Array.isArray(parsed)) {
+          currentEstablishment.effectif = parsed.length;
+          localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+        }
+      } catch(e) {}
+    } else if (currentEstablishment.effectif === 11) {
+      currentEstablishment.effectif = 0;
+      localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+    }
+  }
 } catch (e) {}
 
 // ============================================================================
@@ -3602,7 +3645,7 @@ async function executeSubscriptionPayment() {
   const generatedCode = existing?.code || ('SSE-SN-' + Math.floor(1000 + Math.random() * 9000));
   const etabId = existing?.id || `etab-${schoolName.toLowerCase().replace(/[^a-z0-9]/g, '') || Date.now()}`;
 
-  // 1. CRÉATION IMMÉDIATE & PERSISTANCE LOCALE INFAILLIBLE
+  // 1. CRÉATION IMMÉDIATE & PERSISTANCE LOCALE INFAILLIBLE (Site Vierge Garanti : 0 Fictif)
   const newEstablishment = {
     id: etabId,
     email: email,
@@ -3620,6 +3663,7 @@ async function executeSubscriptionPayment() {
     fraisAdhesionPayes: existing?.fraisAdhesionPayes || false,
     operateurPaiement: selectedPaymentOp,
     isUserCreated: true,
+    effectif: 0, // TOUJOURS 0 ELEVE PAR DEFAUT (SITE VIERGE)
     createdAt: existing?.createdAt || new Date().toISOString()
   };
 
@@ -3628,6 +3672,17 @@ async function executeSubscriptionPayment() {
     localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
     localStorage.removeItem('sunuschool_active_workspace'); // Accès bloqué tant que non validé par l'Admin
     saveEstablishmentToRegistry(currentEstablishment);
+
+    // Initialisation 100% vierge des clés (zéro élève, zéro classe, zéro prof, zéro transaction fictive)
+    if (!existing) {
+      const freshKeys = [
+        `sse_eleves_${etabId}`, `sse_talibes_${etabId}`, `sse_classes_${etabId}`, `sse_teachers_${etabId}`, `sse_caisse_${etabId}`,
+        `sse_eleves_${generatedCode}`, `sse_talibes_${generatedCode}`, `sse_classes_${generatedCode}`, `sse_teachers_${generatedCode}`, `sse_caisse_${generatedCode}`
+      ];
+      freshKeys.forEach(k => {
+        try { localStorage.setItem(k, '[]'); } catch(e) {}
+      });
+    }
   } catch (storageErr) {
     console.warn('Erreur stockage local immédiat:', storageErr);
   }
@@ -5466,24 +5521,14 @@ function getEstablishmentActiveStudents(isDaara) {
     return isDaara ? demoState.talibes : demoState.elevesScolaires;
   }
 
-  // Vérifier si c'est l'École des Métiers du Futur
-  if (isEmfEstablishment(currentEstablishment)) {
-    const emfKeys = ['sse_eleves_SSE-SN-2901', 'sse_eleves_etab-2901', 'sse_eleves_emf@gmail.com'];
-    for (const k of emfKeys) {
-      const raw = localStorage.getItem(k);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        } catch(e) {}
-      }
-    }
-    // Si pas encore initialisé dans le stockage de ce navigateur, enregistrer et retourner les 11 élèves officiels
-    saveEstablishmentActiveStudents(EMF_DEFAULT_STUDENTS, false);
-    return EMF_DEFAULT_STUDENTS;
-  }
+  // Détecteur rigoureux de fausse donnée de maquette (EMF_DEFAULT_STUDENTS injectés lors d'anciennes versions)
+  const isMockStudent = (s) => {
+    if (!s) return true;
+    const id = (s.id || '').toLowerCase();
+    const mat = (s.matricule || '').toUpperCase();
+    return id.startsWith('emf-el-') || mat.startsWith('EMF-2026-');
+  };
 
-  // Autres établissements réels
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
   const candidateKeys = [
     isDaara ? `sse_talibes_${estKey}` : `sse_eleves_${estKey}`,
@@ -5497,17 +5542,24 @@ function getEstablishmentActiveStudents(isDaara) {
     if (stored !== null) {
       try {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          parsed.forEach(s => {
-            if (s.moyenne === 15.5 && (!s.notes || s.notes.length === 0)) {
-              s.moyenne = null;
-              s.rang = '--';
-            }
-            if (s.tajwidNote === 16.5 && (!s.notes || s.notes.length === 0)) {
-              s.tajwidNote = null;
-            }
-          });
-          return parsed;
+        if (Array.isArray(parsed)) {
+          // Filtrer et purger définitivement les élèves fictifs injectés
+          const realStudents = parsed.filter(s => !isMockStudent(s));
+          if (realStudents.length !== parsed.length) {
+            localStorage.setItem(sk, JSON.stringify(realStudents));
+          }
+          if (realStudents.length > 0) {
+            realStudents.forEach(s => {
+              if (s.moyenne === 15.5 && (!s.notes || s.notes.length === 0)) {
+                s.moyenne = null;
+                s.rang = '--';
+              }
+              if (s.tajwidNote === 16.5 && (!s.notes || s.notes.length === 0)) {
+                s.tajwidNote = null;
+              }
+            });
+            return realStudents;
+          }
         }
       } catch(e) {}
     }
@@ -5520,8 +5572,9 @@ function getEstablishmentActiveStudents(isDaara) {
       const sseDb = JSON.parse(sseDbRaw);
       if (Array.isArray(sseDb.eleves) && sseDb.eleves.length > 0) {
         const matches = sseDb.eleves.filter(el => 
-          (currentEstablishment.id && el.etablissementId === currentEstablishment.id) ||
-          (currentEstablishment.code && (el.etablissementCode === currentEstablishment.code || el.code === currentEstablishment.code))
+          !isMockStudent(el) &&
+          ((currentEstablishment.id && el.etablissementId === currentEstablishment.id) ||
+           (currentEstablishment.code && (el.etablissementCode === currentEstablishment.code || el.code === currentEstablishment.code)))
         );
         if (matches.length > 0) {
           saveEstablishmentActiveStudents(matches, isDaara);
@@ -5531,6 +5584,7 @@ function getEstablishmentActiveStudents(isDaara) {
     }
   } catch(e) {}
 
+  // 100% VIERGE PAR DÉFAUT : aucun élève fictif n'est pré-rempli !
   return [];
 }
 
@@ -5546,13 +5600,7 @@ function saveEstablishmentActiveStudents(list, isDaara) {
   if (currentEstablishment.id) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.id}` : `sse_eleves_${currentEstablishment.id}`, serialized);
   if (currentEstablishment.email) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.email}` : `sse_eleves_${currentEstablishment.email}`, serialized);
 
-  if (isEmfEstablishment(currentEstablishment)) {
-    localStorage.setItem('sse_eleves_SSE-SN-2901', serialized);
-    localStorage.setItem('sse_eleves_etab-2901', serialized);
-    localStorage.setItem('sse_eleves_emf@gmail.com', serialized);
-  }
-
-  // Mettre à jour l'effectif sur l'objet établissement
+  // Mettre à jour l'effectif exact sur l'objet établissement
   currentEstablishment.effectif = list.length;
   try {
     localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
@@ -5682,31 +5730,36 @@ function getEstablishmentTeachers() {
     return demoState.hrTeachers || [];
   }
 
-  // Vérifier si c'est l'École des Métiers du Futur
-  if (isEmfEstablishment(currentEstablishment)) {
-    const emfKeys = ['sse_teachers_SSE-SN-2901', 'sse_teachers_etab-2901', 'sse_teachers_emf@gmail.com'];
-    for (const k of emfKeys) {
-      const raw = localStorage.getItem(k);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        } catch(e) {}
-      }
-    }
-    saveEstablishmentTeachers([EMF_DEFAULT_TEACHER]);
-    return [EMF_DEFAULT_TEACHER];
-  }
+  const isMockTeacher = (t) => {
+    if (!t) return true;
+    const id = (t.id || '').toLowerCase();
+    return id.includes('ousmane-niang-emf');
+  };
 
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
-  const storageKey = `sse_teachers_${estKey}`;
-  const stored = localStorage.getItem(storageKey);
-  if (stored !== null) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch(e) {}
+  const candidateKeys = [
+    `sse_teachers_${estKey}`,
+    currentEstablishment.code ? `sse_teachers_${currentEstablishment.code}` : null,
+    currentEstablishment.id ? `sse_teachers_${currentEstablishment.id}` : null,
+    currentEstablishment.email ? `sse_teachers_${currentEstablishment.email}` : null
+  ].filter(Boolean);
+
+  for (const sk of candidateKeys) {
+    const stored = localStorage.getItem(sk);
+    if (stored !== null) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const realTeachers = parsed.filter(t => !isMockTeacher(t));
+          if (realTeachers.length !== parsed.length) {
+            localStorage.setItem(sk, JSON.stringify(realTeachers));
+          }
+          if (realTeachers.length > 0) return realTeachers;
+        }
+      } catch(e) {}
+    }
   }
+  // Vierge par défaut : l'établissement enregistre ses propres enseignants
   return [];
 }
 
@@ -5718,45 +5771,45 @@ function saveEstablishmentTeachers(list) {
   localStorage.setItem(storageKey, serialized);
   if (currentEstablishment.code) localStorage.setItem(`sse_teachers_${currentEstablishment.code}`, serialized);
   if (currentEstablishment.id) localStorage.setItem(`sse_teachers_${currentEstablishment.id}`, serialized);
-  if (isEmfEstablishment(currentEstablishment)) {
-    localStorage.setItem('sse_teachers_SSE-SN-2901', serialized);
-    localStorage.setItem('sse_teachers_etab-2901', serialized);
-    localStorage.setItem('sse_teachers_emf@gmail.com', serialized);
-  }
+  if (currentEstablishment.email) localStorage.setItem(`sse_teachers_${currentEstablishment.email}`, serialized);
 }
 
 // 5. GESTION DES CLASSES ET NIVEAUX PEDAGOGIQUES PAR ECOLE (Zéro fausse donnée)
 function getEstablishmentClasses() {
   if (!currentEstablishment) return [];
 
-  // Vérifier si c'est l'École des Métiers du Futur
-  if (isEmfEstablishment(currentEstablishment)) {
-    const emfKeys = ['sse_classes_SSE-SN-2901', 'sse_classes_etab-2901', 'sse_classes_emf@gmail.com'];
-    for (const k of emfKeys) {
-      const raw = localStorage.getItem(k);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        } catch(e) {}
-      }
-    }
-    saveEstablishmentClasses(EMF_DEFAULT_CLASSES);
-    return EMF_DEFAULT_CLASSES;
-  }
+  const isMockClass = (c) => {
+    if (!c) return true;
+    const id = (c.id || '').toLowerCase();
+    return id.startsWith('cls-emf-');
+  };
 
   const estKey = currentEstablishment.code || currentEstablishment.id || currentEstablishment.email;
-  const storageKey = `sse_classes_${estKey}`;
-  const stored = localStorage.getItem(storageKey);
-  if (stored !== null) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch(e) {}
+  const candidateKeys = [
+    `sse_classes_${estKey}`,
+    currentEstablishment.code ? `sse_classes_${currentEstablishment.code}` : null,
+    currentEstablishment.id ? `sse_classes_${currentEstablishment.id}` : null,
+    currentEstablishment.email ? `sse_classes_${currentEstablishment.email}` : null
+  ].filter(Boolean);
+
+  for (const sk of candidateKeys) {
+    const stored = localStorage.getItem(sk);
+    if (stored !== null) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const realClasses = parsed.filter(c => !isMockClass(c));
+          if (realClasses.length !== parsed.length) {
+            localStorage.setItem(sk, JSON.stringify(realClasses));
+          }
+          if (realClasses.length > 0) return realClasses;
+        }
+      } catch(e) {}
+    }
   }
   
   if (!isRealRegisteredEstablishment()) {
-    // Mode Démo : classes types sénégalaises par défaut
+    // Mode Démo : classes types sénégalaises par défaut pour les visiteurs
     return [
       { id: 'cls_ci', nom: 'CI', cycle: 'Élémentaire', salle: 'Salle 1', capacite: 40, profPrincipal: 'Mme Mariama Ba' },
       { id: 'cls_cp', nom: 'CP', cycle: 'Élémentaire', salle: 'Salle 2', capacite: 40, profPrincipal: 'Mme Mariama Ba' },
@@ -5766,7 +5819,7 @@ function getEstablishmentClasses() {
       { id: 'cls_3eme', nom: '3ème A', cycle: 'Collège', salle: 'Salle 107', capacite: 50, profPrincipal: 'M. Abdoulaye Diallo' }
     ];
   }
-  // Pour un nouvel établissement réel : 0 classe par défaut
+  // Pour un établissement réel : 0 classe par défaut, l'établissement crée les siennes librement !
   return [];
 }
 
@@ -5778,14 +5831,44 @@ function saveEstablishmentClasses(list) {
   localStorage.setItem(storageKey, serialized);
   if (currentEstablishment.code) localStorage.setItem(`sse_classes_${currentEstablishment.code}`, serialized);
   if (currentEstablishment.id) localStorage.setItem(`sse_classes_${currentEstablishment.id}`, serialized);
-  if (isEmfEstablishment(currentEstablishment)) {
-    localStorage.setItem('sse_classes_SSE-SN-2901', serialized);
-    localStorage.setItem('sse_classes_etab-2901', serialized);
-    localStorage.setItem('sse_classes_emf@gmail.com', serialized);
-  }
+  if (currentEstablishment.email) localStorage.setItem(`sse_classes_${currentEstablishment.email}`, serialized);
   const badge = document.getElementById('wsClassesBadge');
   if (badge) badge.textContent = list.length;
 }
+
+// Fonction de purge intégrale pour garantir un site vierge (0 fictif) à la demande
+function resetEstablishmentToVirginState() {
+  if (!currentEstablishment) return;
+  const isDaara = Boolean(currentEstablishment.type === 'DAARA');
+  const typeLabel = isDaara ? 'talibés' : 'élèves';
+
+  if (!confirm(`🧹 RÉINITIALISATION DE L'EFFECTIF (SITE VIERGE) :\n\nÊtes-vous sûr de vouloir remettre l'effectif de « ${currentEstablishment.name} » strictement à zéro (0 ${typeLabel}) ?\n\nToutes les données d'essai ou fictives seront effacées et votre établissement sera 100% prêt pour vos inscriptions réelles.`)) {
+    return;
+  }
+
+  saveEstablishmentActiveStudents([], isDaara);
+  currentEstablishment.effectif = 0;
+  try {
+    localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+  } catch(e) {}
+
+  renderWsData(isDaara);
+  showNotification(`🧹 Effectif réinitialisé à zéro avec succès ! Votre établissement dispose d'un répertoire vierge (0 ${typeLabel}).`);
+}
+window.resetEstablishmentToVirginState = resetEstablishmentToVirginState;
+
+function resetEstablishmentClassesToVirgin() {
+  if (!currentEstablishment) return;
+  if (!confirm(`🧹 RÉINITIALISATION DES CLASSES :\n\nÊtes-vous sûr de vouloir effacer toutes les classes pour configurer vos propres classes personnalisées ?`)) {
+    return;
+  }
+  saveEstablishmentClasses([]);
+  renderClassesTab();
+  const wsClassesBadge = document.getElementById('wsClassesBadge');
+  if (wsClassesBadge) wsClassesBadge.textContent = 0;
+  showNotification("🧹 Classes réinitialisées à zéro ! Vous pouvez maintenant créer vos propres classes.");
+}
+window.resetEstablishmentClassesToVirgin = resetEstablishmentClassesToVirgin;
 
 function applyClassPresetPack(packName) {
   let presetClasses = [];
@@ -11255,34 +11338,7 @@ function resolveTeacherProfile(keyInput, schoolName) {
 
   if (isNiangExplicit || isNiangMatched || isCurrentEmf || (!matchedTeacher && !normKey)) {
     const resolvedKey = 'ENS-2026-01';
-    const resolvedSchool = 'École des Métiers du Futur';
-
-    // Synchroniser l'établissement courant sur l'École des Métiers du Futur si nécessaire
-    if (!currentEstablishment || !isEmfEstablishment(currentEstablishment)) {
-      currentEstablishment = {
-        id: "etab-2901",
-        code: "SSE-SN-2901",
-        secretKey: "ADM-2901",
-        name: "École des Métiers du Futur",
-        type: "ECOLE",
-        city: "Dakar",
-        phone: "771507878",
-        email: "emf@gmail.com",
-        directeurNom: "Directeur EMF",
-        plan: "Formule École Pro",
-        prixMensuel: 55000,
-        effectif: 11,
-        statut: "ACTIF",
-        statutAbonnement: "ACTIF",
-        fraisAdhesionPayes: true,
-        dateAdhesion: "2026-09-18",
-        echeanceAbonnement: "2026-11-30",
-        waveTransactionRef: "WAVE-2901-VALID"
-      };
-      try {
-        localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
-      } catch(e) {}
-    }
+    const resolvedSchool = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : (schoolName || 'École Modèle Démo');
 
     teacherDemoData.ECOLE = {
       name: 'M. Ousmane Niang',
@@ -11290,9 +11346,9 @@ function resolveTeacherProfile(keyInput, schoolName) {
       subjects: 'Anglais (Collège & Lycée)',
       school: resolvedSchool,
       avatar: '👨‍🏫',
-      stat1: { label: 'Élèves Assignés', value: '11 Élèves', sub: '4 Classes : Terminale, 1ère, 2nde, 3ème' },
+      stat1: { label: 'Élèves Assignés', value: '45 Élèves', sub: 'Classes assignées' },
       stat2: { label: 'Moyenne Générale Anglais', value: '15.45 / 20', sub: '1er Trimestre 2026-2027' },
-      stat3: { label: 'Pointage Présences Jour', value: '100%', sub: 'Tous les élèves présents' },
+      stat3: { label: 'Pointage Présences Jour', value: '100%', sub: 'Pointage actif' },
       classes: [
         { id: 'cls_t', label: 'Terminale Numérique (Lab 1)' },
         { id: 'cls_1', label: '1ère Informatique (Lab 2)' },

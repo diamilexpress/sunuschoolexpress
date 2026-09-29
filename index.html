@@ -1104,6 +1104,9 @@
                 <button class="btn btn-gold" onclick="openNewClassModal()" style="font-size: 0.82rem; padding: 0.45rem 0.95rem; font-weight: 700;">
                   <span>➕</span> <span>Ajouter une Classe</span>
                 </button>
+                <button class="btn btn-outline" onclick="resetEstablishmentClassesToVirgin()" title="Effacer toutes les classes pour configurer vos propres classes de zéro" style="font-size: 0.82rem; padding: 0.45rem 0.95rem; border-color: rgba(239, 68, 68, 0.4); color: #EF4444; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.12)';" onmouseout="this.style.background='transparent';">
+                  <span>🧹</span> <span>Vider les Classes</span>
+                </button>
               </div>
             </div>
 
@@ -1161,6 +1164,9 @@
                 </button>
                 <button class="btn btn-outline" onclick="printClassRoster()" title="Imprimer la liste d'appel officielle" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">
                   <span>🖨️</span> <span>Imprimer Liste</span>
+                </button>
+                <button class="btn btn-outline" onclick="resetEstablishmentToVirginState()" title="Remettre à zéro l'effectif pour un site 100% vierge (0 élève)" style="font-size: 0.82rem; padding: 0.4rem 0.85rem; border-color: rgba(239, 68, 68, 0.4); color: #EF4444; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.12)';" onmouseout="this.style.background='transparent';">
+                  <span>🧹</span> <span>Vider / Site Vierge</span>
                 </button>
               </div>
             </div>
@@ -5824,6 +5830,6 @@
 
   <!-- Script d'interaction & Supabase Cloud Sync -->
   <script src="supabase-client.js"></script>
-  <script src="app.js?v=4.0.8"></script>
+  <script src="app.js?v=4.0.9"></script>
 </body>
 </html>
