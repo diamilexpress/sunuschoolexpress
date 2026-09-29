@@ -314,7 +314,8 @@ const demoState = {
     { id: 'ens_2', nom: 'Mme Mariama Ba', matiere: 'Français & Littérature', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 210000, mat: 'ENS-2026-14', tel: '+221 78 620 99 11' },
     { id: 'ens_3', nom: 'Oustaz Ibrahima Ndiaye', matiere: 'Arabe, Coran & Hifz', volume: '18h / semaine', contrat: 'CDI Titulaire', salaire: 195000, mat: 'ENS-2026-03', tel: '+221 76 333 44 88' },
     { id: 'ens_4', nom: 'M. Cheikh Tidiane Diop', matiere: 'SVT & Sciences de la Vie', volume: '16h / semaine', contrat: 'Vacataire', salaire: 175000, mat: 'ENS-2026-22', tel: '+221 70 800 15 20' },
-    { id: 'ens_5', nom: 'Mme Aminata Traoré', matiere: 'Anglais & Outils Informatiques', volume: '16h / semaine', contrat: 'Vacataire', salaire: 180000, mat: 'ENS-2026-27', tel: '+221 77 911 22 33' }
+    { id: 'ens_5', nom: 'Mme Aminata Traoré', matiere: 'Anglais & Outils Informatiques', volume: '16h / semaine', contrat: 'Vacataire', salaire: 180000, mat: 'ENS-2026-27', tel: '+221 77 911 22 33' },
+    { id: 'ens_6', nom: 'M. Ousmane Niang', matiere: 'Anglais (Collège & Lycée)', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 230000, mat: 'ENS-2026-01', tel: '+221 77 650 44 12' }
   ]
 };
 
@@ -1048,7 +1049,7 @@ const demoVideosData = {
             </div>
 
             <div style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
-              <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;" onclick="event.stopPropagation(); openReceiptModal('WAV-84920', 'Mouhamed Bachir Sow', '25 000 FCFA', 'Pension Internat Octobre 2026', '+221 77 645 88 12', 'WAVE', (isDaara ? 'Mon Daara Moderne' : 'Mon Ã‰tablissement'))">📄 Voir le Reçu SYSCOHADA</button>
+              <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;" onclick="event.stopPropagation(); openReceiptModal('WAV-84920', 'Mouhamed Bachir Sow', '25 000 FCFA', 'Pension Internat Octobre 2026', '+221 77 645 88 12', 'WAVE', (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement'))">📄 Voir le Reçu SYSCOHADA</button>
               <button type="button" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;" onclick="event.stopPropagation(); showNotification('📲 Reçu transmis par WhatsApp à M. Sow')">💬 Renvoyer WhatsApp</button>
             </div>
           </div>
@@ -2917,7 +2918,7 @@ function previewBulletin(eleveId, customSchoolName, forcePublishOverride, forceL
       schoolMinistry = "Inspection Régionale de l'Enseignement Arabe & Daaras Modernes";
     }
   } else if (!schoolName) {
-    schoolName = "Mon Ã‰tablissement";
+    schoolName = "Mon Établissement";
     schoolLogo = "🏫";
     schoolDetails = "Dakar • Inspection d'Académie • Code : SSE-SN-1786";
   }
@@ -3072,11 +3073,11 @@ function openReceiptModal(ref, name, amount, motif, phone, op, schoolName) {
                          (name && (name.includes('Sow') || name.includes('Kane') || name.includes('Ndiaye') || name.includes('Diallo')));
     
     if (isDaaraMotif) {
-      targetSchool = (isDaara ? "Mon Daara Moderne" : "Mon Ã‰tablissement");
+      targetSchool = (isDaara ? "Mon Daara Moderne" : "Mon Établissement");
       targetLogo = "🕌";
       targetAddress = "Campus Keur Massar, Dakar • Agréé par l'État • Tél : +221 33 820 00 00";
     } else {
-      targetSchool = "Mon Ã‰tablissement";
+      targetSchool = "Mon Établissement";
       targetLogo = "🏫";
       targetAddress = "Dakar • Ministère de l'Éducation • Tél : +221 33 860 11 22";
     }
@@ -3224,7 +3225,7 @@ function verifyMfaCode() {
   if (!targetEst) {
     targetEst = {
       email: emailVal,
-      name: "Mon Ã‰tablissement",
+      name: "Mon Établissement",
       plan: "Formule École Pro",
       type: "ECOLE",
       city: "Dakar",
@@ -3614,7 +3615,7 @@ async function executeSubscriptionPayment() {
   const planPrice = (priceEl && priceEl.textContent.trim()) ? priceEl.textContent.trim() : '55 000 FCFA/mois';
 
   const isDaaraPlan = planName.toLowerCase().includes('daara') || planName.toLowerCase().includes('internat');
-  const schoolName = rawSchoolName || (isDaaraPlan ? (isDaara ? 'Mon Daara Moderne' : 'Mon Ã‰tablissement') : 'Nouvel Établissement Partenaire');
+  const schoolName = rawSchoolName || (isDaaraPlan ? (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement') : 'Nouvel Établissement Partenaire');
 
   let email = (emailEl && emailEl.value.trim()) ? emailEl.value.trim() : '';
   if (!email || email.toLowerCase().includes('diamilacademy')) {
@@ -5646,7 +5647,7 @@ function applyClassPresetPack(packName) {
       { id: `cls_d1_${now}`, nom: "Ibtida'i (Initiation & Alphabet)", cycle: 'Daara', salle: 'Salle Al-Houda', capacite: 30, profPrincipal: '' },
       { id: `cls_d2_${now}`, nom: "Hifz Niveau 1 (Juz 1 à 15)", cycle: 'Daara', salle: 'Salle Badr', capacite: 35, profPrincipal: '' },
       { id: `cls_d3_${now}`, nom: "Hifz Niveau 2 (Juz 16 à 30)", cycle: 'Daara', salle: 'Salle Bilal', capacite: 35, profPrincipal: '' },
-      { id: `cls_d4_${now}`, nom: "Moutawassit (Tajwîd & Grammaire)", cycle: 'Daara', salle: 'Salle de MÃ©morisation', capacite: 30, profPrincipal: '' },
+      { id: `cls_d4_${now}`, nom: "Moutawassit (Tajwîd & Grammaire)", cycle: 'Daara', salle: 'Salle de Mémorisation', capacite: 30, profPrincipal: '' },
       { id: `cls_d5_${now}`, nom: "Thanawi (Sciences Islamiques & Fiqh)", cycle: 'Daara', salle: 'Salle Al-Azhar', capacite: 25, profPrincipal: '' }
     ];
   }
@@ -7037,7 +7038,7 @@ function openTimetablePrintModal(className) {
   if (!modal) return;
 
   const targetClass = className || selectedTimetableClass || 'CM2 A';
-  const schoolName = currentEstablishment?.name || 'Mon Ã‰tablissement';
+  const schoolName = currentEstablishment?.name || 'Mon Établissement';
 
   if (document.getElementById('printTtSchoolName')) {
     document.getElementById('printTtSchoolName').textContent = schoolName;
@@ -7391,7 +7392,7 @@ function handleCertificatFiscalClick() {
 function openCertificatPaywallModal() {
   const modal = document.getElementById('certificatPaywallModal');
   if (!modal) return;
-  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Ã‰tablissement';
+  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Établissement';
   const nameEl = document.getElementById('paywallSchoolName');
   if (nameEl) nameEl.textContent = schoolName;
   closeAllModals();
@@ -7435,7 +7436,7 @@ function openSyscohadaCertificatModal() {
   const modal = document.getElementById('syscohadaCertificatModal');
   if (!modal) return;
 
-  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Ã‰tablissement';
+  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Établissement';
   const ninea = currentEstablishment.ninea || '008942301 2V4';
   const licence = currentEstablishment.license || 'SSE-SN-LIC-2026-9814 (ACTIVE ✓)';
 
@@ -7464,7 +7465,7 @@ function printSyscohadaCertificat() {
 }
 
 function exportSyscohadaBalanceExcel() {
-  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Ã‰tablissement';
+  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Établissement';
   const dateStr = new Date().toLocaleDateString('fr-FR');
 
   const rows = [
@@ -7569,7 +7570,7 @@ function exportSyscohadaBalanceExcel() {
 }
 
 function exportSyscohadaBilanExcel() {
-  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Ã‰tablissement';
+  const schoolName = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : 'Mon Établissement';
   const dateStr = new Date().toLocaleDateString('fr-FR');
 
   let excelHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -7876,7 +7877,7 @@ function renderWhatsAppTab() {
     return;
   }
 
-  const schoolName = currentEstablishment?.name || 'Mon Ã‰tablissement';
+  const schoolName = currentEstablishment?.name || 'Mon Établissement';
 
   container.innerHTML = `
     <!-- Statut de la passerelle connectée -->
@@ -8001,7 +8002,7 @@ function onWsWaTemplateChange(customClass) {
   const msgInput = document.getElementById('wsWaMessageInput');
   if (!select || !msgInput) return;
 
-  const schoolName = currentEstablishment?.name || 'Mon Ã‰tablissement';
+  const schoolName = currentEstablishment?.name || 'Mon Établissement';
   const val = select.value;
   const targetClass = customClass || selectedTimetableClass || 'CM2 A';
 
@@ -8181,7 +8182,7 @@ let currentBadgeSide = 'recto';
 
 function renderBadgesTab() {
   const isDaara = currentEstablishment?.type === 'DAARA' || (currentEstablishment?.plan || '').toLowerCase().includes('daara');
-  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON Ã‰TABLISSEMENT') : 'MON Ã‰TABLISSEMENT');
+  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON ÉTABLISSEMENT') : 'MON ÉTABLISSEMENT');
   
   const previewSchoolEl = document.getElementById('badgePreviewSchoolName');
   if (previewSchoolEl) previewSchoolEl.textContent = schoolName.toUpperCase();
@@ -8259,7 +8260,7 @@ function updateBadgeLivePreview() {
   const s = (list && list.find(item => (item.id === val || item.matricule === val))) || (list && list[0]);
   if (!s) return;
 
-  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON Ã‰TABLISSEMENT') : 'MON Ã‰TABLISSEMENT');
+  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON ÉTABLISSEMENT') : 'MON ÉTABLISSEMENT');
   const nameEl = document.getElementById('badgePreviewName');
   const matEl = document.getElementById('badgePreviewMatricule');
   const clsEl = document.getElementById('badgePreviewClass');
@@ -8310,7 +8311,7 @@ function flipBadgeSide() {
     badgeEl.style.transform = 'rotateY(180deg)';
     setTimeout(() => {
       const isDaara = currentEstablishment?.type === 'DAARA' || (currentEstablishment?.plan || '').toLowerCase().includes('daara');
-      const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON Ã‰TABLISSEMENT') : 'MON Ã‰TABLISSEMENT');
+      const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON ÉTABLISSEMENT') : 'MON ÉTABLISSEMENT');
       badgeEl.innerHTML = `
         <div class="badge-inner-header">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -8377,7 +8378,7 @@ function testNfcScanSimulation() {
 function generateBadgeCardHtml(talibe, schoolName, options = {}) {
   if (!talibe) return '';
   const isDaara = currentEstablishment?.type === 'DAARA' || (currentEstablishment?.plan || '').toLowerCase().includes('daara');
-  const school = (schoolName || currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON Ã‰TABLISSEMENT') : 'MON Ã‰TABLISSEMENT')).toUpperCase();
+  const school = (schoolName || currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON ÉTABLISSEMENT') : 'MON ÉTABLISSEMENT')).toUpperCase();
   const isSheet = !!(options && options.isSheet);
 
   const dormInfo = talibe.dortoir ? `${talibe.dortoir} (Lit ${talibe.lit || '1'})` : (talibe.regime || (isDaara ? 'Pensionnaire Internat' : 'Externe'));
@@ -8473,7 +8474,7 @@ function printSingleBadge() {
   const selectEl = document.getElementById('badgeSelectTalibe');
   const currentVal = selectEl?.value;
   const s = (list && list.find(item => (item.id === currentVal || item.matricule === currentVal))) || (list && list[0]);
-  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON Ã‰TABLISSEMENT') : 'MON Ã‰TABLISSEMENT');
+  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON ÉTABLISSEMENT') : 'MON ÉTABLISSEMENT');
 
   const container = document.getElementById('badgePrintModalBody');
   if (container && s) {
@@ -8495,7 +8496,7 @@ function printAllBadgesPdf() {
   const list = isDaara 
     ? (demoState.talibes && demoState.talibes.length ? demoState.talibes : demoState.elevesScolaires) 
     : (demoState.elevesScolaires && demoState.elevesScolaires.length ? demoState.elevesScolaires : demoState.talibes);
-  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON Ã‰TABLISSEMENT') : 'MON Ã‰TABLISSEMENT');
+  const schoolName = currentEstablishment?.name || (isDaara ? (isDaara ? 'MON DAARA MODERNE' : 'MON ÉTABLISSEMENT') : 'MON ÉTABLISSEMENT');
 
   const grid = document.getElementById('badgePlancheGrid');
   if (grid && list && list.length > 0) {
@@ -8534,7 +8535,7 @@ function renderAuditTab() {
 function downloadAnnualAuditReport() {
   const schoolEl = document.getElementById('auditReportSchoolName');
   if (schoolEl) {
-    schoolEl.textContent = (currentEstablishment?.name || (isDaara ? 'MON DAARA MODERNE' : 'MON Ã‰TABLISSEMENT')).toUpperCase();
+    schoolEl.textContent = (currentEstablishment?.name || (isDaara ? 'MON DAARA MODERNE' : 'MON ÉTABLISSEMENT')).toUpperCase();
   }
   const modal = document.getElementById('auditReportModal');
   if (modal) modal.classList.add('active');
@@ -9837,7 +9838,7 @@ function openShareAccessLinksModal() {
   const modal = document.getElementById('shareAccessLinksModal');
   if (!modal) return;
 
-  const est = currentEstablishment || { name: 'Mon Ã‰tablissement', plan: 'Formule Pro' };
+  const est = currentEstablishment || { name: 'Mon Établissement', plan: 'Formule Pro' };
   const badgeEl = document.getElementById('shareModalSchoolBadge');
   if (badgeEl) {
     badgeEl.textContent = `Établissement Actif : ${est.name} (${est.plan || 'Pro'})`;
@@ -9856,7 +9857,7 @@ function openShareAccessLinksModal() {
 }
 
 function getAccessShareMessage(role) {
-  const est = currentEstablishment || { name: 'Mon Ã‰tablissement' };
+  const est = currentEstablishment || { name: 'Mon Établissement' };
   const keys = getAccessKeysForSchool();
 
   if (role === 'teacher') {
@@ -9980,11 +9981,11 @@ function submitAccessKey(e) {
   closeAllModals();
 
   if (role === 'teacher') {
-    openTeacherPortalModal();
+    openTeacherPortalModal(val);
   } else if (role === 'parent') {
-    openParentPortalModal();
+    openParentPortalModal(val);
   } else {
-    openStudentPortalModal();
+    openStudentPortalModal(val);
   }
 }
 
@@ -10005,7 +10006,7 @@ const studentDemoData = {
     name: 'Mouhamed Sow',
     matricule: 'MAT-2026-042',
     class: '6ème A (Collège Privé)',
-    school: "Mon Ã‰tablissement",
+    school: "Mon Établissement",
     avatar: '🎓',
     status: 'Élève Régulier • Délégué de Classe',
     stat1: { label: 'Moyenne 1er Trimestre', value: '16.45 / 20', sub: 'Mention Très Bien' },
@@ -10163,7 +10164,7 @@ const studentDemoData = {
   }
 };
 
-function openStudentPortalModal() {
+function openStudentPortalModal(accessKey) {
   closeAllModals();
   const modal = document.getElementById('studentPortalModal');
   if (!modal) return;
@@ -10172,6 +10173,11 @@ function openStudentPortalModal() {
     currentStudentContext = 'DAARA';
   } else {
     currentStudentContext = 'ECOLE';
+  }
+
+  const schoolName = (typeof getActiveSchoolName === 'function') ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement');
+  if (studentDemoData[currentStudentContext]) {
+    studentDemoData[currentStudentContext].school = schoolName;
   }
 
   renderStudentPortalContent();
@@ -10774,7 +10780,7 @@ const teacherDemoData = {
     name: 'M. Babacar Ndiaye',
     key: 'ENS-DIAMIL-2026',
     subjects: 'Mathématiques & Sciences (6ème A & CM2 B)',
-    school: "Mon Ã‰tablissement",
+    school: "Mon Établissement",
     avatar: '👨‍🏫',
     stat1: { label: 'Élèves Assignés', value: '42 Élèves', sub: 'Classes : 6ème A & CM2 B' },
     stat2: { label: 'Moyenne Générale Classe', value: '15.42 / 20', sub: '1er Trimestre 2026-2027' },
@@ -10990,16 +10996,296 @@ function getTeacherMentionFromGrade(grade) {
   return { text: 'Insuffisant', bg: 'rgba(239, 68, 68, 0.2)', color: '#F87171' };
 }
 
-function openTeacherPortalModal() {
+function getActiveSchoolName() {
+  if (currentEstablishment && currentEstablishment.name && !currentEstablishment.name.includes('Ã')) {
+    return currentEstablishment.name;
+  }
+  try {
+    const saved = localStorage.getItem('sunuschool_establishment');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.name && !parsed.name.includes('Ã')) {
+        return parsed.name;
+      }
+    }
+  } catch(e) {}
+  return 'Mon Établissement';
+}
+
+function resolveTeacherProfile(keyInput, schoolName) {
+  const normKey = (keyInput || '').trim();
+  const lower = normKey.toLowerCase();
+
+  // Toujours synchroniser le nom d'établissement réel sur le Daara
+  if (teacherDemoData.DAARA) {
+    teacherDemoData.DAARA.school = schoolName;
+  }
+
+  // Chercher dans les enseignants enregistrés de l'école
+  const teachers = getEstablishmentTeachers();
+  let matchedTeacher = null;
+
+  if (normKey) {
+    matchedTeacher = teachers.find(t => {
+      const mMat = (t.mat || '').toLowerCase();
+      const mNom = (t.nom || '').toLowerCase();
+      const mTel = (t.tel || '').replace(/\s+/g, '');
+      const cleanInput = lower.replace(/\s+/g, '');
+      return (mMat && (mMat === lower || lower.includes(mMat) || mMat.includes(lower))) ||
+             (mNom && (mNom === lower || lower.includes(mNom) || mNom.includes(lower))) ||
+             (mTel && mTel === cleanInput);
+    });
+  }
+
+  // Détection pour M. Ousmane Niang (Professeur d'Anglais)
+  const isNiangExplicit = lower.includes('niang') || lower.includes('ousmane') || lower.includes('anglais') || lower.includes('english') || lower === 'ens-2026-01';
+  const isNiangMatched = matchedTeacher && (matchedTeacher.nom || '').toLowerCase().includes('niang');
+
+  if (isNiangExplicit || isNiangMatched || (!matchedTeacher && !normKey)) {
+    const resolvedKey = normKey ? (normKey.toUpperCase().startsWith('ENS-') ? normKey.toUpperCase() : 'ENS-2026-01') : 'ENS-2026-01';
+
+    teacherDemoData.ECOLE = {
+      name: 'M. Ousmane Niang',
+      key: resolvedKey,
+      subjects: 'Anglais (Collège & Lycée)',
+      school: schoolName,
+      avatar: '👨‍🏫',
+      stat1: { label: 'Élèves Assignés', value: '48 Élèves', sub: 'Classes : 6ème A & 3ème A' },
+      stat2: { label: 'Moyenne Générale Anglais', value: '14.85 / 20', sub: '1er Trimestre 2026-2027' },
+      stat3: { label: 'Pointage Présences Jour', value: '98.2%', sub: 'Tous les élèves présents' },
+      classes: [
+        { id: '6A', label: '6ème A (Collège)' },
+        { id: '3A', label: '3ème A (Collège)' },
+        { id: '2ndeL', label: '2nde L (Lycée)' }
+      ],
+      selectedClass: '6A',
+      grades: [
+        { id: 'DIA-2026-001', name: 'Mouhamed Sow', matricule: 'DIA-2026-001', classId: '6A', subject: 'Anglais (Oral & Grammar)', grade: 16.5, coef: 3 },
+        { id: 'DIA-2026-002', name: 'Fatou Sow', matricule: 'DIA-2026-002', classId: '6A', subject: 'Anglais (Reading & Vocab)', grade: 14.5, coef: 3 },
+        { id: 'DIA-2026-003', name: 'Babacar Seck', matricule: 'DIA-2026-003', classId: '6A', subject: 'Anglais (Listening Comprehension)', grade: 11.0, coef: 3 },
+        { id: 'DIA-2026-004', name: 'Aïssatou Ba', matricule: 'DIA-2026-004', classId: '6A', subject: 'Anglais (Writing & Essay)', grade: 18.0, coef: 3 },
+        { id: 'DIA-2026-015', name: 'Cheikh Fall', matricule: 'DIA-2026-015', classId: '3A', subject: 'Anglais (Exam Prep BEPC)', grade: 15.0, coef: 3 },
+        { id: 'DIA-2026-016', name: 'Mariama Diop', matricule: 'DIA-2026-016', classId: '3A', subject: 'Anglais (Oral Fluency & Debate)', grade: 17.5, coef: 3 }
+      ],
+      appreciations: [
+        {
+          studentId: 'DIA-2026-001',
+          name: 'Mouhamed Sow',
+          class: '6ème A',
+          currentNote: '16.5 / 20',
+          rank: '1er en Anglais',
+          appreciation: "Excellent trimestre en Anglais ! Très bonne aisance à l'oral, vocabulaire riche et participation active aux débats de classe.",
+          decision: "Félicitations du Conseil & Tableau d'Honneur",
+          lastUpdated: "Mis à jour il y a 1h"
+        },
+        {
+          studentId: 'DIA-2026-002',
+          name: 'Fatou Sow',
+          class: '6ème A',
+          currentNote: '14.5 / 20',
+          rank: '5ème en Anglais',
+          appreciation: "Bon trimestre en Anglais. Compréhension de texte solide, continuer à pratiquer la prise de parole pour gagner en fluidité.",
+          decision: "Tableau d'Honneur",
+          lastUpdated: "Mis à jour hier"
+        },
+        {
+          studentId: 'DIA-2026-003',
+          name: 'Babacar Seck',
+          class: '6ème A',
+          currentNote: '11.0 / 20',
+          rank: '18ème en Anglais',
+          appreciation: "Résultats moyens en Anglais. Doit consolider le vocabulaire et rendre les devoirs maison régulièrement.",
+          decision: "Encouragements du Conseil",
+          lastUpdated: "Mis à jour le 12 Septembre"
+        }
+      ],
+      attendance: [
+        {
+          studentId: 'DIA-2026-001',
+          name: 'Mouhamed Sow',
+          matricule: 'DIA-2026-001',
+          class: '6ème A',
+          status: 'PRESENT',
+          parentPhone: '+221 77 123 45 67',
+          parentName: 'Mme Aminata Diallo',
+          justification: "À l'heure en cours d'Anglais"
+        },
+        {
+          studentId: 'DIA-2026-002',
+          name: 'Fatou Sow',
+          matricule: 'DIA-2026-002',
+          class: '6ème A',
+          status: 'PRESENT',
+          parentPhone: '+221 77 123 45 67',
+          parentName: 'Mme Aminata Diallo',
+          justification: "À l'heure en cours d'Anglais"
+        },
+        {
+          studentId: 'DIA-2026-003',
+          name: 'Babacar Seck',
+          matricule: 'DIA-2026-003',
+          class: '6ème A',
+          status: 'PRESENT',
+          parentPhone: '+221 77 444 55 66',
+          parentName: 'M. Aliou Seck',
+          justification: "À l'heure en cours d'Anglais"
+        },
+        {
+          studentId: 'DIA-2026-004',
+          name: 'Aïssatou Ba',
+          matricule: 'DIA-2026-004',
+          class: '6ème A',
+          status: 'PRESENT',
+          parentPhone: '+221 78 555 44 33',
+          parentName: 'Mme Khady Ba',
+          justification: "À l'heure en cours d'Anglais"
+        }
+      ],
+      homework: [
+        {
+          id: 201,
+          title: 'English Grammar : Irregular Verbs (Past Simple)',
+          class: '6ème A',
+          dueDate: '2026-09-24',
+          desc: 'Learn the first 25 irregular verbs page 42. Complete exercises 3 & 4 in workbook.',
+          status: '📢 Nouveau • Notifié'
+        },
+        {
+          id: 202,
+          title: 'Reading Comprehension : The Story of Sundiata Keïta',
+          class: '6ème A',
+          dueDate: '2026-09-28',
+          desc: 'Read the short text and answer the 5 comprehension questions in full sentences.',
+          status: 'En cours'
+        }
+      ]
+    };
+
+    // Enregistrer M. Ousmane Niang dans les enseignants RH de l'école s'il n'existe pas encore
+    const exists = teachers.some(t => (t.nom || '').toLowerCase().includes('niang'));
+    if (!exists && currentEstablishment) {
+      const newNiang = {
+        id: 'ens_ousmane_niang',
+        nom: 'M. Ousmane Niang',
+        matiere: 'Anglais (Collège & Lycée)',
+        classes: ['6ème A', '3ème A', '2nde L'],
+        volume: '20h / semaine',
+        contrat: 'CDI Titulaire',
+        salaire: 230000,
+        mat: resolvedKey,
+        tel: '+221 77 650 44 12',
+        ipres: true
+      };
+      teachers.unshift(newNiang);
+      saveEstablishmentTeachers(teachers);
+    }
+  } else if (matchedTeacher) {
+    const tKey = matchedTeacher.mat || normKey || 'ENS-2026-01';
+    const tMatiere = matchedTeacher.matiere || 'Discipline Générale';
+
+    teacherDemoData.ECOLE = {
+      name: matchedTeacher.nom,
+      key: tKey,
+      subjects: tMatiere,
+      school: schoolName,
+      avatar: '👨‍🏫',
+      stat1: { label: 'Élèves Assignés', value: '45 Élèves', sub: `Matière : ${tMatiere}` },
+      stat2: { label: 'Moyenne Générale', value: '14.50 / 20', sub: '1er Trimestre 2026-2027' },
+      stat3: { label: 'Pointage Présences Jour', value: '98.0%', sub: 'Enregistré' },
+      classes: (matchedTeacher.classes && matchedTeacher.classes.length > 0)
+        ? matchedTeacher.classes.map((c, i) => ({ id: `cls_${i}`, label: c }))
+        : [
+            { id: '6A', label: '6ème A (Collège)' },
+            { id: '3A', label: '3ème A (Collège)' }
+          ],
+      selectedClass: '6A',
+      grades: [
+        { id: 'DIA-2026-001', name: 'Mouhamed Sow', matricule: 'DIA-2026-001', classId: '6A', subject: tMatiere, grade: 16.0, coef: 3 },
+        { id: 'DIA-2026-002', name: 'Fatou Sow', matricule: 'DIA-2026-002', classId: '6A', subject: tMatiere, grade: 14.5, coef: 3 },
+        { id: 'DIA-2026-003', name: 'Babacar Seck', matricule: 'DIA-2026-003', classId: '6A', subject: tMatiere, grade: 12.0, coef: 3 },
+        { id: 'DIA-2026-004', name: 'Aïssatou Ba', matricule: 'DIA-2026-004', classId: '6A', subject: tMatiere, grade: 17.5, coef: 3 }
+      ],
+      appreciations: [
+        {
+          studentId: 'DIA-2026-001',
+          name: 'Mouhamed Sow',
+          class: '6ème A',
+          currentNote: '16.0 / 20',
+          rank: '1er de la matière',
+          appreciation: `Très bon trimestre en ${tMatiere}. Travail consciencieux et régulier.`,
+          decision: "Félicitations du Conseil",
+          lastUpdated: "Mis à jour récemment"
+        },
+        {
+          studentId: 'DIA-2026-002',
+          name: 'Fatou Sow',
+          class: '6ème A',
+          currentNote: '14.5 / 20',
+          rank: '4ème de la matière',
+          appreciation: `Bonne participation en ${tMatiere}. Poursuivre ainsi.`,
+          decision: "Tableau d'Honneur",
+          lastUpdated: "Mis à jour récemment"
+        }
+      ],
+      attendance: [
+        {
+          studentId: 'DIA-2026-001',
+          name: 'Mouhamed Sow',
+          matricule: 'DIA-2026-001',
+          class: '6ème A',
+          status: 'PRESENT',
+          parentPhone: '+221 77 123 45 67',
+          parentName: 'Mme Aminata Diallo',
+          justification: `Présent en cours de ${tMatiere}`
+        },
+        {
+          studentId: 'DIA-2026-002',
+          name: 'Fatou Sow',
+          matricule: 'DIA-2026-002',
+          class: '6ème A',
+          status: 'PRESENT',
+          parentPhone: '+221 77 123 45 67',
+          parentName: 'Mme Aminata Diallo',
+          justification: `Présent en cours de ${tMatiere}`
+        }
+      ],
+      homework: [
+        {
+          id: 301,
+          title: `Devoir : ${tMatiere}`,
+          class: '6ème A',
+          dueDate: '2026-09-25',
+          desc: `Exercices d'application du cours de ${tMatiere}.`,
+          status: '📢 Nouveau • Notifié'
+        }
+      ]
+    };
+  } else {
+    if (teacherDemoData.ECOLE) {
+      teacherDemoData.ECOLE.school = schoolName;
+      if (normKey) {
+        teacherDemoData.ECOLE.key = normKey;
+      }
+    }
+  }
+}
+
+function openTeacherPortalModal(accessKey) {
   closeAllModals();
   const modal = document.getElementById('teacherPortalModal');
   if (!modal) return;
+
+  const keyInput = (accessKey || '').trim();
+  const activeSchoolName = getActiveSchoolName();
 
   if (currentEstablishment && currentEstablishment.type === 'DAARA') {
     currentTeacherContext = 'DAARA';
   } else {
     currentTeacherContext = 'ECOLE';
   }
+
+  // Résolution dynamique du profil enseignant selon la clé saisie et l'école active
+  resolveTeacherProfile(keyInput, activeSchoolName);
 
   renderTeacherPortalContent();
   modal.classList.add('active');
@@ -11022,6 +11308,10 @@ function teacherLogout() {
 
 function switchTeacherPortalContext(context) {
   currentTeacherContext = (context === 'DAARA') ? 'DAARA' : 'ECOLE';
+  const schoolName = getActiveSchoolName();
+  if (teacherDemoData[currentTeacherContext]) {
+    teacherDemoData[currentTeacherContext].school = schoolName;
+  }
   renderTeacherPortalContent();
   const data = teacherDemoData[currentTeacherContext];
   showNotification(`🔄 Profil Enseignant basculé : ${data.name} (${data.school})`);
@@ -11447,7 +11737,7 @@ function addTeacherHomework(e) {
 
 let currentParentContext = 'ECOLE'; // 'ECOLE' ou 'DAARA'
 
-function openParentPortalModal() {
+function openParentPortalModal(accessKey) {
   closeAllModals();
   const modal = document.getElementById('parentPortalModal');
   if (!modal) return;
@@ -11462,7 +11752,8 @@ function openParentPortalModal() {
   renderParentPortalContent();
 
   modal.classList.add('active');
-  const modeTxt = currentParentContext === 'DAARA' ? 'Daara Moderne' : 'École Privée (Groupe Scolaire Diamil)';
+  const activeSchool = (typeof getActiveSchoolName === 'function') ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement');
+  const modeTxt = currentParentContext === 'DAARA' ? `Daara Moderne (${activeSchool})` : `École Privée (${activeSchool})`;
   showNotification(`👨‍👩‍👧 Bienvenue Mme Aminata Diallo dans votre Espace Parent [${modeTxt}] !`);
   logAuditEvent('Connexion Espace Parent', `Session parent ouverte en mode ${modeTxt} pour Mme Aminata Diallo (+221 77 123 45 67)`);
 }
@@ -11524,7 +11815,7 @@ function renderParentPortalContent() {
     if (isReal && currentEstablishment?.name) {
       nameEl.textContent = currentEstablishment.name;
     } else if (isDaara) {
-      nameEl.textContent = (isDaara ? 'Mon Daara Moderne' : 'Mon Ã‰tablissement');
+      nameEl.textContent = (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement');
     } else {
       nameEl.textContent = 'Groupe Scolaire d\'Excellence Diamil';
     }
@@ -11930,7 +12221,7 @@ function parentViewBulletin(studentKey) {
   if (isDaara) {
     schoolName = (currentEstablishment && currentEstablishment.type === 'DAARA' && currentEstablishment.name)
       ? currentEstablishment.name
-      : (isDaara ? 'Mon Daara Moderne' : 'Mon Ã‰tablissement');
+      : (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement');
     schoolMinistry = "Inspection Régionale de l'Enseignement Arabe & Daaras Modernes";
     schoolDetails = "Campus Keur Massar, Dakar • Agréé par l'État • Session 2026-2027";
   } else {
@@ -12088,7 +12379,7 @@ function parentOpenPayment(childName, amount, motif) {
   modal.style.zIndex = '2500';
 
   const isDaara = (currentParentContext === 'DAARA');
-  const defaultSchool = isDaara ? (isDaara ? 'Mon Daara Moderne' : 'Mon Ã‰tablissement') : 'Groupe Scolaire Diamil';
+  const defaultSchool = isDaara ? (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement') : 'Groupe Scolaire Diamil';
 
   if (!currentEstablishment) {
     currentEstablishment = {
@@ -12176,7 +12467,7 @@ function parentViewReceipt(ref, childName, amount, motif, phone, operator) {
   modal.style.zIndex = '2500';
 
   const isDaara = (currentParentContext === 'DAARA');
-  const school = isDaara ? (isDaara ? 'Mon Daara Moderne' : 'Mon Ã‰tablissement') : (currentEstablishment?.name || 'Groupe Scolaire Diamil');
+  const school = isDaara ? (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement') : (currentEstablishment?.name || 'Groupe Scolaire Diamil');
 
   openReceiptModal(
     ref || 'WAV-9921',
@@ -12207,7 +12498,7 @@ function initWsPayConfig(est) {
   const isDaara = est.type === 'DAARA';
   const defaultWaveUrl = est.waveUrlPaiement || "https://pay.wave.com/m/M_sn_FEQdl8TlbLnA/c/sn/";
   const defaultWaveNum = est.waveNumero || est.phone || "+221 77 106 48 77";
-  const defaultWaveNom = est.waveNomMarchand || (isDaara ? (isDaara ? "Mon Daara Moderne" : "Mon Ã‰tablissement") : (est.name || (est.name || "Caisse Ã‰tablissement")));
+  const defaultWaveNom = est.waveNomMarchand || (isDaara ? (isDaara ? "Mon Daara Moderne" : "Mon Établissement") : (est.name || (est.name || "Caisse Établissement")));
 
   const waveNumInput = document.getElementById('wsCfgWaveNumero');
   if (waveNumInput) waveNumInput.value = defaultWaveNum;
@@ -12228,7 +12519,7 @@ function initWsPayConfig(est) {
   if (omNumInput) omNumInput.value = est.omNumero || est.phone || "+221 77 123 45 67";
 
   const omNomInput = document.getElementById('wsCfgOmNomMarchand');
-  if (omNomInput) omNomInput.value = est.omNomMarchand || (isDaara ? (est.name || "CAISSE DAARA") : (est.name || (est.name || "CAISSE Ã‰TABLISSEMENT")));
+  if (omNomInput) omNomInput.value = est.omNomMarchand || (isDaara ? (est.name || "CAISSE DAARA") : (est.name || (est.name || "CAISSE ÉTABLISSEMENT")));
 
   updateWsOmUssdPreview(defaultOmCode);
 
@@ -12236,7 +12527,7 @@ function initWsPayConfig(est) {
   if (bqNomInput) bqNomInput.value = est.banqueNom || "CBAO Groupe Attijariwafa Bank";
 
   const bqTitulaireInput = document.getElementById('wsCfgBanqueTitulaire');
-  if (bqTitulaireInput) bqTitulaireInput.value = est.banqueTitulaire || (isDaara ? (isDaara ? "MON DAARA MODERNE" : "MON Ã‰TABLISSEMENT") : (est.name || (est.name || "CAISSE Ã‰TABLISSEMENT")));
+  if (bqTitulaireInput) bqTitulaireInput.value = est.banqueTitulaire || (isDaara ? (isDaara ? "MON DAARA MODERNE" : "MON ÉTABLISSEMENT") : (est.name || (est.name || "CAISSE ÉTABLISSEMENT")));
 
   const bqRibInput = document.getElementById('wsCfgBanqueRib');
   if (bqRibInput) bqRibInput.value = est.banqueRib || "SN012 01345 00123456789 22";

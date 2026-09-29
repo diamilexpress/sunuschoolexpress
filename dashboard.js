@@ -1720,7 +1720,7 @@ function applyClassPresetPack(packName) {
       { id: `cls_d1_${now}`, nom: "Ibtida'i (Initiation & Alphabet)", cycle: 'Daara', salle: 'Salle Al-Houda', capacite: 30, profPrincipal: '' },
       { id: `cls_d2_${now}`, nom: "Hifz Niveau 1 (Juz 1 à 15)", cycle: 'Daara', salle: 'Salle Badr', capacite: 35, profPrincipal: '' },
       { id: `cls_d3_${now}`, nom: "Hifz Niveau 2 (Juz 16 à 30)", cycle: 'Daara', salle: 'Salle Bilal', capacite: 35, profPrincipal: '' },
-      { id: `cls_d4_${now}`, nom: "Moutawassit (Tajwîd & Grammaire)", cycle: 'Daara', salle: 'Salle de MÃ©morisation', capacite: 30, profPrincipal: '' },
+      { id: `cls_d4_${now}`, nom: "Moutawassit (Tajwîd & Grammaire)", cycle: 'Daara', salle: 'Salle de Mémorisation', capacite: 30, profPrincipal: '' },
       { id: `cls_d5_${now}`, nom: "Thanawi (Sciences Islamiques & Fiqh)", cycle: 'Daara', salle: 'Salle Al-Azhar', capacite: 25, profPrincipal: '' }
     ];
   }
@@ -1925,7 +1925,7 @@ function triggerAutoGenerateTimetable() {
     ];
   } else if (cycle.includes('daara')) {
     subjects = [
-      { subject: "Tahfîz Matinal (Hizb 1-60)", teacher: currentClass.profPrincipal || "Oustaz Serigne Modou Ndiaye", room: "Salle de MÃ©morisation" },
+      { subject: "Tahfîz Matinal (Hizb 1-60)", teacher: currentClass.profPrincipal || "Oustaz Serigne Modou Ndiaye", room: "Salle de Mémorisation" },
       { subject: "Planche Allouwa & Récitation", teacher: "Oustaz Cheikh Tidiane", room: "Pavillon Allouwa" },
       { subject: "Règles de Tajwîd & Phonétique", teacher: "Oustaz Thierno Sow", room: "Salle Badr" },
       { subject: "Hadith & Sciences Islamiques", teacher: "Oustaz Serigne Modou Ndiaye", room: "Salle Al-Azhar" },
