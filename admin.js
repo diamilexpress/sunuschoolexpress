@@ -735,6 +735,21 @@ function isMockStudentAdmin(el) {
   return false;
 }
 
+// Clé unique et infaillible d'un apprenant pour dédoublonner entre localStorage, base ERP et snapshots
+function getStudentDeduplicationKey(s) {
+  if (!s) return '';
+  const prenom = String(s.prenom || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const nom = String(s.nom || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (prenom && nom) {
+    return `${prenom}__${nom}`;
+  }
+  const mat = String(s.matricule || '').trim().toUpperCase();
+  if (mat) {
+    return `mat__${mat}`;
+  }
+  return s.id ? `id__${String(s.id).trim().toUpperCase()}` : '';
+}
+
 // Extraction de la liste unique et rigoureusement dédoublonnée des élèves/talibés pour un établissement
 function getStudentsListForEtab(e) {
   if (!e) return [];
@@ -786,14 +801,14 @@ function getStudentsListForEtab(e) {
   const studentMap = new Map();
   const addStudent = (s) => {
     if (!s || isMockStudentAdmin(s)) return;
-    const uid = String(s.matricule || s.id || `${s.prenom || ''}_${s.nom || ''}`).toUpperCase().trim();
+    const uid = getStudentDeduplicationKey(s);
     if (!uid) return;
     if (!studentMap.has(uid)) {
       studentMap.set(uid, s);
     }
   };
 
-  // 1. Lire depuis les clés de stockage locales candidates
+  // 1. Lire depuis les clés de stockage locales candidates prioritaires
   candidateKeys.forEach(k => {
     try {
       const raw = localStorage.getItem(k);
@@ -806,7 +821,13 @@ function getStudentsListForEtab(e) {
     } catch(err) {}
   });
 
-  // 2. Vérifier dans sunuschool_erp_db
+  // Si des apprenants réels ont été trouvés dans les clés directes de l'école, on s'arrête là !
+  // (Évite d'importer une copie désynchronisée ou ré-identifiée depuis un snapshot central)
+  if (studentMap.size > 0) {
+    return Array.from(studentMap.values());
+  }
+
+  // 2. Vérifier dans sunuschool_erp_db uniquement si aucune clé directe n'existait
   try {
     const rawDb = localStorage.getItem('sunuschool_erp_db');
     if (rawDb) {
@@ -820,6 +841,10 @@ function getStudentsListForEtab(e) {
       }
     }
   } catch(err) {}
+
+  if (studentMap.size > 0) {
+    return Array.from(studentMap.values());
+  }
 
   // 3. Vérifier dans sse_saas_database
   try {
@@ -923,9 +948,11 @@ function updateKpis() {
     const list = getStudentsListForEtab(e);
     if (list.length > 0) {
       list.forEach(s => {
-        const schoolScope = e.code || e.id || e.name || 'etab';
-        const uid = `${schoolScope}_${s.matricule || s.id || `${s.prenom}_${s.nom}`}`.toUpperCase();
-        globalUniqueStudentKeys.add(uid);
+        const schoolScope = (e.code || e.id || e.name || 'etab').toUpperCase();
+        const studentKey = getStudentDeduplicationKey(s);
+        if (studentKey) {
+          globalUniqueStudentKeys.add(`${schoolScope}___${studentKey}`);
+        }
       });
     } else {
       totalEleves += getStudentCountForEtab(e);

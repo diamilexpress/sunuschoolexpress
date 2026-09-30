@@ -1603,8 +1603,11 @@ function syncEstablishmentStudents() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           parsed.filter(pel => !isMockStudent(pel)).forEach(pel => {
             const exists = appState.db.eleves.some(el =>
-              (el.matricule && el.matricule === pel.matricule) ||
-              (el.id && el.id === pel.id)
+              (el.matricule && pel.matricule && el.matricule === pel.matricule) ||
+              (el.id && el.id === pel.id) ||
+              (el.prenom && el.nom && pel.prenom && pel.nom &&
+               el.prenom.trim().toLowerCase() === pel.prenom.trim().toLowerCase() &&
+               el.nom.trim().toLowerCase() === pel.nom.trim().toLowerCase())
             );
             if (!exists) {
               appState.db.eleves.push({
@@ -1630,6 +1633,16 @@ function syncEstablishmentStudents() {
         }
       }
     } catch(e) {}
+  });
+
+  // Dédoublonnage interne strict pour garantir l'unicité de chaque apprenant
+  const seenStudentKeys = new Set();
+  appState.db.eleves = appState.db.eleves.filter(el => {
+    const key = (el.prenom && el.nom) ? `${el.prenom.trim().toLowerCase()}__${el.nom.trim().toLowerCase()}` : (el.matricule || el.id);
+    if (!key) return false;
+    if (seenStudentKeys.has(key)) return false;
+    seenStudentKeys.add(key);
+    return true;
   });
 
   // 3. Synchronisation miroir vers les clés individuelles (uniquement élèves réels)
