@@ -314,8 +314,8 @@ const demoState = {
     { id: 'ens_2', nom: 'Mme Mariama Ba', matiere: 'Français & Littérature', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 210000, mat: 'ENS-2026-14', tel: '+221 78 620 99 11' },
     { id: 'ens_3', nom: 'Oustaz Ibrahima Ndiaye', matiere: 'Arabe, Coran & Hifz', volume: '18h / semaine', contrat: 'CDI Titulaire', salaire: 195000, mat: 'ENS-2026-03', tel: '+221 76 333 44 88' },
     { id: 'ens_4', nom: 'M. Cheikh Tidiane Diop', matiere: 'SVT & Sciences de la Vie', volume: '16h / semaine', contrat: 'Vacataire', salaire: 175000, mat: 'ENS-2026-22', tel: '+221 70 800 15 20' },
-    { id: 'ens_5', nom: 'Mme Aminata Traoré', matiere: 'Anglais & Outils Informatiques', volume: '16h / semaine', contrat: 'Vacataire', salaire: 180000, mat: 'ENS-2026-27', tel: '+221 77 911 22 33' },
-    { id: 'ens_6', nom: 'M. Ousmane Niang', matiere: 'Anglais (Collège & Lycée)', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 230000, mat: 'ENS-2026-01', tel: '+221 77 650 44 12' }
+    { id: 'ens_6', nom: 'M. Ousmane Niang', matiere: 'Anglais (Collège & Lycée)', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 230000, mat: 'ENS-2026-04', tel: '+221 77 650 44 12' },
+    { id: 'ens_7', nom: 'Mme Fatou Diéne', matiere: 'Français & Littérature', volume: '18h / semaine', contrat: 'CDI Titulaire', salaire: 220000, mat: 'ENS-2026-01', tel: '+221 77 123 45 67' }
   ]
 };
 
@@ -5593,9 +5593,9 @@ const EMF_DEFAULT_TEACHER = {
   id: 'ens-ousmane-niang-emf',
   etablissementId: 'etab-2901',
   nom: 'M. Ousmane Niang',
-  mat: 'ENS-2026-01',
+  mat: 'ENS-2026-04',
   matiere: 'Anglais (Collège & Lycée)',
-  classes: ['Terminale Numérique', '1ère Informatique', '2nde Technique', '3ème A'],
+  classes: ['2nde L', '1ère L1', 'Terminale L2'],
   volume: '20h / semaine',
   contrat: 'CDI Titulaire',
   salaire: 250000,
@@ -5604,19 +5604,7 @@ const EMF_DEFAULT_TEACHER = {
   ipres: true
 };
 
-const EMF_DEFAULT_STUDENTS = [
-  { id: 'emf-el-01', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-001', prenom: 'Moussa', nom: 'Diop', sexe: 'M', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '18/09/2026', parentTel: '+221 77 150 78 78', moyenne: 16.5, rang: '1er', cleAcces: 'EMF-2026-001' },
-  { id: 'emf-el-02', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-002', prenom: 'Fatou Binetou', nom: 'Ndiaye', sexe: 'F', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '18/09/2026', parentTel: '+221 77 234 56 78', moyenne: 15.8, rang: '2ème', cleAcces: 'EMF-2026-002' },
-  { id: 'emf-el-03', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-003', prenom: 'Cheikh Ahmadou', nom: 'Fall', sexe: 'M', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '19/09/2026', parentTel: '+221 77 345 67 89', moyenne: 14.5, rang: '3ème', cleAcces: 'EMF-2026-003' },
-  { id: 'emf-el-04', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-004', prenom: 'Aïssatou', nom: 'Sow', sexe: 'F', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '19/09/2026', parentTel: '+221 77 456 78 90', moyenne: 17.2, rang: '1ère', cleAcces: 'EMF-2026-004' },
-  { id: 'emf-el-05', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-005', prenom: 'Ibrahima', nom: 'Ba', sexe: 'M', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '20/09/2026', parentTel: '+221 77 567 89 01', moyenne: 13.5, rang: '2ème', cleAcces: 'EMF-2026-005' },
-  { id: 'emf-el-06', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-006', prenom: 'Mariama', nom: 'Diallo', sexe: 'F', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '20/09/2026', parentTel: '+221 77 678 90 12', moyenne: 16.0, rang: '3ème', cleAcces: 'EMF-2026-006' },
-  { id: 'emf-el-07', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-007', prenom: 'Abdoulaye', nom: 'Seck', sexe: 'M', type: 'SCOLAIRE', classe: '2nde Technique', classeId: '2nde', statutPension: 'A_JOUR', dateInscription: '21/09/2026', parentTel: '+221 77 789 01 23', moyenne: 14.8, rang: '1er', cleAcces: 'EMF-2026-007' },
-  { id: 'emf-el-08', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-008', prenom: 'Khadija', nom: 'Gueye', sexe: 'F', type: 'SCOLAIRE', classe: '2nde Technique', classeId: '2nde', statutPension: 'A_JOUR', dateInscription: '21/09/2026', parentTel: '+221 77 890 12 34', moyenne: 15.2, rang: '2ème', cleAcces: 'EMF-2026-008' },
-  { id: 'emf-el-09', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-009', prenom: 'Modou', nom: 'Cissé', sexe: 'M', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '22/09/2026', parentTel: '+221 77 901 23 45', moyenne: 16.8, rang: '1er', cleAcces: 'EMF-2026-009' },
-  { id: 'emf-el-10', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-010', prenom: 'Aminata', nom: 'Sy', sexe: 'F', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '22/09/2026', parentTel: '+221 78 112 34 56', moyenne: 14.2, rang: '2ème', cleAcces: 'EMF-2026-010' },
-  { id: 'emf-el-11', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-011', prenom: 'Ousmane', nom: 'Sarr', sexe: 'M', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '23/09/2026', parentTel: '+221 78 223 45 67', moyenne: 15.5, rang: '3ème', cleAcces: 'EMF-2026-011' }
-];
+const EMF_DEFAULT_STUDENTS = [];
 
 function isEmfEstablishment(est) {
   if (!est) return false;
@@ -11420,16 +11408,27 @@ async function openTeacherPortalModal(accessKey) {
         avatar: '👨‍🏫',
         classesAffectees: found.classes || []
       };
-    } else if (rawKey === 'ENS-2026-01') {
+    } else if (rawKey === 'ENS-2026-04') {
       teacher = {
         id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         nomComplet: 'M. Ousmane Niang',
         matiere: 'Anglais (Collège & Lycée)',
-        accessKey: 'ENS-2026-01',
+        accessKey: 'ENS-2026-04',
         telephone: '+221 77 650 44 12',
         email: 'ousmane.niang@emf.sn',
         avatar: '👨‍🏫',
-        classesAffectees: ['Terminale Numérique']
+        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
+      };
+    } else if (rawKey === 'ENS-2026-01') {
+      teacher = {
+        id: '84c8ce4c-2561-4999-a7f4-20569f4656b9',
+        nomComplet: 'Mme Fatou Diéne',
+        matiere: 'Français',
+        accessKey: 'ENS-2026-01',
+        telephone: '+221 77 123 45 67',
+        email: 'fatou.diene@emf.sn',
+        avatar: '👩‍🏫',
+        classesAffectees: []
       };
     }
   }
@@ -11450,7 +11449,7 @@ async function openTeacherPortalModal(accessKey) {
   if (!classes || classes.length === 0) {
     const defaultClassNames = teacher.classesAffectees && teacher.classesAffectees.length > 0 
       ? teacher.classesAffectees 
-      : ['Terminale Numérique'];
+      : ['2nde L', '1ère L1', 'Terminale L2'];
     classes = defaultClassNames.map(cn => ({
       id: cn,
       nom: cn,

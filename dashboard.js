@@ -1585,19 +1585,18 @@ function getActiveEstablishmentKey() {
 
 // --- JEUX DE DONNÉES OFFICIELS POUR ÉCOLE DES MÉTIERS DU FUTUR (SSE-SN-2901) ---
 const EMF_DEFAULT_CLASSES = [
-  { id: 'cls-emf-t', etablissementId: 'etab-2901', nom: 'Terminale Numérique', cycle: 'Lycée', salle: 'Lab 1', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 3 },
-  { id: 'cls-emf-1', etablissementId: 'etab-2901', nom: '1ère Informatique', cycle: 'Lycée', salle: 'Lab 2', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 3 },
-  { id: 'cls-emf-2', etablissementId: 'etab-2901', nom: '2nde Technique', cycle: 'Lycée', salle: 'Salle 101', capacite: 40, profPrincipal: 'M. Ousmane Niang', effectif: 2 },
-  { id: 'cls-emf-3', etablissementId: 'etab-2901', nom: '3ème A', cycle: 'Collège', salle: 'Salle 102', capacite: 40, profPrincipal: 'M. Ousmane Niang', effectif: 3 }
+  { id: 'cls-2nde-l', etablissementId: 'etab-2901', nom: '2nde L', cycle: 'Secondaire', salle: 'Salle 101', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 0 },
+  { id: 'cls-1ere-l1', etablissementId: 'etab-2901', nom: '1ère L1', cycle: 'Secondaire', salle: 'Salle 102', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 0 },
+  { id: 'cls-term-l2', etablissementId: 'etab-2901', nom: 'Terminale L2', cycle: 'Lycée', salle: 'Salle 103', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 0 }
 ];
 
 const EMF_DEFAULT_TEACHER = {
   id: 'ens-ousmane-niang-emf',
   etablissementId: 'etab-2901',
   nom: 'M. Ousmane Niang',
-  mat: 'ENS-2026-01',
+  mat: 'ENS-2026-04',
   matiere: 'Anglais (Collège & Lycée)',
-  classes: ['Terminale Numérique', '1ère Informatique', '2nde Technique', '3ème A'],
+  classes: ['2nde L', '1ère L1', 'Terminale L2'],
   volume: '20h / semaine',
   contrat: 'CDI Titulaire',
   salaire: 250000,

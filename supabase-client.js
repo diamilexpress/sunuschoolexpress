@@ -105,6 +105,19 @@
     async saveEtablissement(etab) {
       const payload = toSupabaseEtab(etab);
       if (!payload || !payload.id) return false;
+
+      // Éviter l'erreur 409 Conflict : si un établissement avec le même code ou id existe déjà, faire un update (PATCH)
+      try {
+        const query = payload.code 
+          ? `?or=(id.eq.${encodeURIComponent(payload.id)},code.eq.${encodeURIComponent(payload.code)})&limit=1`
+          : `?id=eq.${encodeURIComponent(payload.id)}&limit=1`;
+        const existing = await apiRequest(`/rest/v1/etablissements${query}`);
+        if (Array.isArray(existing) && existing.length > 0) {
+          const match = existing[0];
+          return await this.updateEtablissement(match.id, payload);
+        }
+      } catch(e) {}
+
       const res = await apiRequest(
         '/rest/v1/etablissements',
         'POST',
@@ -238,12 +251,7 @@
       if (!cleanKey) return null;
 
       // 9.A. Recherche exacte dans public.teachers
-      let rows = await apiRequest(`/rest/v1/teachers?access_key=eq.${encodeURIComponent(cleanKey)}&limit=1`);
-      
-      // 9.B. Fallback si table enseignants (alias)
-      if (!Array.isArray(rows) || rows.length === 0) {
-        rows = await apiRequest(`/rest/v1/enseignants?matricule=eq.${encodeURIComponent(cleanKey)}&limit=1`);
-      }
+      const rows = await apiRequest(`/rest/v1/teachers?access_key=eq.${encodeURIComponent(cleanKey)}&limit=1`);
 
       if (!Array.isArray(rows) || rows.length === 0) {
         return null;
