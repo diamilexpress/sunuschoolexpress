@@ -152,39 +152,56 @@ CREATE POLICY presences_teacher_filter_policy ON public.presences
     );
 
 -- ==============================================================================
--- 7. DONNÉES INITIALES (SEED ENSEIGNANT M. OUSMANE NIANG & CLASSES EMF)
+-- 7. DONNÉES DE RÉFÉRENCE (ENSEIGNANTS EMF ET CLASSES CONFORMES DONNEES_REFERENCE.MD)
 -- ==============================================================================
 
--- Insertion Enseignant M. Ousmane Niang (Clé exacte : ENS-2026-01)
+-- 1. Mme Fatou Diéne (ENS-2026-01) - Mathématiques
+INSERT INTO public.teachers (id, nom_complet, matiere, access_key, telephone, email)
+VALUES ('84c8ce4c-2561-4999-a7f4-20569f4656b9', 'Mme Fatou Diéne', 'Mathématiques', 'ENS-2026-01', '+221 77 123 45 67', 'fatou.diene@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
+
+-- 2. M. Nabou Diome (ENS-2026-02) - Français
+INSERT INTO public.teachers (id, nom_complet, matiere, access_key, telephone, email)
+VALUES ('b2c3d4e5-f6a7-8901-bcde-f12345678901', 'M. Nabou Diome', 'Français', 'ENS-2026-02', '+221 77 500 11 22', 'nabou.diome@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
+
+-- 3. M. Aziz Diome (ENS-2026-03) - Sciences Physiques
+INSERT INTO public.teachers (id, nom_complet, matiere, access_key, telephone, email)
+VALUES ('c3d4e5f6-a7b8-9012-cdef-123456789012', 'M. Aziz Diome', 'Sciences Physiques', 'ENS-2026-03', '+221 77 500 33 44', 'aziz.diome@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
+
+-- 4. M. Ousmane Niang (ENS-2026-04) - Anglais
 INSERT INTO public.teachers (id, etablissement_id, nom_complet, matiere, access_key, telephone, email)
-VALUES (
-    'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    'etab-1790685533712',
-    'M. Ousmane Niang',
-    'Anglais (Collège & Lycée)',
-    'ENS-2026-01',
-    '+221 77 650 44 12',
-    'ousmane.niang@emf.sn'
-) ON CONFLICT (access_key) DO UPDATE SET
-    nom_complet = EXCLUDED.nom_complet,
-    matiere = EXCLUDED.matiere,
-    telephone = EXCLUDED.telephone;
+VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'etab-1790685533712', 'M. Ousmane Niang', 'Anglais', 'ENS-2026-04', '+221 77 650 44 12', 'ousmane.niang@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
 
--- Insertion de la classe Terminale Numérique rattachée à M. Ousmane Niang
-INSERT INTO public.classes (id, etablissement_id, teacher_id, nom, cycle)
-VALUES (
-    'cls-term-num',
-    'etab-1790685533712',
-    'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    'Terminale Numérique',
-    'LYCEE'
-) ON CONFLICT (id) DO UPDATE SET
-    teacher_id = EXCLUDED.teacher_id,
-    nom = EXCLUDED.nom;
+-- Classes affectées selon DONNEES_REFERENCE.md
+-- Mme Fatou Diéne : Terminale S2, 1ère S1, 2nde S
+INSERT INTO public.classes (id, teacher_id, nom, cycle) VALUES
+    ('cls-fatou-term-s2', '84c8ce4c-2561-4999-a7f4-20569f4656b9', 'Terminale S2', 'LYCEE'),
+    ('cls-fatou-1ere-s1', '84c8ce4c-2561-4999-a7f4-20569f4656b9', '1ère S1', 'LYCEE'),
+    ('cls-fatou-2nde-s', '84c8ce4c-2561-4999-a7f4-20569f4656b9', '2nde S', 'LYCEE')
+ON CONFLICT (id) DO UPDATE SET teacher_id = EXCLUDED.teacher_id, nom = EXCLUDED.nom;
 
--- Rattachement des 9 élèves réels EMF à la classe 'cls-term-num'
-UPDATE public.eleves 
-SET classe_id = 'cls-term-num'
-WHERE etablissement_code IN ('SSE-SN-1125', 'SSE-SN-2901', 'SSE-SN-3938')
-   OR etablissement_id IN ('etab-1790685533712', 'etab-emf');
+-- M. Nabou Diome : 2nde L, 1ère L1, Terminale L2
+INSERT INTO public.classes (id, teacher_id, nom, cycle) VALUES
+    ('cls-nabou-2nde-l', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', '2nde L', 'LYCEE'),
+    ('cls-nabou-1ere-l1', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', '1ère L1', 'LYCEE'),
+    ('cls-nabou-term-l2', 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'Terminale L2', 'LYCEE')
+ON CONFLICT (id) DO UPDATE SET teacher_id = EXCLUDED.teacher_id, nom = EXCLUDED.nom;
+
+-- M. Aziz Diome : 2nde S, Terminale S2, 1ère S1
+INSERT INTO public.classes (id, teacher_id, nom, cycle) VALUES
+    ('cls-aziz-2nde-s', 'c3d4e5f6-a7b8-9012-cdef-123456789012', '2nde S', 'LYCEE'),
+    ('cls-aziz-term-s2', 'c3d4e5f6-a7b8-9012-cdef-123456789012', 'Terminale S2', 'LYCEE'),
+    ('cls-aziz-1ere-s1', 'c3d4e5f6-a7b8-9012-cdef-123456789012', '1ère S1', 'LYCEE')
+ON CONFLICT (id) DO UPDATE SET teacher_id = EXCLUDED.teacher_id, nom = EXCLUDED.nom;
+
+-- M. Ousmane Niang : 2nde L, 1ère L1, Terminale L2
+INSERT INTO public.classes (id, teacher_id, nom, cycle) VALUES
+    ('cls-2nde-l', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', '2nde L', 'LYCEE'),
+    ('cls-1ere-l1', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', '1ère L1', 'LYCEE'),
+    ('cls-term-l2', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Terminale L2', 'LYCEE')
+ON CONFLICT (id) DO UPDATE SET teacher_id = EXCLUDED.teacher_id, nom = EXCLUDED.nom;
+
 

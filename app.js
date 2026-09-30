@@ -310,12 +310,10 @@ const demoState = {
   ],
 
   hrTeachers: [
-    { id: 'ens_1', nom: 'M. Abdoulaye Diallo', matiere: 'Mathématiques (CM2 / 3ème)', volume: '22h / semaine', contrat: 'CDI Titulaire', salaire: 220000, mat: 'ENS-2026-08', tel: '+221 77 450 12 34' },
-    { id: 'ens_2', nom: 'Mme Mariama Ba', matiere: 'Français & Littérature', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 210000, mat: 'ENS-2026-14', tel: '+221 78 620 99 11' },
-    { id: 'ens_3', nom: 'Oustaz Ibrahima Ndiaye', matiere: 'Arabe, Coran & Hifz', volume: '18h / semaine', contrat: 'CDI Titulaire', salaire: 195000, mat: 'ENS-2026-03', tel: '+221 76 333 44 88' },
-    { id: 'ens_4', nom: 'M. Cheikh Tidiane Diop', matiere: 'SVT & Sciences de la Vie', volume: '16h / semaine', contrat: 'Vacataire', salaire: 175000, mat: 'ENS-2026-22', tel: '+221 70 800 15 20' },
-    { id: 'ens_6', nom: 'M. Ousmane Niang', matiere: 'Anglais (Collège & Lycée)', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 230000, mat: 'ENS-2026-04', tel: '+221 77 650 44 12' },
-    { id: 'ens_7', nom: 'Mme Fatou Diéne', matiere: 'Français & Littérature', volume: '18h / semaine', contrat: 'CDI Titulaire', salaire: 220000, mat: 'ENS-2026-01', tel: '+221 77 123 45 67' }
+    { id: 'ens_1', nom: 'Mme Fatou Diéne', matiere: 'Mathématiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-01', tel: '+221 77 123 45 67' },
+    { id: 'ens_2', nom: 'M. Nabou Diome', matiere: 'Français', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 240000, mat: 'ENS-2026-02', tel: '+221 77 500 11 22' },
+    { id: 'ens_3', nom: 'M. Aziz Diome', matiere: 'Sciences Physiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-03', tel: '+221 77 500 33 44' },
+    { id: 'ens_4', nom: 'M. Ousmane Niang', matiere: 'Anglais', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-04', tel: '+221 77 650 44 12' }
   ]
 };
 
@@ -11408,27 +11406,49 @@ async function openTeacherPortalModal(accessKey) {
         avatar: '👨‍🏫',
         classesAffectees: found.classes || []
       };
+    } else if (rawKey === 'ENS-2026-01') {
+      teacher = {
+        id: '84c8ce4c-2561-4999-a7f4-20569f4656b9',
+        nomComplet: 'Mme Fatou Diéne',
+        matiere: 'Mathématiques',
+        accessKey: 'ENS-2026-01',
+        telephone: '+221 77 123 45 67',
+        email: 'fatou.diene@emf.sn',
+        avatar: '👩‍🏫',
+        classesAffectees: ['Terminale S2', '1ère S1', '2nde S']
+      };
+    } else if (rawKey === 'ENS-2026-02') {
+      teacher = {
+        id: 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+        nomComplet: 'M. Nabou Diome',
+        matiere: 'Français',
+        accessKey: 'ENS-2026-02',
+        telephone: '+221 77 500 11 22',
+        email: 'nabou.diome@emf.sn',
+        avatar: '👨‍🏫',
+        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
+      };
+    } else if (rawKey === 'ENS-2026-03') {
+      teacher = {
+        id: 'c3d4e5f6-a7b8-9012-cdef-123456789012',
+        nomComplet: 'M. Aziz Diome',
+        matiere: 'Sciences Physiques',
+        accessKey: 'ENS-2026-03',
+        telephone: '+221 77 500 33 44',
+        email: 'aziz.diome@emf.sn',
+        avatar: '👨‍🏫',
+        classesAffectees: ['2nde S', 'Terminale S2', '1ère S1']
+      };
     } else if (rawKey === 'ENS-2026-04') {
       teacher = {
         id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         nomComplet: 'M. Ousmane Niang',
-        matiere: 'Anglais (Collège & Lycée)',
+        matiere: 'Anglais',
         accessKey: 'ENS-2026-04',
         telephone: '+221 77 650 44 12',
         email: 'ousmane.niang@emf.sn',
         avatar: '👨‍🏫',
         classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
-      };
-    } else if (rawKey === 'ENS-2026-01') {
-      teacher = {
-        id: '84c8ce4c-2561-4999-a7f4-20569f4656b9',
-        nomComplet: 'Mme Fatou Diéne',
-        matiere: 'Français',
-        accessKey: 'ENS-2026-01',
-        telephone: '+221 77 123 45 67',
-        email: 'fatou.diene@emf.sn',
-        avatar: '👩‍🏫',
-        classesAffectees: []
       };
     }
   }
