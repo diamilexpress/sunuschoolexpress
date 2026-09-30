@@ -12184,15 +12184,28 @@ let currentParentSession = {
   children: []
 };
 
+// Registre officiel des élèves et de leurs parents réels
+const STUDENT_PARENT_MAP = {
+  'ELE-2026-745': { parentName: 'Mr Mbaye', parentPhone: '+221775637435' },       // Astou Mbaye (2nde L)
+  'ELE-2026-385': { parentName: 'Mr Seck', parentPhone: '+221771064877' },        // Cheikh Seck (Terminale L2)
+  'ELE-2026-114': { parentName: 'Fatou Diene', parentPhone: '+221775218097' },    // Mariama Diéne (Terminale L2)
+  'ELE-2026-400': { parentName: 'Mr Sow', parentPhone: '+221775637435' },         // Ibrahima Sow (1ère L1)
+  'ELE-2026-452': { parentName: 'M. O Niang', parentPhone: '+221777572706' },     // Sokhna Niang (1ère L1)
+  'ELE-2026-992': { parentName: 'Mr Fall', parentPhone: '+221761503938' },        // Khadim Fall (1ère L1)
+  'ELE-2026-259': { parentName: 'Parent Sy', parentPhone: '+221771064877' },       // Fatou Sy (2nde L)
+  'ELE-2026-411': { parentName: 'Nabou Diome', parentPhone: '+221771685148' },    // Mamadou Diome (2nde L)
+  'ELE-2026-807': { parentName: 'Bachir Diop', parentPhone: '+221773557877' }     // Awa Diop (2nde L)
+};
+
 // Registre des parents réels (numéro épuré -> Nom officiel du parent)
 const PARENT_DIRECTORY = {
-  '775637435': 'Parent Mbaye / Sow',
-  '771064877': 'Parent Seck / Sy',
-  '775218097': 'Parent Diéne',
-  '777572706': 'Parent Niang',
-  '761503938': 'Parent Fall',
-  '771685148': 'Parent Diome',
-  '773557877': 'Parent Diop'
+  '775637435': 'Mr Mbaye / Mr Sow',
+  '771064877': 'Mr Seck',
+  '775218097': 'Fatou Diene',
+  '777572706': 'M. O Niang',
+  '761503938': 'Mr Fall',
+  '771685148': 'Nabou Diome',
+  '773557877': 'Bachir Diop'
 };
 
 function normalizePhoneDigits(phone) {
@@ -12239,8 +12252,8 @@ async function openParentPortalModal(accessKey) {
               prenom: s.prenom,
               nom: s.nom,
               classe: s.classeId || 'Inscrit',
-              parentTel: s.parentPhone || '',
-              parentNom: s.parentName || '',
+              parentTel: '',
+              parentNom: '',
               moyenne: null,
               rang: '--'
             });
@@ -12251,6 +12264,15 @@ async function openParentPortalModal(accessKey) {
       console.warn('Erreur chargement élèves Supabase dans portail parent:', err);
     }
   }
+
+  // Injecter les données réelles des parents depuis STUDENT_PARENT_MAP
+  allStudents.forEach(s => {
+    const pInfo = STUDENT_PARENT_MAP[s.matricule];
+    if (pInfo) {
+      s.parentTel = pInfo.parentPhone;
+      s.parentNom = pInfo.parentName;
+    }
+  });
 
   // 3. Filtrer strictement les enfants de ce parent
   let matchedChildren = [];
@@ -12273,6 +12295,9 @@ async function openParentPortalModal(accessKey) {
   let parentName = '';
   if (searchDigits && PARENT_DIRECTORY[searchDigits]) {
     parentName = PARENT_DIRECTORY[searchDigits];
+  } else if (matchedChildren.length > 0 && matchedChildren.every(c => c.parentNom)) {
+    const uniqueParents = Array.from(new Set(matchedChildren.map(c => c.parentNom).filter(Boolean)));
+    parentName = uniqueParents.join(' / ');
   } else if (matchedChildren.length > 0 && matchedChildren[0].parentNom) {
     parentName = matchedChildren[0].parentNom;
   } else if (matchedChildren.length > 0) {
@@ -12372,6 +12397,7 @@ function renderParentPortalContent() {
                 <div>
                   <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">${s.prenom} ${s.nom}</h5>
                   <span style="font-size: 0.78rem; color: var(--turquoise-400);">Matricule : ${s.matricule} • Classe : ${s.classe || s.classeId || 'Inscrit'}</span>
+                  ${s.parentNom ? `<div style="font-size: 0.75rem; color: var(--gris-400); margin-top: 0.2rem;">Responsable : <strong style="color: var(--gold-400);">${s.parentNom}</strong></div>` : ''}
                 </div>
               </div>
               <span class="badge-tag badge-excellent">Inscrit ✓</span>
