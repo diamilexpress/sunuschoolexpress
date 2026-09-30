@@ -28,7 +28,7 @@ Si le code ou la base contredit ce fichier, c'est ce fichier qui a raison.
 | ELE-2026-400 | Ibrahima Sow | 1ère L1 | +221 77 563 74 35 | Mr Sow |
 | ELE-2026-452 | Sokhna Niang | 1ère L1 | +221 77 757 27 06 | M. O Niang |
 | ELE-2026-992 | Khadim Fall | 1ère L1 | +221 76 150 39 38 | Mr Fall |
-| ELE-2026-259 | Fatou Sy | 2nde L | +221 77 106 48 77 | *À confirmer par l'utilisateur* |
+| ELE-2026-259 | Fatou Sy | 2nde L | +221 77 106 48 77 | Aminata Sy |
 | ELE-2026-411 | Mamadou Diome | 2nde L | +221 77 168 51 48 | Nabou Diome |
 | ELE-2026-807 | Awa Diop | 2nde L | +221 77 355 78 77 | Bachir Diop |
 

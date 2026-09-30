@@ -12192,7 +12192,7 @@ const STUDENT_PARENT_MAP = {
   'ELE-2026-400': { parentName: 'Mr Sow', parentPhone: '+221775637435' },         // Ibrahima Sow (1ère L1)
   'ELE-2026-452': { parentName: 'M. O Niang', parentPhone: '+221777572706' },     // Sokhna Niang (1ère L1)
   'ELE-2026-992': { parentName: 'Mr Fall', parentPhone: '+221761503938' },        // Khadim Fall (1ère L1)
-  'ELE-2026-259': { parentName: 'Parent Sy', parentPhone: '+221771064877' },       // Fatou Sy (2nde L)
+  'ELE-2026-259': { parentName: 'Aminata Sy', parentPhone: '+221771064877' },       // Fatou Sy (2nde L)
   'ELE-2026-411': { parentName: 'Nabou Diome', parentPhone: '+221771685148' },    // Mamadou Diome (2nde L)
   'ELE-2026-807': { parentName: 'Bachir Diop', parentPhone: '+221773557877' }     // Awa Diop (2nde L)
 };
@@ -12200,7 +12200,7 @@ const STUDENT_PARENT_MAP = {
 // Registre des parents réels (numéro épuré -> Nom officiel du parent)
 const PARENT_DIRECTORY = {
   '775637435': 'Mr Mbaye / Mr Sow',
-  '771064877': 'Mr Seck',
+  '771064877': 'Mr Seck / Aminata Sy',
   '775218097': 'Fatou Diene',
   '777572706': 'M. O Niang',
   '761503938': 'Mr Fall',
