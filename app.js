@@ -12178,456 +12178,256 @@ function addTeacherHomework(e) {
 }
 
 let currentParentContext = 'ECOLE'; // 'ECOLE' ou 'DAARA'
+let currentParentSession = {
+  phone: '',
+  name: '',
+  children: []
+};
 
-function openParentPortalModal(accessKey) {
+// Registre des parents réels (numéro épuré -> Nom officiel du parent)
+const PARENT_DIRECTORY = {
+  '775637435': 'Parent Mbaye / Sow',
+  '771064877': 'Parent Seck / Sy',
+  '775218097': 'Parent Diéne',
+  '777572706': 'Parent Niang',
+  '761503938': 'Parent Fall',
+  '771685148': 'Parent Diome',
+  '773557877': 'Parent Diop'
+};
+
+function normalizePhoneDigits(phone) {
+  if (!phone) return '';
+  return phone.toString().replace(/[^0-9]/g, '');
+}
+
+async function openParentPortalModal(accessKey) {
   closeAllModals();
   const modal = document.getElementById('parentPortalModal');
   if (!modal) return;
 
-  // Si l'établissement sélectionné actuellement dans l'app est un Daara, pré-sélectionner Daara, sinon École Privée
+  // Déterminer le type d'établissement
   if (currentEstablishment && currentEstablishment.type === 'DAARA') {
     currentParentContext = 'DAARA';
   } else {
     currentParentContext = 'ECOLE';
   }
 
+  // 1. Récupérer l'identifiant / numéro saisi
+  let rawPhone = accessKey || '';
+  if (!rawPhone) {
+    const inputEl = document.getElementById('accessKeyValueInput');
+    if (inputEl && inputEl.value) rawPhone = inputEl.value.trim();
+  }
+
+  const cleanInput = normalizePhoneDigits(rawPhone);
+  const searchDigits = cleanInput.length >= 9 ? cleanInput.slice(-9) : cleanInput;
+
+  // 2. Récupérer tous les élèves actifs (local + Supabase si disponible)
+  const isDaara = (currentParentContext === 'DAARA');
+  let allStudents = (typeof getEstablishmentActiveStudents === 'function') ? getEstablishmentActiveStudents(isDaara) : [];
+
+  // Compléter avec Supabase Cloud si connecté
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getStudentsByClassIds === 'function') {
+    try {
+      const supaStudents = await window.SSE_SUPABASE.getStudentsByClassIds(['2nde L', '1ère L1', 'Terminale L2', '2nde S', '1ère S1', 'Terminale S2']);
+      if (Array.isArray(supaStudents) && supaStudents.length > 0) {
+        supaStudents.forEach(s => {
+          if (!allStudents.some(ex => ex.matricule === s.matricule)) {
+            allStudents.push({
+              id: s.id,
+              matricule: s.matricule,
+              prenom: s.prenom,
+              nom: s.nom,
+              classe: s.classeId || 'Inscrit',
+              parentTel: s.parentPhone || '',
+              parentNom: s.parentName || '',
+              moyenne: null,
+              rang: '--'
+            });
+          }
+        });
+      }
+    } catch(err) {
+      console.warn('Erreur chargement élèves Supabase dans portail parent:', err);
+    }
+  }
+
+  // 3. Filtrer strictement les enfants de ce parent
+  let matchedChildren = [];
+  if (searchDigits) {
+    matchedChildren = allStudents.filter(s => {
+      const pTel = normalizePhoneDigits(s.parentTel || s.parentTelephone || s.parent_phone || '');
+      return pTel.endsWith(searchDigits) || (searchDigits.length >= 7 && pTel.includes(searchDigits));
+    });
+  } else if (allStudents.length > 0) {
+    // Si aucune clé spécifiée lors d'un test direct, prendre le premier groupe de parent disponible
+    const firstWithParent = allStudents.find(s => s.parentTel);
+    if (firstWithParent) {
+      const firstDigits = normalizePhoneDigits(firstWithParent.parentTel).slice(-9);
+      rawPhone = firstWithParent.parentTel;
+      matchedChildren = allStudents.filter(s => normalizePhoneDigits(s.parentTel || '').endsWith(firstDigits));
+    }
+  }
+
+  // 4. Identifier le nom du parent
+  let parentName = '';
+  if (searchDigits && PARENT_DIRECTORY[searchDigits]) {
+    parentName = PARENT_DIRECTORY[searchDigits];
+  } else if (matchedChildren.length > 0 && matchedChildren[0].parentNom) {
+    parentName = matchedChildren[0].parentNom;
+  } else if (matchedChildren.length > 0) {
+    parentName = `Famille ${matchedChildren[0].nom}`;
+  } else {
+    parentName = 'Parent d\'Élève';
+  }
+
+  currentParentSession = {
+    phone: rawPhone || 'Non renseigné',
+    name: parentName,
+    children: matchedChildren
+  };
+
   renderParentPortalContent();
 
   modal.classList.add('active');
   const activeSchool = (typeof getActiveSchoolName === 'function') ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement');
-  const modeTxt = currentParentContext === 'DAARA' ? `Daara Moderne (${activeSchool})` : `École Privée (${activeSchool})`;
-  showNotification(`👨‍👩‍👧 Bienvenue Mme Aminata Diallo dans votre Espace Parent [${modeTxt}] !`);
-  logAuditEvent('Connexion Espace Parent', `Session parent ouverte en mode ${modeTxt} pour Mme Aminata Diallo (+221 77 123 45 67)`);
+  const modeTxt = isDaara ? `Daara Moderne (${activeSchool})` : `École Privée (${activeSchool})`;
+  showNotification(`👨‍👩‍👧 Bienvenue ${parentName} dans votre Espace Parent [${modeTxt}] !`);
+  logAuditEvent('Connexion Espace Parent', `Session parent ouverte pour ${parentName} (${currentParentSession.phone})`);
 }
 
 function switchParentPortalContext(context) {
   currentParentContext = (context === 'DAARA') ? 'DAARA' : 'ECOLE';
   renderParentPortalContent();
-  const label = currentParentContext === 'DAARA' ? 'Daara Moderne' : 'École Privée (Groupe Scolaire Diamil)';
-  showNotification(`🔄 Espace Parent synchronisé avec succès en mode : ${label}`);
-  logAuditEvent('Bascule Contexte Parent', `Mode parent basculé vers ${label}`);
+  const label = currentParentContext === 'DAARA' ? 'Daara Moderne' : 'École Privée';
+  showNotification(`🔄 Espace Parent synchronisé : ${label}`);
 }
 
 function renderParentPortalContent() {
   const isDaara = (currentParentContext === 'DAARA');
-  const isReal = isRealRegisteredEstablishment();
-  const bannerContainer = document.getElementById('parentPortalBannerContainer');
-  const realStudents = isReal ? getEstablishmentActiveStudents(isDaara) : [];
+  const activeSchool = (typeof getActiveSchoolName === 'function') ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement');
 
-  // 1. Bannière d'Avertissement & Anti-confusion
+  // 1. En-tête dynamique du portail
+  const headerNameEl = document.getElementById('parentPortalHeaderName');
+  const headerPhoneEl = document.getElementById('parentPortalHeaderPhone');
+  const schoolNameEl = document.getElementById('parentSchoolNameDisplay');
+  const countDisplayEl = document.getElementById('parentChildrenCountDisplay');
+
+  if (headerNameEl) headerNameEl.textContent = `Espace Parent : ${currentParentSession.name || 'Parent d\'Élève'}`;
+  if (headerPhoneEl) headerPhoneEl.textContent = currentParentSession.phone || '--';
+  if (schoolNameEl) schoolNameEl.textContent = activeSchool;
+
+  const children = currentParentSession.children || [];
+  if (countDisplayEl) {
+    countDisplayEl.textContent = `Mes Enfants Scolarisés (${children.length} Inscrit${children.length > 1 ? 's' : ''})`;
+  }
+
+  // 2. Bannière de statut
+  const bannerContainer = document.getElementById('parentPortalBannerContainer');
   if (bannerContainer) {
-    if (isReal) {
-      if (realStudents.length === 0) {
-        bannerContainer.innerHTML = `
-          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
-            <div style="font-size: 0.84rem; color: #FCA5A5;">
-              <strong>Aucun élève inscrit dans cet établissement :</strong> Les dossiers apparaîtront automatiquement dès l'inscription de vos élèves.
-            </div>
-            <button class="btn btn-gold" style="font-size: 0.78rem; padding: 0.4rem 0.8rem;" onclick="closeParentPortal(); openNewRegistrationInWs();">
-              ➕ Inscrire un Élève
-            </button>
+    if (children.length > 0) {
+      bannerContainer.innerHTML = `
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.3rem;">👨‍👩‍👧</span>
+          <div style="font-size: 0.82rem; color: #6EE7B7; line-height: 1.4;">
+            <strong>ESPACE PARENT OFFICIEL :</strong> Dossiers certifiés de vos enfants inscrits à <strong>${activeSchool}</strong>. Les relevés et évaluations sont mis à jour directement par leurs enseignants.
           </div>
-        `;
-      } else {
-        bannerContainer.innerHTML = `
-          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.75rem;">
-            <span style="font-size: 1.3rem;">👨‍👩‍👧</span>
-            <div style="font-size: 0.82rem; color: #6EE7B7; line-height: 1.4;">
-              <strong>ESPACE PARENT SYNCHRONISÉ :</strong> Suivi des élèves réels de votre établissement. Les relevés démarrent strictement vierges <strong>(-- / 20)</strong> et se remplissent au fur et à mesure des évaluations réelles des professeurs.
-            </div>
-          </div>
-        `;
-      }
+        </div>
+      `;
     } else {
       bannerContainer.innerHTML = `
-        <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.45); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.3rem;">💡</span>
-          <div style="font-size: 0.82rem; color: #FDE68A; line-height: 1.4;">
-            <strong>SPÉCIMEN DE DÉMONSTRATION (Simulation Parent après fin de trimestre) :</strong>
-            Ce profil modèle illustre le suivi complet une fois les cours et examens terminés. Vos élèves réels inscrits démarrent avec un relevé strictement vierge.
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+          <div style="font-size: 0.84rem; color: #FCA5A5;">
+            <strong>Aucun élève rattaché au numéro ${currentParentSession.phone} :</strong> Veuillez vérifier que ce numéro correspond bien à celui renseigné lors de l'inscription à l'établissement.
           </div>
         </div>
       `;
     }
   }
 
-  // 2. Nom de l'établissement
-  const nameEl = document.getElementById('parentSchoolNameDisplay');
-  if (nameEl) {
-    if (isReal && currentEstablishment?.name) {
-      nameEl.textContent = currentEstablishment.name;
-    } else if (isDaara) {
-      nameEl.textContent = (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement');
-    } else {
-      nameEl.textContent = 'Groupe Scolaire d\'Excellence Diamil';
-    }
-  }
-
-  // 3. Badge et Boutons du sélecteur
-  const modeBadge = document.getElementById('parentCurrentModeBadge');
-  const btnEcole = document.getElementById('parentSwitchBtnEcole');
-  const btnDaara = document.getElementById('parentSwitchBtnDaara');
-
-  if (modeBadge) {
-    modeBadge.textContent = isDaara ? '🕌 Mode Daara Moderne' : '🏫 Mode École Privée';
-    modeBadge.className = isDaara ? 'badge-tag badge-gold' : 'badge-tag badge-primary';
-  }
-
-  if (btnEcole && btnDaara) {
-    if (isDaara) {
-      btnEcole.className = 'btn btn-outline';
-      btnDaara.className = 'btn btn-gold';
-    } else {
-      btnEcole.className = 'btn btn-primary';
-      btnDaara.className = 'btn btn-outline';
-    }
-  }
-
-  // 4. Cartes des enfants
+  // 3. Cartes des enfants réels
   const cardsContainer = document.getElementById('parentChildrenCardsContainer');
   if (cardsContainer) {
-    if (isReal) {
-      if (realStudents.length === 0) {
-        cardsContainer.innerHTML = `
-          <div style="text-align: center; padding: 2.5rem 1.5rem; background: rgba(255,255,255,0.02); border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 12px;">
-            <div style="font-size: 2.6rem; margin-bottom: 0.5rem;">👨‍👧‍👦</div>
-            <h5 style="color: #FFF; font-size: 1.1rem; margin-bottom: 0.3rem;">Aucun élève rattaché pour l'instant</h5>
-            <p style="color: var(--gris-400); font-size: 0.85rem; max-width: 480px; margin: 0 auto 1.2rem;">
-              Inscrivez vos premiers élèves depuis le tableau de bord pour que leurs parents puissent suivre leur scolarité ici en direct.
-            </p>
-            <button class="btn btn-gold" style="font-size: 0.85rem; padding: 0.5rem 1.2rem;" onclick="closeParentPortal(); openNewRegistrationInWs();">
-              ➕ Inscrire un Élève Maintenant
-            </button>
-          </div>
-        `;
-      } else {
-        cardsContainer.innerHTML = realStudents.map(s => {
-          const hasGrades = Boolean(s.moyenne !== null && s.moyenne !== undefined && s.moyenne !== '' && s.moyenne !== '--');
-          const safeNom = `${s.prenom} ${s.nom}`.replace(/'/g, "\\'");
-          return `
-            <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: var(--radius-md); padding: 1.2rem; margin-bottom: 1rem;">
-              <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
-                <div style="display: flex; gap: 0.75rem; align-items: center;">
-                  <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 210, 180, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                    ${isDaara ? '👳' : '🎓'}
-                  </div>
-                  <div>
-                    <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">${s.prenom} ${s.nom}</h5>
-                    <span style="font-size: 0.78rem; color: var(--turquoise-400);">Matricule : ${s.matricule} • Classe : ${s.classe || 'Inscrit'}</span>
-                  </div>
-                </div>
-                <span class="badge-tag ${hasGrades ? 'badge-good' : 'badge-primary'}">${hasGrades ? 'Évalué' : 'Dossier Vierge'}</span>
-              </div>
-
-              <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-                  <span style="color: var(--gris-400);">Moyenne 1er Trimestre :</span>
-                  <strong style="color: ${hasGrades ? 'var(--turquoise-400)' : 'var(--gris-300)'}; font-size: 0.95rem;">
-                    ${hasGrades ? `${s.moyenne} / 20 (Rang : ${s.rang})` : '-- / 20 (En attente d\'évaluation)'}
-                  </strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-                  <span style="color: var(--gris-400);">${isDaara ? 'Progression Coranique :' : 'Assiduité :'}</span>
-                  <strong style="color: var(--gold-400);">${isDaara ? `Hizb ${s.hizb || 1} • Tajwîd En cours` : '100% (0 absence)'}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: var(--gris-400);">Statut Inscription / Scolarité :</span>
-                  <strong style="color: #34D399;">Inscrit(e) • Dossier Actif ✓</strong>
-                </div>
-              </div>
-
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="previewBulletin('${s.id}')">
-                  📑 Consulter le Bulletin Officiel
-                </button>
-                <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenAppreciation('${safeNom}')" title="Voir avis des professeurs">
-                  💬 Avis des Enseignants
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-    } else if (isDaara) {
+    if (children.length === 0) {
       cardsContainer.innerHTML = `
-        <!-- Enfant 1 : Mouhamed Sow (Daara Moderne) -->
-        <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: var(--radius-md); padding: 1.2rem; margin-bottom: 1rem;">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 210, 180, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                👦
-              </div>
-              <div>
-                <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">Mouhamed Sow</h5>
-                <span style="font-size: 0.78rem; color: var(--turquoise-400);">Matricule : MAT-2026-042 • Classe : 6ème A (Option Internat Daara Moderne)</span>
-              </div>
-            </div>
-            <span class="badge-tag badge-good">Assidu (0 absence)</span>
-          </div>
-
-          <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Moyenne 1er Semestre :</span>
-              <strong style="color: var(--turquoise-400); font-size: 0.95rem;">16.45 / 20 (Rang : 2ème / 38)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Progression Coranique :</span>
-              <strong style="color: var(--gold-400);">Hizb 38 (Al-Ahqaf) • Tajwîd A+</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--gris-400);">Statut Pension / Caisse :</span>
-              <strong style="color: #34D399;">Octobre 2026 Réglé (25 000 FCFA) ✓</strong>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="parentViewBulletin('mouhamed')">
-              📑 Consulter le Bulletin Officiel
-            </button>
-            <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenAppreciation('Mouhamed Sow')" title="Voir appréciation de l'Oustaz">
-              💬 Appréciation Oustaz
-            </button>
-          </div>
-        </div>
-
-        <!-- Enfant 2 : Fatou Sow (Daara Moderne) -->
-        <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 1.2rem;">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                🧕
-              </div>
-              <div>
-                <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">Fatou Sow</h5>
-                <span style="font-size: 0.78rem; color: var(--gold-400);">Matricule : MAT-2026-088 • Classe : CM2 B (Daara Moderne &amp; Hifz Filles)</span>
-              </div>
-            </div>
-            <span class="badge-tag badge-excellent">Tableau d'Honneur</span>
-          </div>
-
-          <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Moyenne 1er Semestre :</span>
-              <strong style="color: var(--gold-400); font-size: 0.95rem;">15.80 / 20 (Rang : 4ème / 42)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Progression Coranique :</span>
-              <strong style="color: var(--turquoise-400);">Hizb 24 (Al-Furqân) • Tajwîd A</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--gris-400);">Statut Pension / Caisse :</span>
-              <strong style="color: #FBBF24;">À régler : Novembre (20 000 FCFA)</strong>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-gold" style="flex: 1; min-width: 140px; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="parentOpenPayment('Fatou Sow', '20 000', 'Pension Demi-pension Daara Novembre')">
-              🌊 Payer la Pension (Wave)
-            </button>
-            <button type="button" class="btn btn-primary" style="flex: 1; min-width: 150px; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="parentViewBulletin('fatou')" title="Consulter le Bulletin Officiel Daara de Fatou">
-              📑 Consulter le Bulletin Officiel
-            </button>
-            <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenAppreciation('Fatou Sow')" title="Voir appréciation de la Oustaza">
-              💬 Appréciation Oustaza
-            </button>
-          </div>
+        <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1.5rem; background: rgba(255,255,255,0.02); border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 12px;">
+          <div style="font-size: 2.4rem; margin-bottom: 0.5rem;">👨‍👧‍👦</div>
+          <h5 style="color: #FFF; font-size: 1.05rem; margin-bottom: 0.3rem;">Aucun enfant rattaché à ce numéro</h5>
+          <p style="color: var(--gris-400); font-size: 0.85rem; max-width: 480px; margin: 0 auto;">
+            Votre identifiant téléphonique (${currentParentSession.phone}) n'est associé à aucun dossier dans cet établissement.
+          </p>
         </div>
       `;
     } else {
-      // Mode École Privée Démo
-      cardsContainer.innerHTML = `
-        <!-- Enfant 1 : Mouhamed Sow (École Privée - 6ème Collège) -->
-        <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: var(--radius-md); padding: 1.2rem; margin-bottom: 1rem;">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 210, 180, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                👦
+      cardsContainer.innerHTML = children.map(s => {
+        const hasGrades = Boolean(s.moyenne !== null && s.moyenne !== undefined && s.moyenne !== '' && s.moyenne !== '--');
+        const safeNom = `${s.prenom} ${s.nom}`.replace(/'/g, "\\'");
+        return `
+          <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: var(--radius-md); padding: 1.2rem;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
+              <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0, 210, 180, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                  🎓
+                </div>
+                <div>
+                  <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">${s.prenom} ${s.nom}</h5>
+                  <span style="font-size: 0.78rem; color: var(--turquoise-400);">Matricule : ${s.matricule} • Classe : ${s.classe || s.classeId || 'Inscrit'}</span>
+                </div>
               </div>
-              <div>
-                <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">Mouhamed Sow</h5>
-                <span style="font-size: 0.78rem; color: var(--turquoise-400);">Matricule : MAT-2026-042 • Classe : 6ème A (Collège Privé)</span>
+              <span class="badge-tag badge-excellent">Inscrit ✓</span>
+            </div>
+
+            <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                <span style="color: var(--gris-400);">Moyenne 1er Trimestre :</span>
+                <strong style="color: ${hasGrades ? 'var(--turquoise-400)' : 'var(--gris-300)'}; font-size: 0.95rem;">
+                  ${hasGrades ? `${s.moyenne} / 20 (Rang : ${s.rang})` : '-- / 20 (En cours de saisie)'}
+                </strong>
               </div>
-            </div>
-            <span class="badge-tag badge-good">Assidu (0 absence)</span>
-          </div>
-
-          <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Moyenne 1er Trimestre :</span>
-              <strong style="color: var(--turquoise-400); font-size: 0.95rem;">16.45 / 20 (Rang : 2ème / 38)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Matières Dominantes :</span>
-              <strong style="color: var(--gold-400);">Mathématiques (17.5) &amp; Anglais (17.0)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--gris-400);">Statut Scolarité :</span>
-              <strong style="color: #34D399;">Octobre 2026 Réglé (35 000 FCFA) ✓</strong>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="parentViewBulletin('mouhamed')">
-              📑 Consulter le Bulletin Officiel
-            </button>
-            <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenAppreciation('Mouhamed Sow')" title="Voir avis du Conseil de Classe">
-              💬 Conseil de Classe
-            </button>
-          </div>
-        </div>
-
-        <!-- Enfant 2 : Fatou Sow (École Privée - CM2 Primaire) -->
-        <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 1.2rem;">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                👧
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                <span style="color: var(--gris-400);">Assiduité :</span>
+                <strong style="color: var(--gold-400);">100% (0 absence)</strong>
               </div>
-              <div>
-                <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">Fatou Sow</h5>
-                <span style="font-size: 0.78rem; color: var(--gold-400);">Matricule : MAT-2026-088 • Classe : CM2 B (Primaire d'Excellence)</span>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--gris-400);">Statut Inscription / Scolarité :</span>
+                <strong style="color: #34D399;">Dossier Actif &amp; À jour ✓</strong>
               </div>
             </div>
-            <span class="badge-tag badge-excellent">Tableau d'Honneur</span>
-          </div>
 
-          <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Moyenne 1er Trimestre :</span>
-              <strong style="color: var(--gold-400); font-size: 0.95rem;">15.80 / 20 (Rang : 4ème / 42)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span style="color: var(--gris-400);">Matières Dominantes :</span>
-              <strong style="color: var(--turquoise-400);">Éveil Scientifique (17.0) &amp; Français (16.0)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--gris-400);">Statut Scolarité :</span>
-              <strong style="color: #FBBF24;">À régler : Novembre (25 000 FCFA)</strong>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="previewBulletin('${s.id}')">
+                📑 Consulter le Bulletin Officiel
+              </button>
+              <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenAppreciation('${safeNom}')" title="Voir appréciations des enseignants">
+                💬 Avis des Enseignants
+              </button>
             </div>
           </div>
-
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-gold" style="flex: 1; min-width: 140px; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="parentOpenPayment('Fatou Sow', '25 000', 'Scolarité Novembre CM2')">
-              🌊 Payer Scolarité (Wave)
-            </button>
-            <button type="button" class="btn btn-primary" style="flex: 1; min-width: 150px; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="parentViewBulletin('fatou')" title="Consulter le Bulletin Officiel de Fatou">
-              📑 Consulter le Bulletin Officiel
-            </button>
-            <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenAppreciation('Fatou Sow')" title="Voir avis de l'Enseignante">
-              💬 Avis Maître
-            </button>
-          </div>
-        </div>
-      `;
+        `;
+      }).join('');
     }
   }
 
-  // 4. Historique des Reçus de Paiement
+  // 4. Historique des Paiements
   const paymentsTable = document.getElementById('parentPaymentsTableBody');
   if (paymentsTable) {
-    if (isDaara) {
-      paymentsTable.innerHTML = `
-        <tr>
-          <td>05/10/2026</td>
-          <td>Mouhamed Sow</td>
-          <td>Pension Internat Octobre</td>
-          <td><strong style="color: var(--turquoise-400);">25 000 FCFA</strong></td>
-          <td><span class="badge-tag" style="background: rgba(30,144,255,0.15); color: #1E90FF;">Wave ✓</span></td>
-          <td>
-            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: var(--turquoise-400); border-color: rgba(0,210,180,0.4);" onclick="parentViewReceipt('WAV-9921', 'Mouhamed Sow', '25 000 FCFA', 'Pension Internat Octobre 2026', '+221 77 123 45 67', 'WAVE')">
-              🧾 Télécharger
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <td>04/09/2026</td>
-          <td>Mouhamed Sow</td>
-          <td>Frais d'Inscription Daara 2026</td>
-          <td><strong style="color: var(--turquoise-400);">15 000 FCFA</strong></td>
-          <td><span class="badge-tag" style="background: rgba(255,140,0,0.15); color: #FF8C00;">Orange Money ✓</span></td>
-          <td>
-            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: var(--turquoise-400); border-color: rgba(0,210,180,0.4);" onclick="parentViewReceipt('OM-4128', 'Mouhamed Sow', '15 000 FCFA', 'Frais d\\'Inscription 2026', '+221 77 123 45 67', 'ORANGE_MONEY')">
-              🧾 Télécharger
-            </button>
-          </td>
-        </tr>
-      `;
-    } else {
-      paymentsTable.innerHTML = `
-        <tr>
-          <td>05/10/2026</td>
-          <td>Mouhamed Sow</td>
-          <td>Scolarité Octobre (Collège)</td>
-          <td><strong style="color: var(--turquoise-400);">35 000 FCFA</strong></td>
-          <td><span class="badge-tag" style="background: rgba(30,144,255,0.15); color: #1E90FF;">Wave ✓</span></td>
-          <td>
-            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: var(--turquoise-400); border-color: rgba(0,210,180,0.4);" onclick="parentViewReceipt('WAV-9921', 'Mouhamed Sow', '35 000 FCFA', 'Scolarité Octobre Collège 2026', '+221 77 123 45 67', 'WAVE')">
-              🧾 Télécharger
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <td>04/09/2026</td>
-          <td>Mouhamed Sow</td>
-          <td>Frais d'Inscription 6ème &amp; Blason</td>
-          <td><strong style="color: var(--turquoise-400);">25 000 FCFA</strong></td>
-          <td><span class="badge-tag" style="background: rgba(255,140,0,0.15); color: #FF8C00;">Orange Money ✓</span></td>
-          <td>
-            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: var(--turquoise-400); border-color: rgba(0,210,180,0.4);" onclick="parentViewReceipt('OM-4128', 'Mouhamed Sow', '25 000 FCFA', 'Frais d\\'Inscription 6ème 2026', '+221 77 123 45 67', 'ORANGE_MONEY')">
-              🧾 Télécharger
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <td>04/09/2026</td>
-          <td>Fatou Sow</td>
-          <td>Inscription Primaire CM2 &amp; Livrets</td>
-          <td><strong style="color: var(--turquoise-400);">20 000 FCFA</strong></td>
-          <td><span class="badge-tag" style="background: rgba(30,144,255,0.15); color: #1E90FF;">Wave ✓</span></td>
-          <td>
-            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: var(--turquoise-400); border-color: rgba(0,210,180,0.4);" onclick="parentViewReceipt('WAV-3312', 'Fatou Sow', '20 000 FCFA', 'Inscription Primaire CM2 2026', '+221 77 123 45 67', 'WAVE')">
-              🧾 Télécharger
-            </button>
-          </td>
-        </tr>
-      `;
-    }
+    paymentsTable.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 1.8rem; color: var(--gris-400);">
+          Aucun historique de paiement pour le moment. Vos futurs règlements (Wave, Orange Money) s'afficheront ici avec reçu téléchargeable.
+        </td>
+      </tr>
+    `;
   }
 
   // 5. Alertes WhatsApp & SMS
   const alertsContainer = document.getElementById('parentAlertsContainer');
   if (alertsContainer) {
-    if (isDaara) {
-      alertsContainer.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--gris-300);">
-          <span style="color: #25D366; font-size: 1rem;">💬</span>
-          <span><strong>05/10 - 14h20 (WhatsApp) :</strong> Votre paiement de 25 000 FCFA pour Mouhamed Sow (Pension Daara) a été validé. Reçu #WAV-9921 disponible.</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--gris-300);">
-          <span style="color: #60A5FA; font-size: 1rem;">📱</span>
-          <span><strong>01/10 - 09h00 (SMS Daara) :</strong> Assemblée Générale des tuteurs et parents au Daara ce Samedi à 10h00.</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--gold-400);">
-          <span style="color: var(--gold-400); font-size: 1rem;">📢</span>
-          <span><strong>28/09 - 11h15 (Direction Daara) :</strong> Évaluation de mémorisation du Coran (Hifz) clôturée avec mention d'excellence pour vos deux enfants.</span>
-        </div>
-      `;
-    } else {
-      alertsContainer.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--gris-300);">
-          <span style="color: #25D366; font-size: 1rem;">💬</span>
-          <span><strong>05/10 - 14h20 (WhatsApp) :</strong> Votre paiement de 35 000 FCFA pour Mouhamed Sow (Scolarité Octobre Collège) a été validé. Reçu #WAV-9921 disponible.</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--gris-300);">
-          <span style="color: #60A5FA; font-size: 1rem;">📱</span>
-          <span><strong>01/10 - 09h00 (SMS Établissement) :</strong> Réunion Parents-Professeurs pour les classes de 6ème et CM2 ce Samedi à 10h00 en salle polyvalente.</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--gold-400);">
-          <span style="color: var(--gold-400); font-size: 1rem;">📢</span>
-          <span><strong>28/09 - 11h15 (Direction des Études) :</strong> Les bulletins officiels du 1er Trimestre sont disponibles en consultation et téléchargement certifié.</span>
-        </div>
-      `;
-    }
+    alertsContainer.innerHTML = `
+      <div style="color: var(--gris-400); font-size: 0.85rem; padding: 0.4rem 0;">
+        ℹ️ Aucune notification récente pour votre dossier.
+      </div>
+    `;
   }
 }
 
@@ -12639,8 +12439,9 @@ function closeParentPortal() {
 
 function parentLogout() {
   closeParentPortal();
-  showNotification('👋 Vous avez été déconnecté avec succès de votre Espace Parent.');
-  logAuditEvent('Déconnexion Espace Parent', 'Session parent clôturée pour Mme Aminata Diallo (+221 77 123 45 67)');
+  showNotification('👋 Déconnexion réussie de votre Espace Parent.');
+  logAuditEvent('Déconnexion Espace Parent', `Session parent clôturée pour ${currentParentSession.name || 'Parent'} (${currentParentSession.phone || '--'})`);
+  currentParentSession = { phone: '', name: '', children: [] };
   const hero = document.getElementById('hero');
   if (hero) hero.scrollIntoView({ behavior: 'smooth' });
 }
@@ -12741,19 +12542,33 @@ function parentViewBulletin(studentKey) {
   }
 
   modal.classList.add('active');
-  const childName = isMouhamed ? 'Mouhamed Sow' : 'Fatou Sow';
+  const childName = (studPrenom + ' ' + studNom).trim() || 'Élève';
   const typeTxt = isDaara ? 'Daara Moderne' : 'École Privée';
   showNotification(`📑 Bulletin officiel [${typeTxt}] de ${childName} ouvert ! Prêt pour consultation ou impression.`);
-  logAuditEvent('Consultation Bulletin Parent', `Bulletin officiel [${typeTxt}] ${childName} ouvert par Mme Aminata Diallo`);
+  logAuditEvent('Consultation Bulletin Parent', `Bulletin officiel [${typeTxt}] ${childName} ouvert par ${currentParentSession.name || 'Parent'}`);
 }
 
 function parentOpenAppreciation(studentName) {
   const modal = document.getElementById('parentAppreciationModal');
   if (!modal) return;
 
-  const targetName = studentName || 'Mouhamed Sow';
-  const isMouhamed = targetName.toLowerCase().includes('mouhamed');
   const isDaara = (currentParentContext === 'DAARA');
+  const activeStudents = (typeof getEstablishmentActiveStudents === 'function') 
+    ? getEstablishmentActiveStudents(isDaara) 
+    : (state.students || []);
+
+  const found = activeStudents.find(e => 
+    (studentName && (
+      String(e.id) === String(studentName) ||
+      (e.matricule && e.matricule.toLowerCase() === String(studentName).toLowerCase()) ||
+      (e.nom && e.nom.toLowerCase().includes(String(studentName).toLowerCase())) ||
+      (`${e.prenom || ''} ${e.nom || ''}`.toLowerCase().includes(String(studentName).toLowerCase()))
+    ))
+  ) || (currentParentSession.children && currentParentSession.children[0]) || activeStudents[0];
+
+  const targetName = found ? `${found.prenom || ''} ${found.nom || ''}`.trim() : (studentName || 'Élève');
+  const targetMat = found ? (found.matricule || 'ELE-2026') : 'ELE-2026';
+  const targetClass = found ? (found.classe || 'Classe') : 'Classe';
 
   const badgeEl = document.getElementById('appreciationCouncilBadge');
   const titleEl = document.getElementById('appreciationStudentTitle');
@@ -12772,66 +12587,42 @@ function parentOpenAppreciation(studentName) {
       badgeEl.className = "badge-tag badge-gold";
     }
     if (pillarLabel) pillarLabel.textContent = "Tajwîd & Hifz Coran";
-    if (pillarSub) pillarSub.textContent = "Excellente articulation";
+    if (pillarSub) pillarSub.textContent = "Excellente articulation & assiduité";
 
-    if (isMouhamed) {
-      if (titleEl) titleEl.textContent = "Appréciation Pédagogique & Comportementale : Mouhamed Sow";
-      if (metaEl) metaEl.textContent = 'Matricule : MAT-2026-042 • Classe : 6ème A • Option Internat Daara Moderne Keur Massar';
-      if (studentStat) studentStat.textContent = 'Hizb 38 ✓';
-      if (obsLabel) obsLabel.textContent = "💬 Observation de l'Oustaz Titulaire (Oustaz Abdoulaye Ba) :";
-      if (obsText) {
-        obsText.textContent = "« Mouhamed fait preuve d'un dévouement exceptionnel dans l'apprentissage du Coran et de ses matières scolaires. Sa récitation est mélodieuse, posée et respecte scrupuleusement les règles de Tajwîd. À l'internat, il aide ses camarades plus jeunes et respecte tous les horaires de prière et de révision. Félicitations chaleureuses. »";
-      }
-      if (councilTitle) councilTitle.textContent = "Décision du Conseil des Oustazs :";
-      if (decisionText) decisionText.textContent = "Tableau d'Honneur avec Félicitations Spéciales";
-    } else {
-      if (titleEl) titleEl.textContent = "Appréciation Pédagogique & Comportementale : Fatou Sow";
-      if (metaEl) metaEl.textContent = 'Matricule : MAT-2026-088 • Classe : CM2 B (Daara Moderne & Hifz) • Campus Keur Massar';
-      if (studentStat) studentStat.textContent = 'Hizb 24 ✓';
-      if (obsLabel) obsLabel.textContent = "💬 Observation de la Oustaza Titulaire (Oustaza Mariama Sall) :";
-      if (obsText) {
-        obsText.textContent = "« Fatou fait preuve d'une application admirable dans l'apprentissage du Coran et de ses matières scolaires. Sa récitation est mélodieuse, posée et respecte scrupuleusement les règles de Tajwîd. Sur sa planche Allwa, ses écrits sont d'une grande netteté. Elle est pieuse, polie et très attentive aux cercles coraniques. Félicitations chaleureuses. »";
-      }
-      if (councilTitle) councilTitle.textContent = "Décision du Conseil des Oustazs :";
-      if (decisionText) decisionText.textContent = "Tableau d'Honneur avec Félicitations Spéciales";
+    if (titleEl) titleEl.textContent = `Appréciation Pédagogique & Comportementale : ${targetName}`;
+    if (metaEl) metaEl.textContent = `Matricule : ${targetMat} • Classe : ${targetClass} • Option Daara Moderne`;
+    if (studentStat) studentStat.textContent = 'Hizb Suivi ✓';
+    if (obsLabel) obsLabel.textContent = "💬 Observation du Conseil Pédagogique :";
+    if (obsText) {
+      obsText.textContent = `« ${targetName} fait preuve d'un dévouement remarquable dans l'apprentissage et le respect des valeurs scolaires. Félicitations chaleureuses du corps professoral. »`;
     }
+    if (councilTitle) councilTitle.textContent = "Décision du Conseil :";
+    if (decisionText) decisionText.textContent = "Tableau d'Honneur avec Félicitations";
   } else {
-    // Mode École Privée
+    // Mode Enseignement Général
     if (badgeEl) {
       badgeEl.textContent = "Avis Pédagogique & Conseil de Classe";
       badgeEl.className = "badge-tag badge-primary";
     }
-    if (pillarLabel) pillarLabel.textContent = "Moyenne & Rang";
+    if (pillarLabel) pillarLabel.textContent = "Moyenne & Assiduité";
 
-    if (isMouhamed) {
-      if (titleEl) titleEl.textContent = "Appréciation Pédagogique & Conseil de Classe : Mouhamed Sow";
-      if (metaEl) metaEl.textContent = 'Matricule : MAT-2026-042 • Classe : 6ème A (Collège Privé) • Groupe Scolaire Diamil';
-      if (studentStat) studentStat.textContent = '16.45 / 20';
-      if (pillarSub) pillarSub.textContent = 'Rang : 2ème / 38 élèves';
-      if (obsLabel) obsLabel.textContent = "💬 Observation du Professeur Principal (M. Babacar Ndiaye - Mathématiques) :";
-      if (obsText) {
-        obsText.textContent = "« Mouhamed réalise un premier trimestre remarquable. Il fait preuve d'un esprit d'analyse logique très développé en mathématiques et d'une aisance appréciable dans l'expression écrite et en anglais. Élève curieux, très poli et constructif en classe. Félicitations très chaleureuses du Conseil de Classe. »";
-      }
-      if (councilTitle) councilTitle.textContent = "Décision du Conseil de Classe :";
-      if (decisionText) decisionText.textContent = "Tableau d'Honneur avec Félicitations Spéciales";
-    } else {
-      if (titleEl) titleEl.textContent = "Appréciation Pédagogique & Conseil des Maîtres : Fatou Sow";
-      if (metaEl) metaEl.textContent = 'Matricule : MAT-2026-088 • Classe : CM2 B (Primaire d\'Excellence) • Groupe Scolaire Diamil';
-      if (studentStat) studentStat.textContent = '15.80 / 20';
-      if (pillarSub) pillarSub.textContent = 'Rang : 4ème / 42 élèves';
-      if (obsLabel) obsLabel.textContent = "💬 Observation de l'Enseignante Titulaire (Mme Khady Diop) :";
-      if (obsText) {
-        obsText.textContent = "« Fatou est une élève brillante, sérieuse et appliquée. Ses cahiers sont tenus avec un soin exemplaire et ses résultats en éveil scientifique et calcul réfléchi sont remarquables. Très bonne camarade, toujours serviable et attentive aux consignes. Poursuivre dans cette excellente voie pour le concours du CFEE. »";
-      }
-      if (councilTitle) councilTitle.textContent = "Décision du Conseil des Maîtres :";
-      if (decisionText) decisionText.textContent = "Tableau d'Honneur avec Félicitations Spéciales";
+    if (titleEl) titleEl.textContent = `Appréciation Pédagogique & Conseil de Classe : ${targetName}`;
+    if (metaEl) metaEl.textContent = `Matricule : ${targetMat} • Classe : ${targetClass} • Établissement EMF`;
+    if (studentStat) studentStat.textContent = (found && found.moyenne) ? `${found.moyenne} / 20` : 'En cours';
+    if (pillarSub) pillarSub.textContent = (found && found.rang) ? `Rang : ${found.rang}` : 'Assiduité 100%';
+    if (obsLabel) obsLabel.textContent = "💬 Observation du Professeur Principal :";
+    if (obsText) {
+      obsText.textContent = `« ${targetName} fait preuve d'un travail sérieux, régulier et constructif en classe. Le conseil de classe encourage vivement à poursuivre dans cette dynamique d'excellence. »`;
     }
+    if (councilTitle) councilTitle.textContent = "Décision du Conseil de Classe :";
+    if (decisionText) decisionText.textContent = "Tableau d'Honneur avec Félicitations";
   }
 
   modal.style.zIndex = '2400';
   modal.classList.add('active');
-  const typeTxt = isDaara ? 'Daara' : 'École Privée';
+  const typeTxt = isDaara ? 'Daara' : 'Enseignement Général';
   showNotification(`💬 Rapport d'appréciation pédagogique [${typeTxt}] ouvert pour ${targetName}.`);
+  logAuditEvent('Consultation Appréciation Parent', `Appréciation de ${targetName} consultée par ${currentParentSession.name || 'Parent'}`);
 }
 
 function closeParentAppreciationModal() {
@@ -12862,20 +12653,34 @@ function parentOpenPayment(childName, amount, motif) {
     badgeEl.textContent = currentEstablishment.name || defaultSchool;
   }
 
-  // Pré-remplir l'élève dans le select
+  // Pré-remplir l'élève dans le select avec les vrais enfants du parent connecté
   const select = document.getElementById('wsPayStudentSelect');
   if (select) {
     select.innerHTML = '';
-    const optTarget = document.createElement('option');
-    optTarget.value = childName || 'Fatou Sow';
-    optTarget.textContent = `${childName || 'Fatou Sow'} (Famille Diallo)`;
-    optTarget.selected = true;
-    select.appendChild(optTarget);
+    const childrenList = (currentParentSession && currentParentSession.children && currentParentSession.children.length > 0)
+      ? currentParentSession.children
+      : (childName ? [{ nom: childName }] : []);
 
-    const optOther = document.createElement('option');
-    optOther.value = (childName && childName.includes('Mouhamed')) ? 'Fatou Sow' : 'Mouhamed Sow';
-    optOther.textContent = (childName && childName.includes('Mouhamed')) ? 'Fatou Sow (Famille Diallo)' : 'Mouhamed Sow (Famille Diallo)';
-    select.appendChild(optOther);
+    if (childrenList.length > 0) {
+      childrenList.forEach((c, idx) => {
+        const cName = `${c.prenom || ''} ${c.nom || ''}`.trim() || c.nom;
+        const opt = document.createElement('option');
+        opt.value = cName;
+        opt.textContent = `${cName} (${c.classe || 'Inscrit'})`;
+        if (childName && cName.toLowerCase().includes(childName.toLowerCase())) {
+          opt.selected = true;
+        } else if (idx === 0 && !childName) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+    } else {
+      const opt = document.createElement('option');
+      opt.value = childName || 'Élève';
+      opt.textContent = childName || 'Élève';
+      opt.selected = true;
+      select.appendChild(opt);
+    }
   }
 
   // Pré-sélectionner le motif
@@ -12898,13 +12703,13 @@ function parentOpenPayment(childName, amount, motif) {
     }
   }
 
-  // Pré-remplir montant & téléphone
+  // Pré-remplir montant & téléphone réel du parent
   const cleanAmount = (amount || (isDaara ? '20 000' : '25 000')).toString().replace(/[^0-9\s]/g, '').trim();
   const amountInput = document.getElementById('wsPayAmountInput');
   if (amountInput) amountInput.value = cleanAmount;
 
   const phoneInput = document.getElementById('wsPayPhoneInput');
-  if (phoneInput) phoneInput.value = '+221 77 123 45 67';
+  if (phoneInput) phoneInput.value = currentParentSession.phone || '';
 
   // Réinitialiser la zone QR et boutons
   const qrContainer = document.getElementById('wsWaveQrContainer');
@@ -12916,7 +12721,8 @@ function parentOpenPayment(childName, amount, motif) {
   const submitBtn = document.getElementById('wsPaySubmitBtn');
   if (submitBtn) {
     submitBtn.style.display = 'block';
-    submitBtn.textContent = `🌊 Valider le Règlement Wave (${cleanAmount} FCFA - Mme Diallo)`;
+    const parentLabel = currentParentSession.name ? ` - ${currentParentSession.name}` : '';
+    submitBtn.textContent = `🌊 Valider le Règlement Wave (${cleanAmount} FCFA${parentLabel})`;
   }
 
   if (typeof selectWsOperator === 'function') {
@@ -12924,7 +12730,8 @@ function parentOpenPayment(childName, amount, motif) {
   }
 
   modal.classList.add('active');
-  showNotification(`🌊 Passerelle Wave ouverte pour ${childName || 'votre enfant'} (${cleanAmount} FCFA - ${motif || 'Scolarité'}).`);
+  const targetLabel = childName || (currentParentSession.children && currentParentSession.children[0] ? (currentParentSession.children[0].nom || 'votre enfant') : 'votre enfant');
+  showNotification(`🌊 Passerelle Wave ouverte pour ${targetLabel} (${cleanAmount} FCFA - ${motif || 'Scolarité'}).`);
 }
 
 function parentViewReceipt(ref, childName, amount, motif, phone, operator) {
@@ -12937,17 +12744,17 @@ function parentViewReceipt(ref, childName, amount, motif, phone, operator) {
   const school = isDaara ? (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement') : (currentEstablishment?.name || 'Groupe Scolaire Diamil');
 
   openReceiptModal(
-    ref || 'WAV-9921',
-    childName || 'Mouhamed Sow',
-    amount || (isDaara ? '25 000 FCFA' : '35 000 FCFA'),
-    motif || (isDaara ? 'Pension Internat Octobre 2026' : 'Scolarité Octobre Collège 2026'),
-    phone || '+221 77 123 45 67',
+    ref || 'WAV-0001',
+    childName || (currentParentSession.children && currentParentSession.children[0] ? `${currentParentSession.children[0].prenom || ''} ${currentParentSession.children[0].nom || ''}`.trim() : 'Élève'),
+    amount || '25 000 FCFA',
+    motif || 'Scolarité',
+    phone || currentParentSession.phone || '',
     operator || 'WAVE',
     school
   );
 
   showNotification(`🧾 Reçu officiel ${ref} ouvert avec succès (Certification SYSCOHADA).`);
-  logAuditEvent('Téléchargement Reçu Parent', `Reçu ${ref} pour ${childName} ouvert par Mme Aminata Diallo`);
+  logAuditEvent('Téléchargement Reçu Parent', `Reçu ${ref} pour ${childName || 'élève'} ouvert par ${currentParentSession.name || 'Parent'}`);
 }
 
 // Exports globaux pour accès direct au Tableau de Bord et Portail de Sécurité
