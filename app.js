@@ -310,10 +310,10 @@ const demoState = {
   ],
 
   hrTeachers: [
-    { id: 'ens_1', nom: 'Mme Fatou Diéne', matiere: 'Mathématiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-01', tel: '+221 77 123 45 67' },
-    { id: 'ens_2', nom: 'M. Nabou Diome', matiere: 'Français', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 240000, mat: 'ENS-2026-02', tel: '+221 77 500 11 22' },
-    { id: 'ens_3', nom: 'M. Aziz Diome', matiere: 'Sciences Physiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-03', tel: '+221 77 500 33 44' },
-    { id: 'ens_4', nom: 'M. Ousmane Niang', matiere: 'Anglais', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-04', tel: '+221 77 650 44 12' }
+    { id: 'ens_1', nom: 'Mme Fatou Diéne', matiere: 'Mathématiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-01', tel: '+221 77 521 80 97' },
+    { id: 'ens_2', nom: 'M. Nabou Diome', matiere: 'Français', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 240000, mat: 'ENS-2026-02', tel: '+221 77 168 51 48' },
+    { id: 'ens_3', nom: 'M. Aziz Diome', matiere: 'Sciences Physiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-03', tel: '+221 76 150 39 38' },
+    { id: 'ens_4', nom: 'M. Ousmane Niang', matiere: 'Anglais', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-04', tel: '+221 77 757 27 06' }
   ]
 };
 
@@ -11412,7 +11412,7 @@ async function openTeacherPortalModal(accessKey) {
         nomComplet: 'Mme Fatou Diéne',
         matiere: 'Mathématiques',
         accessKey: 'ENS-2026-01',
-        telephone: '+221 77 123 45 67',
+        telephone: '+221 77 521 80 97',
         email: 'fatou.diene@emf.sn',
         avatar: '👩‍🏫',
         classesAffectees: ['Terminale S2', '1ère S1', '2nde S']
@@ -11423,7 +11423,7 @@ async function openTeacherPortalModal(accessKey) {
         nomComplet: 'M. Nabou Diome',
         matiere: 'Français',
         accessKey: 'ENS-2026-02',
-        telephone: '+221 77 500 11 22',
+        telephone: '+221 77 168 51 48',
         email: 'nabou.diome@emf.sn',
         avatar: '👨‍🏫',
         classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
@@ -11434,7 +11434,7 @@ async function openTeacherPortalModal(accessKey) {
         nomComplet: 'M. Aziz Diome',
         matiere: 'Sciences Physiques',
         accessKey: 'ENS-2026-03',
-        telephone: '+221 77 500 33 44',
+        telephone: '+221 76 150 39 38',
         email: 'aziz.diome@emf.sn',
         avatar: '👨‍🏫',
         classesAffectees: ['2nde S', 'Terminale S2', '1ère S1']
@@ -11445,7 +11445,7 @@ async function openTeacherPortalModal(accessKey) {
         nomComplet: 'M. Ousmane Niang',
         matiere: 'Anglais',
         accessKey: 'ENS-2026-04',
-        telephone: '+221 77 650 44 12',
+        telephone: '+221 77 757 27 06',
         email: 'ousmane.niang@emf.sn',
         avatar: '👨‍🏫',
         classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']

@@ -157,23 +157,23 @@ CREATE POLICY presences_teacher_filter_policy ON public.presences
 
 -- 1. Mme Fatou Diéne (ENS-2026-01) - Mathématiques
 INSERT INTO public.teachers (id, nom_complet, matiere, access_key, telephone, email)
-VALUES ('84c8ce4c-2561-4999-a7f4-20569f4656b9', 'Mme Fatou Diéne', 'Mathématiques', 'ENS-2026-01', '+221 77 123 45 67', 'fatou.diene@emf.sn')
-ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
+VALUES ('84c8ce4c-2561-4999-a7f4-20569f4656b9', 'Mme Fatou Diéne', 'Mathématiques', 'ENS-2026-01', '+221 77 521 80 97', 'fatou.diene@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere, telephone = EXCLUDED.telephone;
 
 -- 2. M. Nabou Diome (ENS-2026-02) - Français
 INSERT INTO public.teachers (id, nom_complet, matiere, access_key, telephone, email)
-VALUES ('b2c3d4e5-f6a7-8901-bcde-f12345678901', 'M. Nabou Diome', 'Français', 'ENS-2026-02', '+221 77 500 11 22', 'nabou.diome@emf.sn')
-ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
+VALUES ('b2c3d4e5-f6a7-8901-bcde-f12345678901', 'M. Nabou Diome', 'Français', 'ENS-2026-02', '+221 77 168 51 48', 'nabou.diome@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere, telephone = EXCLUDED.telephone;
 
 -- 3. M. Aziz Diome (ENS-2026-03) - Sciences Physiques
 INSERT INTO public.teachers (id, nom_complet, matiere, access_key, telephone, email)
-VALUES ('c3d4e5f6-a7b8-9012-cdef-123456789012', 'M. Aziz Diome', 'Sciences Physiques', 'ENS-2026-03', '+221 77 500 33 44', 'aziz.diome@emf.sn')
-ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
+VALUES ('c3d4e5f6-a7b8-9012-cdef-123456789012', 'M. Aziz Diome', 'Sciences Physiques', 'ENS-2026-03', '+221 76 150 39 38', 'aziz.diome@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere, telephone = EXCLUDED.telephone;
 
 -- 4. M. Ousmane Niang (ENS-2026-04) - Anglais
 INSERT INTO public.teachers (id, etablissement_id, nom_complet, matiere, access_key, telephone, email)
-VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'etab-1790685533712', 'M. Ousmane Niang', 'Anglais', 'ENS-2026-04', '+221 77 650 44 12', 'ousmane.niang@emf.sn')
-ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere;
+VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'etab-1790685533712', 'M. Ousmane Niang', 'Anglais', 'ENS-2026-04', '+221 77 757 27 06', 'ousmane.niang@emf.sn')
+ON CONFLICT (access_key) DO UPDATE SET nom_complet = EXCLUDED.nom_complet, matiere = EXCLUDED.matiere, telephone = EXCLUDED.telephone;
 
 -- Classes affectées selon DONNEES_REFERENCE.md
 -- Mme Fatou Diéne : Terminale S2, 1ère S1, 2nde S
