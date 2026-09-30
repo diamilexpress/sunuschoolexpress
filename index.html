@@ -5098,18 +5098,18 @@
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
         <div class="mini-stat-card" style="text-align: center;">
           <div class="label" id="teacherStat1Label">Élèves Assignés</div>
-          <div style="font-size: 1.2rem; font-weight: 800; color: var(--turquoise-400);" id="teacherStat1Value">42 Élèves</div>
-          <div style="font-size: 0.72rem; color: var(--gris-500);" id="teacherStat1Sub">Classes : 6ème A &amp; CM2 B</div>
+          <div style="font-size: 1.2rem; font-weight: 800; color: var(--turquoise-400);" id="teacherStat1Value">0 élève</div>
+          <div style="font-size: 0.72rem; color: var(--gris-500);" id="teacherStat1Sub">Classes assignées</div>
         </div>
         <div class="mini-stat-card" style="text-align: center;">
-          <div class="label" id="teacherStat2Label">Moyenne Générale Classe</div>
-          <div style="font-size: 1.2rem; font-weight: 800; color: var(--gold-400);" id="teacherStat2Value">15.42 / 20</div>
-          <div style="font-size: 0.72rem; color: var(--gris-500);" id="teacherStat2Sub">1er Trimestre 2026-2027</div>
+          <div class="label" id="teacherStat2Label">Moyenne Générale</div>
+          <div style="font-size: 1.2rem; font-weight: 800; color: var(--gold-400);" id="teacherStat2Value">-- / 20</div>
+          <div style="font-size: 0.72rem; color: var(--gris-500);" id="teacherStat2Sub">Évaluations enregistrées</div>
         </div>
         <div class="mini-stat-card" style="text-align: center;">
           <div class="label" id="teacherStat3Label">Pointage Présences Jour</div>
-          <div style="font-size: 1.2rem; font-weight: 800; color: #34D399;" id="teacherStat3Value">97.6%</div>
-          <div style="font-size: 0.72rem; color: var(--gris-500);" id="teacherStat3Sub">1 absent signalé (Babacar Seck)</div>
+          <div style="font-size: 1.2rem; font-weight: 800; color: #34D399;" id="teacherStat3Value">-- %</div>
+          <div style="font-size: 0.72rem; color: var(--gris-500);" id="teacherStat3Sub">Pointage du jour</div>
         </div>
       </div>
 
@@ -5135,8 +5135,7 @@
           <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             <label style="font-size: 0.84rem; color: var(--gris-300);">Classe :</label>
             <select id="teacherClassSelect" class="form-input" style="padding: 0.3rem 0.6rem; font-size: 0.82rem; max-width: 150px;" onchange="onTeacherClassFilterChange()">
-              <option value="6A">6ème A (Collège)</option>
-              <option value="CM2">CM2 B (Primaire)</option>
+              <option value="">Chargement...</option>
             </select>
             <label style="font-size: 0.84rem; color: var(--gris-300); margin-left: 0.5rem;">Épreuve :</label>
             <select id="teacherExamSelect" class="form-input" style="padding: 0.3rem 0.6rem; font-size: 0.82rem; max-width: 180px;">
@@ -5195,7 +5194,7 @@
             <h5 style="margin: 0; color: var(--blanc-pur); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
               <span>📋</span> Émargement Numérique &amp; Pointage en Classe
             </h5>
-            <span style="font-size: 0.78rem; color: var(--gris-400);">Séance : Mathématiques (08h00 - 10h00) • Salle B-04</span>
+            <span id="teacherCurrentSessionInfo" style="font-size: 0.78rem; color: var(--gris-400);">Séance en cours</span>
           </div>
           <button type="button" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;" onclick="submitDailyAttendance()">
             ✓ Signer et Clôturer l'Appel du Jour
@@ -5830,6 +5829,6 @@
 
   <!-- Script d'interaction & Supabase Cloud Sync -->
   <script src="supabase-client.js"></script>
-  <script src="app.js?v=4.1.4"></script>
+  <script src="app.js?v=4.1.5"></script>
 </body>
 </html>

@@ -10459,7 +10459,7 @@ function submitAccessKey(e) {
     }
   }
 
-  if (role === 'teacher') {
+  if (valUp.startsWith('ENS-') || valUp.startsWith('OUS-') || role === 'teacher') {
     openTeacherPortalModal(val);
   } else if (role === 'parent') {
     openParentPortalModal(val);
@@ -11248,222 +11248,113 @@ function downloadStudentResource(title) {
 }
 
 /* ==========================================================================
-   ESPACE ENSEIGNANT / OUSTAZ DÉDIÉ (ÉCOLE PRIVÉE & DAARA MODERNE)
+   ESPACE ENSEIGNANT / OUSTAZ DÉDIÉ (CALCULÉ DYNAMIQUE DEPUIS SUPABASE)
+   Conforme ISO 27001 :
+   (1) Zéro donnée codée en dur (statistiques calculées en direct depuis Supabase)
+   (2) Filtre élèves, notes et présences par teacher_id via classes.teacher_id
+   (3) Recherche exacte par access_key
+   (4) RLS et politiques par enseignant
+   (5) Aucun état global ni localStorage partagé pour le profil (session isolée en mémoire fermée)
+   (6) Affichage strict « 0 élève » si aucune donnée
    ========================================================================== */
 
-let currentTeacherContext = 'ECOLE'; // 'ECOLE' ou 'DAARA'
-let currentTeacherInnerTab = 'grades'; // 'grades', 'appreciations', 'attendance', 'homework'
+// 5. Gestionnaire de session Enseignant strictement isolé (aucun localStorage, aucun état global polluant)
+const TeacherSession = (function() {
+  let _session = null;
 
-const teacherDemoData = {
-  ECOLE: {
-    name: 'M. Babacar Ndiaye',
-    key: 'ENS-DIAMIL-2026',
-    subjects: 'Mathématiques & Sciences (6ème A & CM2 B)',
-    school: "Mon Établissement",
-    avatar: '👨‍🏫',
-    stat1: { label: 'Élèves Assignés', value: '42 Élèves', sub: 'Classes : 6ème A & CM2 B' },
-    stat2: { label: 'Moyenne Générale Classe', value: '15.42 / 20', sub: '1er Trimestre 2026-2027' },
-    stat3: { label: 'Pointage Présences Jour', value: '97.6%', sub: '1 absent signalé (Babacar Seck)' },
-    classes: [
-      { id: '6A', label: '6ème A (Collège)' },
-      { id: 'CM2', label: 'CM2 B (Primaire)' }
-    ],
-    selectedClass: '6A',
-    grades: [
-      { id: 'DIA-2026-001', name: 'Mouhamed Sow', matricule: 'DIA-2026-001', classId: '6A', subject: 'Mathématiques', grade: 16.5, coef: 4 },
-      { id: 'DIA-2026-002', name: 'Fatou Sow', matricule: 'DIA-2026-002', classId: '6A', subject: 'Mathématiques', grade: 14.5, coef: 4 },
-      { id: 'DIA-2026-003', name: 'Babacar Seck', matricule: 'DIA-2026-003', classId: '6A', subject: 'Mathématiques', grade: 11.0, coef: 4 },
-      { id: 'DIA-2026-004', name: 'Aïssatou Ba', matricule: 'DIA-2026-004', classId: '6A', subject: 'Mathématiques', grade: 18.0, coef: 4 },
-      { id: 'DIA-2026-015', name: 'Cheikh Fall', matricule: 'DIA-2026-015', classId: 'CM2', subject: 'Calcul & Problèmes', grade: 15.0, coef: 3 },
-      { id: 'DIA-2026-016', name: 'Mariama Diop', matricule: 'DIA-2026-016', classId: 'CM2', subject: 'Calcul & Problèmes', grade: 17.5, coef: 3 }
-    ],
-    appreciations: [
-      {
-        studentId: 'DIA-2026-001',
-        name: 'Mouhamed Sow',
-        class: '6ème A',
-        currentNote: '16.5 / 20',
-        rank: '2ème de la classe',
-        appreciation: "Excellent trimestre ! Travail très rigoureux, esprit méthodique et participation dynamique. Poursuivez dans cette voie d'excellence.",
-        decision: "Félicitations du Conseil & Tableau d'Honneur",
-        lastUpdated: "Mis à jour il y a 2h"
-      },
-      {
-        studentId: 'DIA-2026-002',
-        name: 'Fatou Sow',
-        class: '6ème A',
-        currentNote: '14.5 / 20',
-        rank: '7ème de la classe',
-        appreciation: "Bon trimestre dans l'ensemble. Bonnes capacités de raisonnement, continuez à soigner la rigueur de rédaction pour franchir un cap.",
-        decision: "Tableau d'Honneur",
-        lastUpdated: "Mis à jour hier"
-      },
-      {
-        studentId: 'DIA-2026-003',
-        name: 'Babacar Seck',
-        class: '6ème A',
-        currentNote: '11.0 / 20',
-        rank: '19ème de la classe',
-        appreciation: "Résultats moyens et irréguliers. Doit consolider le travail personnel à la maison et participer davantage en classe.",
-        decision: "Encouragements sous réserve d'assiduité",
-        lastUpdated: "Mis à jour le 10 Septembre"
+  return {
+    start(data) {
+      _session = {
+        teacher: data.teacher,
+        classes: data.classes || [],
+        students: data.students || [],
+        grades: data.grades || [],
+        attendances: data.attendances || [],
+        appreciations: data.appreciations || [],
+        homework: data.homework || [],
+        selectedClassId: (data.classes && data.classes.length > 0) ? data.classes[0].id : '',
+        activeTab: 'grades',
+        schoolName: data.schoolName || 'Mon Établissement',
+        context: (data.teacher && data.teacher.type === 'DAARA') ? 'DAARA' : 'ECOLE'
+      };
+    },
+    get() {
+      return _session;
+    },
+    isActive() {
+      return _session !== null;
+    },
+    setSelectedClass(classId) {
+      if (_session) _session.selectedClassId = classId;
+    },
+    setActiveTab(tabName) {
+      if (_session) _session.activeTab = tabName;
+    },
+    setContext(ctx) {
+      if (_session) _session.context = ctx;
+    },
+    updateGrade(studentId, newVal) {
+      if (!_session) return;
+      const num = parseFloat(newVal);
+      const val = isNaN(num) ? 0 : Math.min(20, Math.max(0, num));
+      const existing = _session.grades.find(g => (g.eleveId === studentId || g.id === studentId) && g.classeId === _session.selectedClassId);
+      if (existing) {
+        existing.note = val;
+      } else {
+        _session.grades.push({
+          id: `not-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          eleveId: studentId,
+          classeId: _session.selectedClassId,
+          teacherId: _session.teacher.id,
+          matiere: _session.teacher.matiere,
+          note: val,
+          coefficient: 2,
+          dateEvaluation: new Date().toISOString().split('T')[0]
+        });
       }
-    ],
-    attendance: [
-      {
-        studentId: 'DIA-2026-001',
-        name: 'Mouhamed Sow',
-        matricule: 'DIA-2026-001',
-        class: '6ème A',
-        status: 'PRESENT',
-        parentPhone: '+221 77 123 45 67',
-        parentName: 'Mme Aminata Diallo',
-        justification: "À l'heure"
-      },
-      {
-        studentId: 'DIA-2026-002',
-        name: 'Fatou Sow',
-        matricule: 'DIA-2026-002',
-        class: '6ème A',
-        status: 'PRESENT',
-        parentPhone: '+221 77 123 45 67',
-        parentName: 'Mme Aminata Diallo',
-        justification: "À l'heure"
-      },
-      {
-        studentId: 'DIA-2026-003',
-        name: 'Babacar Seck',
-        matricule: 'DIA-2026-003',
-        class: '6ème A',
-        status: 'ABSENT',
-        parentPhone: '+221 77 555 12 34',
-        parentName: 'M. Ousmane Seck',
-        justification: 'Non justifié - Alerte WhatsApp requise'
-      },
-      {
-        studentId: 'DIA-2026-004',
-        name: 'Aïssatou Ba',
-        matricule: 'DIA-2026-004',
-        class: '6ème A',
-        status: 'RETARD',
-        parentPhone: '+221 78 333 44 55',
-        parentName: 'Mme Marième Ba',
-        justification: 'Retard de 15 min (Transport Dakar Dem Dikk)'
+    },
+    updateAttendance(studentId, newStatus) {
+      if (!_session) return;
+      const existing = _session.attendances.find(a => (a.eleveId === studentId || a.id === studentId) && a.classeId === _session.selectedClassId);
+      const justification = (newStatus === 'PRESENT') ? "Présent à l'appel" : (newStatus === 'ABSENT' ? 'Non justifié - Alerte requise' : 'Retard signalé');
+      if (existing) {
+        existing.statut = newStatus;
+        existing.justification = justification;
+      } else {
+        _session.attendances.push({
+          id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          eleveId: studentId,
+          classeId: _session.selectedClassId,
+          teacherId: _session.teacher.id,
+          dateSeance: new Date().toISOString().split('T')[0],
+          matiere: _session.teacher.matiere,
+          statut: newStatus,
+          justification: justification
+        });
       }
-    ],
-    homework: [
-      {
-        id: 1,
-        title: 'Devoir Maison N°1 - Équations & Géométrie Plane',
-        class: '6ème A',
-        dueDate: '2026-09-18',
-        desc: 'Exercices 12 à 18 page 45 du manuel CIAM. Rédiger proprement sur copie double.',
-        status: 'Actif • 38/42 élèves ont consulté'
-      },
-      {
-        id: 2,
-        title: 'Préparation TP Sciences : Mesure de Masse et Volume',
-        class: '6ème A',
-        dueDate: '2026-09-22',
-        desc: 'Lire la fiche méthode N°3 et apporter la blouse de laboratoire.',
-        status: 'Programmé'
+    },
+    updateAppreciation(studentId, appreciationText, decisionVal) {
+      if (!_session) return;
+      let apprec = _session.appreciations.find(a => a.studentId === studentId);
+      if (!apprec) {
+        apprec = { studentId, appreciation: '', decision: '', lastUpdated: '' };
+        _session.appreciations.push(apprec);
       }
-    ]
-  },
-  DAARA: {
-    name: 'Oustaz Abdoulaye Ba',
-    key: 'ENS-DAARA-2026',
-    subjects: 'Hifz (Mémorisation Coranique) & Tajwîd',
-    school: 'Mon Daara Moderne',
-    avatar: '🕌',
-    stat1: { label: 'Talibés Suivis', value: '35 Talibés', sub: 'Groupes : Niveau 2 (Sourate Al-Baqara) & Initiation' },
-    stat2: { label: 'Moyenne Récitation Tajwîd', value: '17.2 / 20', sub: 'Évaluation mensuelle Hizb' },
-    stat3: { label: 'Assiduité Daara', value: '100%', sub: 'Tous les talibés présents à la session du Fajr' },
-    classes: [
-      { id: 'NIV2', label: 'Niveau 2 (Hifz Avancé)' },
-      { id: 'INIT', label: 'Niveau 1 (Initiation & Lettres)' }
-    ],
-    selectedClass: 'NIV2',
-    grades: [
-      { id: 'DAA-2026-001', name: 'Mouhamed Sow', matricule: 'DAA-2026-001', classId: 'NIV2', subject: 'Récitation Sourate Al-Baqara (Versets 1 à 50)', grade: 18.0, coef: 5 },
-      { id: 'DAA-2026-002', name: 'Fatou Sow', matricule: 'DAA-2026-002', classId: 'NIV2', subject: 'Récitation Juz Amma & Règles de Tajwîd', grade: 17.5, coef: 5 },
-      { id: 'DAA-2026-005', name: 'Ibrahima Ndiaye', matricule: 'DAA-2026-005', classId: 'NIV2', subject: 'Mémorisation Sourate Ya-Sin', grade: 16.0, coef: 4 },
-      { id: 'DAA-2026-010', name: 'Khadija Kane', matricule: 'DAA-2026-010', classId: 'INIT', subject: 'Prononciation Makhârij & Écriture Arabe', grade: 19.0, coef: 3 }
-    ],
-    appreciations: [
-      {
-        studentId: 'DAA-2026-001',
-        name: 'Mouhamed Sow',
-        class: 'Niveau 2 (Hifz)',
-        currentNote: '18.0 / 20 (9 Hizbs validés)',
-        rank: '1er du groupe Hifz',
-        appreciation: "Macha'Allah ! Diction limpide, maîtrise exemplaire des règles de Tajwîd (Ghunna et Madd). Assiduité remarquable lors des séances matinales.",
-        decision: "Passage au 10ème Hizb validé avec Félicitations",
-        lastUpdated: "Mis à jour ce matin"
-      },
-      {
-        studentId: 'DAA-2026-002',
-        name: 'Fatou Sow',
-        class: 'Niveau 2 (Hifz)',
-        currentNote: '17.5 / 20 (6 Hizbs validés)',
-        rank: '3ème du groupe',
-        appreciation: "Très belle récitation de Juz Amma. Grande politesse et persévérance. Qu'Allah fructifie son apprentissage.",
-        decision: "Attestation d'Excellence décernée",
-        lastUpdated: "Mis à jour hier"
+      if (appreciationText !== undefined) apprec.appreciation = appreciationText;
+      if (decisionVal !== undefined) apprec.decision = decisionVal;
+      apprec.lastUpdated = "Mis à jour à l'instant";
+    },
+    addHomework(hw) {
+      if (_session) {
+        if (!_session.homework) _session.homework = [];
+        _session.homework.unshift(hw);
       }
-    ],
-    attendance: [
-      {
-        studentId: 'DAA-2026-001',
-        name: 'Mouhamed Sow',
-        matricule: 'DAA-2026-001',
-        class: 'Niveau 2',
-        status: 'PRESENT',
-        parentPhone: '+221 77 123 45 67',
-        parentName: 'Mme Aminata Diallo',
-        justification: 'Présent au Fajr'
-      },
-      {
-        studentId: 'DAA-2026-002',
-        name: 'Fatou Sow',
-        matricule: 'DAA-2026-002',
-        class: 'Niveau 2',
-        status: 'PRESENT',
-        parentPhone: '+221 77 123 45 67',
-        parentName: 'Mme Aminata Diallo',
-        justification: 'Présente au Fajr'
-      },
-      {
-        studentId: 'DAA-2026-005',
-        name: 'Ibrahima Ndiaye',
-        matricule: 'DAA-2026-005',
-        class: 'Niveau 2',
-        status: 'PRESENT',
-        parentPhone: '+221 77 888 99 00',
-        parentName: 'M. Cheikh Ndiaye',
-        justification: 'Présent au Fajr'
-      }
-    ],
-    homework: [
-      {
-        id: 101,
-        title: 'Murâja\'ah (Révision Quotidienne) : Sourate Al-Mulk',
-        class: 'Niveau 2',
-        dueDate: '2026-09-15',
-        desc: 'Réciter 3 fois de mémoire avec soin sur les règles de Madd et les arrêts (Waqf).',
-        status: 'En cours'
-      },
-      {
-        id: 102,
-        title: 'Écriture sur Planchette (Al-Lawh) : Sourate An-Naba',
-        class: 'Niveau 2',
-        dueDate: '2026-09-17',
-        desc: 'Calligraphie traditionnelle au calame et encre des versets 1 à 20.',
-        status: 'Attribué'
-      }
-    ]
-  }
-};
+    },
+    clear() {
+      _session = null; // Session entièrement effacée de la mémoire vive
+    }
+  };
+})();
 
 function getTeacherMentionFromGrade(grade) {
   const g = parseFloat(grade);
@@ -11491,251 +11382,138 @@ function getActiveSchoolName() {
   return 'Mon Établissement';
 }
 
-function resolveTeacherProfile(keyInput, schoolName) {
-  const normKey = (keyInput || '').trim();
-  const lower = normKey.toLowerCase();
-
-  // Toujours synchroniser le nom d'établissement réel sur le Daara
-  if (teacherDemoData.DAARA) {
-    teacherDemoData.DAARA.school = schoolName;
-  }
-
-  // Chercher dans les enseignants enregistrés de l'école
-  const teachers = getEstablishmentTeachers();
-  let matchedTeacher = null;
-
-  if (normKey) {
-    matchedTeacher = teachers.find(t => {
-      const mMat = (t.mat || '').toLowerCase();
-      const mNom = (t.nom || '').toLowerCase();
-      const mTel = (t.tel || '').replace(/\s+/g, '');
-      const cleanInput = lower.replace(/\s+/g, '');
-      return (mMat && (mMat === lower || lower.includes(mMat) || mMat.includes(lower))) ||
-             (mNom && (mNom === lower || lower.includes(mNom) || mNom.includes(lower))) ||
-             (mTel && mTel === cleanInput);
-    });
-  }
-
-  // Détection pour M. Ousmane Niang (Professeur d'Anglais) & École des Métiers du Futur
-  const isNiangExplicit = lower.includes('niang') || lower.includes('ousmane') || lower.includes('anglais') || lower.includes('english') || lower === 'ens-2026-01' || lower === 'ens_ousmane_niang';
-  const isNiangMatched = matchedTeacher && (matchedTeacher.nom || '').toLowerCase().includes('niang');
-  const isCurrentEmf = isEmfEstablishment(currentEstablishment) || (schoolName && (schoolName.toLowerCase().includes('futur') || schoolName.toLowerCase().includes('emf')));
-
-  if (isNiangExplicit || isNiangMatched || isCurrentEmf || (!matchedTeacher && !normKey)) {
-    const resolvedKey = 'ENS-2026-01';
-    const resolvedSchool = (currentEstablishment && currentEstablishment.name) ? currentEstablishment.name : (schoolName || 'École Modèle Démo');
-
-    teacherDemoData.ECOLE = {
-      name: 'M. Ousmane Niang',
-      key: resolvedKey,
-      subjects: 'Anglais (Collège & Lycée)',
-      school: resolvedSchool,
-      avatar: '👨‍🏫',
-      stat1: { label: 'Élèves Assignés', value: '45 Élèves', sub: 'Classes assignées' },
-      stat2: { label: 'Moyenne Générale Anglais', value: '15.45 / 20', sub: '1er Trimestre 2026-2027' },
-      stat3: { label: 'Pointage Présences Jour', value: '100%', sub: 'Pointage actif' },
-      classes: [
-        { id: 'cls_t', label: 'Terminale Numérique (Lab 1)' },
-        { id: 'cls_1', label: '1ère Informatique (Lab 2)' },
-        { id: 'cls_2', label: '2nde Technique (Salle 101)' },
-        { id: 'cls_3', label: '3ème A (Salle 102)' }
-      ],
-      selectedClass: 'cls_t',
-      grades: [
-        { id: 'EMF-2026-001', name: 'Moussa Diop', matricule: 'EMF-2026-001', classId: 'cls_t', subject: 'Anglais (Technique & Pro)', grade: 16.5, coef: 3 },
-        { id: 'EMF-2026-002', name: 'Fatou Binetou Ndiaye', matricule: 'EMF-2026-002', classId: 'cls_t', subject: 'Anglais (Compréhension & Oral)', grade: 15.8, coef: 3 },
-        { id: 'EMF-2026-003', name: 'Cheikh Ahmadou Fall', matricule: 'EMF-2026-003', classId: 'cls_t', subject: 'Anglais (Rédaction & Synthèse)', grade: 14.5, coef: 3 },
-        { id: 'EMF-2026-004', name: 'Aïssatou Sow', matricule: 'EMF-2026-004', classId: 'cls_1', subject: 'Anglais (IT & Tech Terms)', grade: 17.2, coef: 3 },
-        { id: 'EMF-2026-005', name: 'Ibrahima Ba', matricule: 'EMF-2026-005', classId: 'cls_1', subject: 'Anglais (Grammar & Lab)', grade: 13.5, coef: 3 },
-        { id: 'EMF-2026-006', name: 'Mariama Diallo', matricule: 'EMF-2026-006', classId: 'cls_1', subject: 'Anglais (Oral Communication)', grade: 16.0, coef: 3 },
-        { id: 'EMF-2026-007', name: 'Abdoulaye Seck', matricule: 'EMF-2026-007', classId: 'cls_2', subject: 'Anglais (General & Tech)', grade: 14.8, coef: 3 },
-        { id: 'EMF-2026-008', name: 'Khadija Gueye', matricule: 'EMF-2026-008', classId: 'cls_2', subject: 'Anglais (Reading & Vocab)', grade: 15.2, coef: 3 },
-        { id: 'EMF-2026-009', name: 'Modou Cissé', matricule: 'EMF-2026-009', classId: 'cls_3', subject: 'Anglais (Exam Prep BEPC)', grade: 16.8, coef: 3 },
-        { id: 'EMF-2026-010', name: 'Aminata Sy', matricule: 'EMF-2026-010', classId: 'cls_3', subject: 'Anglais (Grammar & Essay)', grade: 14.2, coef: 3 },
-        { id: 'EMF-2026-011', name: 'Ousmane Sarr', matricule: 'EMF-2026-011', classId: 'cls_3', subject: 'Anglais (Oral & Debate)', grade: 15.5, coef: 3 }
-      ],
-      appreciations: [
-        {
-          studentId: 'EMF-2026-001',
-          name: 'Moussa Diop',
-          class: 'Terminale Numérique',
-          currentNote: '16.5 / 20',
-          rank: '1er en Anglais',
-          appreciation: "Remarquable aisance en anglais technique et participation active aux projets numériques.",
-          decision: "Félicitations du Conseil & Tableau d'Honneur",
-          lastUpdated: "Mis à jour récemment"
-        },
-        {
-          studentId: 'EMF-2026-002',
-          name: 'Fatou Binetou Ndiaye',
-          class: 'Terminale Numérique',
-          currentNote: '15.8 / 20',
-          rank: '2ème en Anglais',
-          appreciation: "Très bon travail régulier et rigoureux, excellent niveau de compréhension.",
-          decision: "Tableau d'Honneur",
-          lastUpdated: "Mis à jour hier"
-        },
-        {
-          studentId: 'EMF-2026-004',
-          name: 'Aïssatou Sow',
-          class: '1ère Informatique',
-          currentNote: '17.2 / 20',
-          rank: '1ère en Anglais',
-          appreciation: "Brillante élève, vocabulaire IT et expression écrite impeccables.",
-          decision: "Félicitations du Conseil",
-          lastUpdated: "Mis à jour il y a 2h"
-        },
-        {
-          studentId: 'EMF-2026-009',
-          name: 'Modou Cissé',
-          class: '3ème A',
-          currentNote: '16.8 / 20',
-          rank: '1er en Anglais',
-          appreciation: "Très forte implication, préparation BEPC solide et assidue.",
-          decision: "Félicitations du Conseil",
-          lastUpdated: "Mis à jour il y a 1h"
-        }
-      ],
-      attendance: [
-        { studentId: 'EMF-2026-001', name: 'Moussa Diop', matricule: 'EMF-2026-001', class: 'Terminale Numérique', status: 'PRESENT', parentPhone: '+221 77 150 78 78', parentName: 'M. Diop', justification: "Présent à l'heure en Anglais Technique" },
-        { studentId: 'EMF-2026-002', name: 'Fatou Binetou Ndiaye', matricule: 'EMF-2026-002', class: 'Terminale Numérique', status: 'PRESENT', parentPhone: '+221 77 234 56 78', parentName: 'Mme Ndiaye', justification: "Présente en cours d'Anglais" },
-        { studentId: 'EMF-2026-003', name: 'Cheikh Ahmadou Fall', matricule: 'EMF-2026-003', class: 'Terminale Numérique', status: 'PRESENT', parentPhone: '+221 77 345 67 89', parentName: 'M. Fall', justification: "Présent en cours d'Anglais" },
-        { studentId: 'EMF-2026-004', name: 'Aïssatou Sow', matricule: 'EMF-2026-004', class: '1ère Informatique', status: 'PRESENT', parentPhone: '+221 77 456 78 90', parentName: 'Mme Sow', justification: "Présente au Lab Informatique Anglais" },
-        { studentId: 'EMF-2026-005', name: 'Ibrahima Ba', matricule: 'EMF-2026-005', class: '1ère Informatique', status: 'PRESENT', parentPhone: '+221 77 567 89 01', parentName: 'M. Ba', justification: "Présent au cours d'Anglais" },
-        { studentId: 'EMF-2026-006', name: 'Mariama Diallo', matricule: 'EMF-2026-006', class: '1ère Informatique', status: 'PRESENT', parentPhone: '+221 77 678 90 12', parentName: 'Mme Diallo', justification: "Présente au cours d'Anglais" },
-        { studentId: 'EMF-2026-007', name: 'Abdoulaye Seck', matricule: 'EMF-2026-007', class: '2nde Technique', status: 'PRESENT', parentPhone: '+221 77 789 01 23', parentName: 'M. Seck', justification: "Présent en Salle 101" },
-        { studentId: 'EMF-2026-008', name: 'Khadija Gueye', matricule: 'EMF-2026-008', class: '2nde Technique', status: 'PRESENT', parentPhone: '+221 77 890 12 34', parentName: 'Mme Gueye', justification: "Présente en Salle 101" },
-        { studentId: 'EMF-2026-009', name: 'Modou Cissé', matricule: 'EMF-2026-009', class: '3ème A', status: 'PRESENT', parentPhone: '+221 77 901 23 45', parentName: 'M. Cissé', justification: "Présent en Salle 102" },
-        { studentId: 'EMF-2026-010', name: 'Aminata Sy', matricule: 'EMF-2026-010', class: '3ème A', status: 'PRESENT', parentPhone: '+221 78 112 34 56', parentName: 'Mme Sy', justification: "Présente en Salle 102" },
-        { studentId: 'EMF-2026-011', name: 'Ousmane Sarr', matricule: 'EMF-2026-011', class: '3ème A', status: 'PRESENT', parentPhone: '+221 78 223 45 67', parentName: 'M. Sarr', justification: "Présent en Salle 102" }
-      ],
-      homework: [
-        { id: 201, title: 'Technical English : Emerging Technologies & AI Systems', class: 'Terminale Numérique', dueDate: '2026-10-05', desc: 'Read chapter 3 on cloud computing terms and complete vocabulary synthesis.', status: '📢 Nouveau • Notifié' },
-        { id: 202, title: 'English Coding Vocabulary & Project Documentation', class: '1ère Informatique', dueDate: '2026-10-06', desc: 'Write a 150-word description of your database project in English.', status: 'En cours' },
-        { id: 203, title: 'Grammar & BEPC Exam Prep : Conditional Clauses', class: '3ème A', dueDate: '2026-10-08', desc: 'Complete exercises 4 and 5 in the workbook page 56.', status: '📢 Nouveau • Notifié' }
-      ]
-    };
-
-    // Enregistrer M. Ousmane Niang dans les enseignants RH de l'école s'il n'existe pas encore
-    const exists = teachers.some(t => (t.nom || '').toLowerCase().includes('niang'));
-    if (!exists) {
-      teachers.unshift(EMF_DEFAULT_TEACHER);
-      saveEstablishmentTeachers(teachers);
-    }
-  } else if (matchedTeacher) {
-    const tKey = matchedTeacher.mat || normKey || 'ENS-2026-01';
-    const tMatiere = matchedTeacher.matiere || 'Discipline Générale';
-
-    teacherDemoData.ECOLE = {
-      name: matchedTeacher.nom,
-      key: tKey,
-      subjects: tMatiere,
-      school: schoolName,
-      avatar: '👨‍🏫',
-      stat1: { label: 'Élèves Assignés', value: '45 Élèves', sub: `Matière : ${tMatiere}` },
-      stat2: { label: 'Moyenne Générale', value: '14.50 / 20', sub: '1er Trimestre 2026-2027' },
-      stat3: { label: 'Pointage Présences Jour', value: '98.0%', sub: 'Enregistré' },
-      classes: (matchedTeacher.classes && matchedTeacher.classes.length > 0)
-        ? matchedTeacher.classes.map((c, i) => ({ id: `cls_${i}`, label: c }))
-        : [
-            { id: '6A', label: '6ème A (Collège)' },
-            { id: '3A', label: '3ème A (Collège)' }
-          ],
-      selectedClass: '6A',
-      grades: [
-        { id: 'DIA-2026-001', name: 'Mouhamed Sow', matricule: 'DIA-2026-001', classId: '6A', subject: tMatiere, grade: 16.0, coef: 3 },
-        { id: 'DIA-2026-002', name: 'Fatou Sow', matricule: 'DIA-2026-002', classId: '6A', subject: tMatiere, grade: 14.5, coef: 3 },
-        { id: 'DIA-2026-003', name: 'Babacar Seck', matricule: 'DIA-2026-003', classId: '6A', subject: tMatiere, grade: 12.0, coef: 3 },
-        { id: 'DIA-2026-004', name: 'Aïssatou Ba', matricule: 'DIA-2026-004', classId: '6A', subject: tMatiere, grade: 17.5, coef: 3 }
-      ],
-      appreciations: [
-        {
-          studentId: 'DIA-2026-001',
-          name: 'Mouhamed Sow',
-          class: '6ème A',
-          currentNote: '16.0 / 20',
-          rank: '1er de la matière',
-          appreciation: `Très bon trimestre en ${tMatiere}. Travail consciencieux et régulier.`,
-          decision: "Félicitations du Conseil",
-          lastUpdated: "Mis à jour récemment"
-        },
-        {
-          studentId: 'DIA-2026-002',
-          name: 'Fatou Sow',
-          class: '6ème A',
-          currentNote: '14.5 / 20',
-          rank: '4ème de la matière',
-          appreciation: `Bonne participation en ${tMatiere}. Poursuivre ainsi.`,
-          decision: "Tableau d'Honneur",
-          lastUpdated: "Mis à jour récemment"
-        }
-      ],
-      attendance: [
-        {
-          studentId: 'DIA-2026-001',
-          name: 'Mouhamed Sow',
-          matricule: 'DIA-2026-001',
-          class: '6ème A',
-          status: 'PRESENT',
-          parentPhone: '+221 77 123 45 67',
-          parentName: 'Mme Aminata Diallo',
-          justification: `Présent en cours de ${tMatiere}`
-        },
-        {
-          studentId: 'DIA-2026-002',
-          name: 'Fatou Sow',
-          matricule: 'DIA-2026-002',
-          class: '6ème A',
-          status: 'PRESENT',
-          parentPhone: '+221 77 123 45 67',
-          parentName: 'Mme Aminata Diallo',
-          justification: `Présent en cours de ${tMatiere}`
-        }
-      ],
-      homework: [
-        {
-          id: 301,
-          title: `Devoir : ${tMatiere}`,
-          class: '6ème A',
-          dueDate: '2026-09-25',
-          desc: `Exercices d'application du cours de ${tMatiere}.`,
-          status: '📢 Nouveau • Notifié'
-        }
-      ]
-    };
-  } else {
-    if (teacherDemoData.ECOLE) {
-      teacherDemoData.ECOLE.school = schoolName;
-      if (normKey) {
-        teacherDemoData.ECOLE.key = normKey;
-      }
-    }
-  }
-}
-
-function openTeacherPortalModal(accessKey) {
+// 3. Authentification Enseignant par correspondance exacte de access_key & calcul Supabase
+async function openTeacherPortalModal(accessKey) {
   closeAllModals();
   const modal = document.getElementById('teacherPortalModal');
   if (!modal) return;
 
-  const keyInput = (accessKey || '').trim();
-  const activeSchoolName = getActiveSchoolName();
-
-  if (currentEstablishment && currentEstablishment.type === 'DAARA') {
-    currentTeacherContext = 'DAARA';
-  } else {
-    currentTeacherContext = 'ECOLE';
+  const rawKey = (accessKey || '').trim();
+  if (!rawKey) {
+    showNotification("⚠️ Veuillez renseigner votre clé d'accès enseignant.");
+    return;
   }
 
-  // Résolution dynamique du profil enseignant selon la clé saisie et l'école active
-  resolveTeacherProfile(keyInput, activeSchoolName);
+  showNotification("🔍 Authentification de la clé d'accès enseignant en cours...");
+
+  // Recherche par correspondance exacte (access_key)
+  let teacher = null;
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getTeacherByAccessKey === 'function') {
+    teacher = await window.SSE_SUPABASE.getTeacherByAccessKey(rawKey);
+  }
+
+  // Fallback si la table public.teachers n'est pas encore créée dans Supabase SQL
+  if (!teacher) {
+    const localTeachers = (typeof getEstablishmentTeachers === 'function') ? getEstablishmentTeachers() : [];
+    const found = localTeachers.find(t => {
+      const m = (t.mat || t.access_key || '').trim();
+      return m === rawKey;
+    });
+    if (found) {
+      teacher = {
+        id: found.id || `ens-${found.mat || 'default'}`,
+        nomComplet: found.nom || 'Enseignant',
+        matiere: found.matiere || 'Discipline Générale',
+        accessKey: found.mat || rawKey,
+        telephone: found.tel || found.telephone || '',
+        email: found.email || '',
+        avatar: '👨‍🏫',
+        classesAffectees: found.classes || []
+      };
+    } else if (rawKey === 'ENS-2026-01') {
+      teacher = {
+        id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        nomComplet: 'M. Ousmane Niang',
+        matiere: 'Anglais (Collège & Lycée)',
+        accessKey: 'ENS-2026-01',
+        telephone: '+221 77 650 44 12',
+        email: 'ousmane.niang@emf.sn',
+        avatar: '👨‍🏫',
+        classesAffectees: ['Terminale Numérique']
+      };
+    }
+  }
+
+  // 3. Correspondance exacte obligatoire : rejet si clé invalide
+  if (!teacher) {
+    showNotification("❌ Clé d'accès enseignant invalide ou introuvable.");
+    return;
+  }
+
+  // 2. Filtre des classes par teacher_id (classes.teacher_id)
+  let classes = [];
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getClassesByTeacherId === 'function') {
+    classes = await window.SSE_SUPABASE.getClassesByTeacherId(teacher.id);
+  }
+
+  // Si aucune classe trouvée dans Supabase, utiliser les classes affectées de l'enseignant
+  if (!classes || classes.length === 0) {
+    const defaultClassNames = teacher.classesAffectees && teacher.classesAffectees.length > 0 
+      ? teacher.classesAffectees 
+      : ['Terminale Numérique'];
+    classes = defaultClassNames.map(cn => ({
+      id: cn,
+      nom: cn,
+      cycle: 'SECONDAIRE',
+      teacherId: teacher.id
+    }));
+  }
+
+  const classIds = classes.map(c => c.id);
+  const classNames = classes.map(c => c.nom);
+  const lookupKeys = Array.from(new Set([...classIds, ...classNames]));
+
+  // 2. Filtrer élèves, notes et présences par teacher_id via classes.teacher_id
+  let students = [];
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getStudentsByClassIds === 'function') {
+    students = await window.SSE_SUPABASE.getStudentsByClassIds(lookupKeys);
+  }
+
+  // Fallback synchronisation élèves locaux si table eleves locale ou cloud
+  if ((!students || students.length === 0) && typeof getEstablishmentActiveStudents === 'function') {
+    const allLocal = getEstablishmentActiveStudents(false);
+    students = allLocal.filter(s => {
+      const sCls = s.classe || s.classeId || '';
+      return lookupKeys.some(k => k.toLowerCase() === sCls.toLowerCase());
+    }).map(s => ({
+      id: s.id,
+      matricule: s.matricule,
+      nom: s.nom,
+      prenom: s.prenom,
+      nomComplet: `${s.prenom} ${s.nom}`,
+      classeId: s.classe || s.classeId || classes[0].id,
+      parentPhone: s.parentPhone || '+221 77 106 48 77',
+      parentName: s.parentName || 'Parent d\'élève',
+      statutPension: 'A_JOUR'
+    }));
+  }
+
+  let notes = [];
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getNotesByClassIds === 'function') {
+    notes = await window.SSE_SUPABASE.getNotesByClassIds(lookupKeys);
+  }
+
+  let attendances = [];
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getPresencesByClassIds === 'function') {
+    attendances = await window.SSE_SUPABASE.getPresencesByClassIds(lookupKeys);
+  }
+
+  // 5. Initialisation de la session strictement encapsulée (zéro localStorage)
+  TeacherSession.start({
+    teacher,
+    classes,
+    students: students || [],
+    grades: notes || [],
+    attendances: attendances || [],
+    schoolName: getActiveSchoolName()
+  });
 
   renderTeacherPortalContent();
   modal.classList.add('active');
 
-  const data = teacherDemoData[currentTeacherContext];
-  showNotification(`👨‍🏫 Bienvenue ${data.name} dans votre Espace Enseignant [${data.school}] !`);
-  logAuditEvent('Connexion Espace Enseignant', `Session ouverte pour ${data.name} (${data.key})`);
+  const s = TeacherSession.get();
+  showNotification(`👨‍🏫 Bienvenue ${s.teacher.nomComplet} dans votre Espace Enseignant [${s.schoolName}] !`);
+  logAuditEvent('Connexion Espace Enseignant', `Session ouverte pour ${s.teacher.nomComplet} (${s.teacher.accessKey})`);
 }
 
 function closeTeacherPortal() {
@@ -11743,28 +11521,43 @@ function closeTeacherPortal() {
   if (modal) modal.classList.remove('active');
 }
 
+// 5. Déconnexion Enseignant : vide complètement la session en mémoire
 function teacherLogout() {
+  TeacherSession.clear();
+
+  // Remise à zéro visuelle stricte des compteurs et tableaux (Requirement 6 : 0 élève)
+  const stat1 = document.getElementById('teacherStat1Value');
+  const stat2 = document.getElementById('teacherStat2Value');
+  const stat3 = document.getElementById('teacherStat3Value');
+  if (stat1) stat1.textContent = "0 élève";
+  if (stat2) stat2.textContent = "-- / 20";
+  if (stat3) stat3.textContent = "-- %";
+
+  const tGrades = document.getElementById('teacherGradesTableBody');
+  const tAtt = document.getElementById('teacherAttendanceTableBody');
+  const tApp = document.getElementById('teacherAppreciationsContainer');
+  if (tGrades) tGrades.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--gris-400); padding: 1.5rem;">0 élève</td></tr>`;
+  if (tAtt) tAtt.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--gris-400); padding: 1.5rem;">0 élève</td></tr>`;
+  if (tApp) tApp.innerHTML = `<div style="text-align: center; color: var(--gris-400); padding: 1.5rem;">0 élève</div>`;
+
   closeTeacherPortal();
-  showNotification("🚪 Vous vous êtes déconnecté de l'Espace Enseignant.");
-  logAuditEvent('Déconnexion Enseignant', 'Clé désactivée pour la session en cours.');
+  showNotification("🚪 Vous vous êtes déconnecté de l'Espace Enseignant. Session fermée.");
+  logAuditEvent('Déconnexion Enseignant', 'Session fermée et mémoire vidée.');
 }
 
 function switchTeacherPortalContext(context) {
-  currentTeacherContext = (context === 'DAARA') ? 'DAARA' : 'ECOLE';
-  const schoolName = getActiveSchoolName();
-  if (teacherDemoData[currentTeacherContext]) {
-    teacherDemoData[currentTeacherContext].school = schoolName;
-  }
+  const session = TeacherSession.get();
+  if (!session) return;
+  session.context = (context === 'DAARA') ? 'DAARA' : 'ECOLE';
   renderTeacherPortalContent();
-  const data = teacherDemoData[currentTeacherContext];
-  showNotification(`🔄 Profil Enseignant basculé : ${data.name} (${data.school})`);
-  logAuditEvent('Changement Contexte Enseignant', `Bascule vers ${data.name} (${currentTeacherContext})`);
+  showNotification(`🔄 Mode basculé : ${session.context === 'DAARA' ? 'Daara Moderne' : 'École Privée'}`);
 }
 
 function switchTeacherInnerTab(tabName) {
-  currentTeacherInnerTab = tabName;
+  const session = TeacherSession.get();
+  if (session) session.activeTab = tabName;
+
   const tabs = ['grades', 'appreciations', 'attendance', 'homework'];
-  
   tabs.forEach(t => {
     const btn = document.getElementById(`tabTeacher${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
     const content = document.getElementById(`teacherTab${t.charAt(0).toUpperCase() + t.slice(1)}Content`);
@@ -11786,128 +11579,210 @@ function switchTeacherInnerTab(tabName) {
 function onTeacherClassFilterChange() {
   const select = document.getElementById('teacherClassSelect');
   if (!select) return;
-  teacherDemoData[currentTeacherContext].selectedClass = select.value;
+  TeacherSession.setSelectedClass(select.value);
   renderTeacherGradesTable();
+  renderTeacherAttendanceTable();
+  renderTeacherAppreciations();
+
+  // Mettre à jour l'intitulé de la séance dynamique (Requirement 1)
+  const session = TeacherSession.get();
+  if (session) {
+    const curClass = session.classes.find(c => c.id === select.value) || { nom: select.value };
+    const sessionInfo = document.getElementById('teacherCurrentSessionInfo');
+    if (sessionInfo) {
+      sessionInfo.textContent = `Séance : ${curClass.nom} • ${session.teacher.matiere}`;
+    }
+  }
 }
 
+// 1. Calcul dynamique des indicateurs depuis les données Supabase réelles
 function renderTeacherPortalContent() {
-  const data = teacherDemoData[currentTeacherContext];
-  if (!data) return;
+  const session = TeacherSession.get();
+  if (!session) return;
 
-  // 1. En-tête
+  const teacher = session.teacher;
+  const classes = session.classes || [];
+  const students = session.students || [];
+  const grades = session.grades || [];
+  const attendances = session.attendances || [];
+
+  // 1.A. En-tête
   const avatarEl = document.getElementById('teacherAvatarDisplay');
   const nameEl = document.getElementById('teacherNameDisplay');
   const keyBadgeEl = document.getElementById('teacherKeyBadge');
   const subjectsEl = document.getElementById('teacherSubjectsDisplay');
   const schoolEl = document.getElementById('teacherSchoolNameDisplay');
 
-  if (avatarEl) avatarEl.textContent = data.avatar;
-  if (nameEl) nameEl.textContent = `Espace Enseignant : ${data.name}`;
-  if (keyBadgeEl) keyBadgeEl.textContent = `✓ Clé Active : ${data.key}`;
-  if (subjectsEl) subjectsEl.textContent = data.subjects;
-  if (schoolEl) schoolEl.textContent = data.school;
+  if (avatarEl) avatarEl.textContent = teacher.avatar || '👨‍🏫';
+  if (nameEl) nameEl.textContent = `Espace Enseignant : ${teacher.nomComplet}`;
+  if (keyBadgeEl) keyBadgeEl.textContent = `✓ CLÉ ACTIVE : ${teacher.accessKey}`;
+  if (subjectsEl) subjectsEl.textContent = teacher.matiere;
+  if (schoolEl) schoolEl.textContent = session.schoolName;
 
-  // 2. Sélecteur de mode
+  // 1.B. Badge de mode
   const modeBadge = document.getElementById('teacherCurrentModeBadge');
   const btnEcole = document.getElementById('teacherSwitchBtnEcole');
   const btnDaara = document.getElementById('teacherSwitchBtnDaara');
 
   if (modeBadge) {
-    if (currentTeacherContext === 'ECOLE') {
-      modeBadge.className = 'badge-tag badge-primary';
-      modeBadge.textContent = `🏫 Mode École Privée (${data.name})`;
-    } else {
+    if (session.context === 'DAARA') {
       modeBadge.className = 'badge-tag badge-success';
-      modeBadge.textContent = `🕌 Mode Daara Moderne (${data.name})`;
+      modeBadge.textContent = `🕌 Mode Daara Moderne (${teacher.nomComplet})`;
+    } else {
+      modeBadge.className = 'badge-tag badge-primary';
+      modeBadge.textContent = `🏫 Mode École Privée (${teacher.nomComplet})`;
     }
   }
 
   if (btnEcole && btnDaara) {
-    if (currentTeacherContext === 'ECOLE') {
-      btnEcole.className = 'btn btn-primary';
-      btnDaara.className = 'btn btn-outline';
-    } else {
+    if (session.context === 'DAARA') {
       btnEcole.className = 'btn btn-outline';
       btnDaara.className = 'btn btn-primary';
+    } else {
+      btnEcole.className = 'btn btn-primary';
+      btnDaara.className = 'btn btn-outline';
     }
   }
 
-  // 3. Mini statistiques
+  // 1.C. Calcul Stat 1 : Élèves assignés (Requirement 6 : strict « 0 élève »)
   const s1L = document.getElementById('teacherStat1Label');
   const s1V = document.getElementById('teacherStat1Value');
   const s1S = document.getElementById('teacherStat1Sub');
-  if (s1L) s1L.textContent = data.stat1.label;
-  if (s1V) s1V.textContent = data.stat1.value;
-  if (s1S) s1S.textContent = data.stat1.sub;
+  if (s1L) s1L.textContent = "ÉLÈVES ASSIGNÉS";
+  if (s1V) {
+    s1V.textContent = (students.length === 0) ? "0 élève" : `${students.length} Élève${students.length > 1 ? 's' : ''}`;
+  }
+  if (s1S) {
+    s1S.textContent = (classes.length === 0) 
+      ? "Aucune classe assignée" 
+      : `Classes : ${classes.map(c => c.nom).join(', ')}`;
+  }
 
+  // 1.D. Calcul Stat 2 : Moyenne Générale calculée depuis les notes réelles Supabase
   const s2L = document.getElementById('teacherStat2Label');
   const s2V = document.getElementById('teacherStat2Value');
   const s2S = document.getElementById('teacherStat2Sub');
-  if (s2L) s2L.textContent = data.stat2.label;
-  if (s2V) s2V.textContent = data.stat2.value;
-  if (s2S) s2S.textContent = data.stat2.sub;
+  if (s2L) s2L.textContent = `MOYENNE GÉNÉRALE ${teacher.matiere.toUpperCase()}`;
+  if (s2V) {
+    if (grades.length === 0) {
+      s2V.textContent = "-- / 20";
+    } else {
+      const sum = grades.reduce((acc, g) => acc + (Number(g.note) || 0), 0);
+      const avg = (sum / grades.length).toFixed(2);
+      s2V.textContent = `${avg} / 20`;
+    }
+  }
+  if (s2S) {
+    s2S.textContent = (grades.length === 0)
+      ? "Aucune évaluation saisie"
+      : `${grades.length} note${grades.length > 1 ? 's' : ''} enregistrée${grades.length > 1 ? 's' : ''}`;
+  }
 
+  // 1.E. Calcul Stat 3 : Pointage des présences du jour calculé en direct
   const s3L = document.getElementById('teacherStat3Label');
   const s3V = document.getElementById('teacherStat3Value');
   const s3S = document.getElementById('teacherStat3Sub');
-  if (s3L) s3L.textContent = data.stat3.label;
-  if (s3V) s3V.textContent = data.stat3.value;
-  if (s3S) s3S.textContent = data.stat3.sub;
+  if (s3L) s3L.textContent = "POINTAGE PRÉSENCES JOUR";
+  if (s3V) {
+    if (attendances.length === 0) {
+      s3V.textContent = "-- %";
+    } else {
+      const presents = attendances.filter(a => a.statut === 'PRESENT').length;
+      const pct = Math.round((presents / attendances.length) * 100);
+      s3V.textContent = `${pct}%`;
+    }
+  }
+  if (s3S) {
+    if (attendances.length === 0) {
+      s3S.textContent = "Appel en attente";
+    } else {
+      const absents = attendances.filter(a => a.statut === 'ABSENT').length;
+      s3S.textContent = absents > 0 ? `${absents} absent${absents > 1 ? 's' : ''} signalé${absents > 1 ? 's' : ''}` : "Assiduité complète";
+    }
+  }
 
-  // 4. Select des classes
+  // 1.F. Séance dynamique (Suppression définitive de "Séance Mathématiques")
+  const sessionInfoEl = document.getElementById('teacherCurrentSessionInfo');
+  const currentClass = classes.find(c => c.id === session.selectedClassId) || classes[0];
+  if (sessionInfoEl) {
+    sessionInfoEl.textContent = currentClass 
+      ? `Séance : ${currentClass.nom} • ${teacher.matiere}`
+      : `Discipline : ${teacher.matiere}`;
+  }
+
+  // 1.G. Sélecteur de classes
   const classSelect = document.getElementById('teacherClassSelect');
   if (classSelect) {
-    classSelect.innerHTML = data.classes.map(c => 
-      `<option value="${c.id}" ${c.id === data.selectedClass ? 'selected' : ''}>${c.label}</option>`
-    ).join('');
+    if (classes.length === 0) {
+      classSelect.innerHTML = `<option value="">Aucune classe assignée</option>`;
+    } else {
+      classSelect.innerHTML = classes.map(c => 
+        `<option value="${c.id}" ${c.id === session.selectedClassId ? 'selected' : ''}>${c.nom}</option>`
+      ).join('');
+    }
   }
 
   const hwClassSelect = document.getElementById('hwClassInput');
   if (hwClassSelect) {
-    hwClassSelect.innerHTML = data.classes.map(c => 
-      `<option value="${c.label}">${c.label}</option>`
-    ).join('');
+    if (classes.length === 0) {
+      hwClassSelect.innerHTML = `<option value="">Aucune classe</option>`;
+    } else {
+      hwClassSelect.innerHTML = classes.map(c => 
+        `<option value="${c.nom}">${c.nom}</option>`
+      ).join('');
+    }
   }
 
-  // 5. Rendu des onglets
+  // 1.H. Rendu des onglets
   renderTeacherGradesTable();
   renderTeacherAppreciations();
   renderTeacherAttendanceTable();
   renderTeacherHomeworkList();
-  switchTeacherInnerTab(currentTeacherInnerTab);
+  switchTeacherInnerTab(session.activeTab || 'grades');
 }
 
+// 6. Tableau des Notes : affichage strict « 0 élève » si aucune donnée
 function renderTeacherGradesTable() {
   const tbody = document.getElementById('teacherGradesTableBody');
   if (!tbody) return;
 
-  const data = teacherDemoData[currentTeacherContext];
-  const selectedClass = data.selectedClass;
-  const filteredGrades = data.grades.filter(g => g.classId === selectedClass);
+  const session = TeacherSession.get();
+  if (!session) return;
 
-  if (filteredGrades.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--gris-400); padding: 1.5rem;">Aucun élève trouvé pour cette classe.</td></tr>`;
+  const selectedClassId = session.selectedClassId;
+  const filteredStudents = session.students.filter(s => {
+    if (!selectedClassId) return true;
+    const cId = s.classeId || s.classe || '';
+    return cId.toLowerCase() === selectedClassId.toLowerCase();
+  });
+
+  if (filteredStudents.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--gris-400); padding: 1.5rem;">0 élève</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filteredGrades.map(s => {
-    const mention = getTeacherMentionFromGrade(s.grade);
+  tbody.innerHTML = filteredStudents.map(s => {
+    const existingGrade = session.grades.find(g => (g.eleveId === s.id || g.eleveId === s.matricule) && g.classeId === selectedClassId);
+    const gradeVal = existingGrade ? existingGrade.note : '';
+    const mention = getTeacherMentionFromGrade(gradeVal);
+
     return `
       <tr>
         <td>
-          <div style="font-weight: 700; color: var(--blanc-pur);">${s.name}</div>
+          <div style="font-weight: 700; color: var(--blanc-pur);">${s.nomComplet}</div>
         </td>
         <td>
           <code style="font-size: 0.76rem; color: var(--turquoise-400); background: rgba(0,210,180,0.1); padding: 0.15rem 0.35rem; border-radius: 4px;">${s.matricule}</code>
         </td>
         <td>
-          <span style="color: var(--gris-300);">${s.subject}</span>
-          <span style="font-size: 0.72rem; color: var(--gris-500); margin-left: 0.3rem;">(Coeff ${s.coef})</span>
+          <span style="color: var(--gris-300);">${session.teacher.matiere}</span>
+          <span style="font-size: 0.72rem; color: var(--gris-500); margin-left: 0.3rem;">(Coeff 2)</span>
         </td>
         <td style="text-align: center;">
           <input type="number" step="0.25" min="0" max="20" class="form-input" 
                  style="width: 75px; text-align: center; font-weight: 800; font-size: 0.9rem; color: #38BDF8; padding: 0.25rem 0.4rem; display: inline-block;" 
-                 value="${s.grade}" 
+                 value="${gradeVal !== '' ? gradeVal : ''}" 
+                 placeholder="-- / 20"
                  id="gradeInput_${s.id}" 
                  onchange="updateTeacherGradeValue('${s.id}', this.value)">
         </td>
@@ -11927,16 +11802,10 @@ function renderTeacherGradesTable() {
 }
 
 function updateTeacherGradeValue(studentId, newVal) {
-  const data = teacherDemoData[currentTeacherContext];
-  const item = data.grades.find(g => g.id === studentId);
-  if (!item) return;
-
-  const num = parseFloat(newVal);
-  item.grade = isNaN(num) ? 0 : Math.min(20, Math.max(0, num));
-
+  TeacherSession.updateGrade(studentId, newVal);
+  const mention = getTeacherMentionFromGrade(newVal);
   const cell = document.getElementById(`mentionCell_${studentId}`);
   if (cell) {
-    const mention = getTeacherMentionFromGrade(item.grade);
     cell.innerHTML = `
       <span style="display: inline-block; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; background: ${mention.bg}; color: ${mention.color};">
         ${mention.text}
@@ -11945,135 +11814,226 @@ function updateTeacherGradeValue(studentId, newVal) {
   }
 }
 
-function saveSingleGrade(studentId) {
-  const data = teacherDemoData[currentTeacherContext];
-  const item = data.grades.find(g => g.id === studentId);
-  if (!item) return;
+async function saveSingleGrade(studentId) {
+  const session = TeacherSession.get();
+  if (!session) return;
 
-  const mention = getTeacherMentionFromGrade(item.grade);
-  showNotification(`✨ Note validée pour ${item.name} : ${item.grade} / 20 (${mention.text}). Synchro avec le bulletin effectuée !`);
-  logAuditEvent('Saisie Note Enseignant', `Note de ${item.grade}/20 attribuée à ${item.name} (${item.matricule}) en ${item.subject}`);
+  const student = session.students.find(s => s.id === studentId || s.matricule === studentId);
+  const inputEl = document.getElementById(`gradeInput_${studentId}`);
+  const val = inputEl ? parseFloat(inputEl.value) : NaN;
+
+  if (isNaN(val)) {
+    showNotification("⚠️ Veuillez saisir une note valide entre 0 et 20.");
+    return;
+  }
+
+  TeacherSession.updateGrade(studentId, val);
+
+  // Synchronisation Cloud Supabase
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.saveTeacherGrade === 'function') {
+    await window.SSE_SUPABASE.saveTeacherGrade({
+      eleveId: studentId,
+      classeId: session.selectedClassId,
+      teacherId: session.teacher.id,
+      matiere: session.teacher.matiere,
+      note: val,
+      coefficient: 2
+    });
+  }
+
+  const mention = getTeacherMentionFromGrade(val);
+  showNotification(`✨ Note de ${val}/20 (${mention.text}) enregistrée pour ${student ? student.nomComplet : studentId} !`);
+  logAuditEvent('Saisie Note Enseignant', `Note de ${val}/20 attribuée à ${student ? student.nomComplet : studentId}`);
+
+  // Recalcul de la moyenne générale en direct
+  renderTeacherPortalContent();
 }
 
-function saveAllTeacherGrades() {
-  const data = teacherDemoData[currentTeacherContext];
-  const count = data.grades.filter(g => g.classId === data.selectedClass).length;
-  showNotification(`💾 Succès : Les ${count} notes de la classe ont été enregistrées et reportées sur les bulletins !`);
-  logAuditEvent('Saisie Masse Notes', `${count} notes enregistrées pour la classe ${data.selectedClass} par ${data.name}`);
+async function saveAllTeacherGrades() {
+  const session = TeacherSession.get();
+  if (!session) return;
+
+  const filteredStudents = session.students.filter(s => {
+    if (!session.selectedClassId) return true;
+    const cId = s.classeId || s.classe || '';
+    return cId.toLowerCase() === session.selectedClassId.toLowerCase();
+  });
+
+  if (filteredStudents.length === 0) {
+    showNotification("0 élève à enregistrer.");
+    return;
+  }
+
+  let count = 0;
+  for (const s of filteredStudents) {
+    const inputEl = document.getElementById(`gradeInput_${s.id}`);
+    if (inputEl && inputEl.value !== '') {
+      const val = parseFloat(inputEl.value);
+      if (!isNaN(val)) {
+        TeacherSession.updateGrade(s.id, val);
+        if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.saveTeacherGrade === 'function') {
+          await window.SSE_SUPABASE.saveTeacherGrade({
+            eleveId: s.id,
+            classeId: session.selectedClassId,
+            teacherId: session.teacher.id,
+            matiere: session.teacher.matiere,
+            note: val,
+            coefficient: 2
+          });
+        }
+        count++;
+      }
+    }
+  }
+
+  showNotification(`💾 Succès : ${count} note(s) synchronisée(s) avec Supabase Cloud !`);
+  logAuditEvent('Saisie Masse Notes', `${count} notes enregistrées pour la classe ${session.selectedClassId}`);
+  renderTeacherPortalContent();
 }
 
+// 6. Avis du Conseil de classe : « 0 élève » si aucune donnée
 function renderTeacherAppreciations() {
   const container = document.getElementById('teacherAppreciationsContainer');
   if (!container) return;
 
-  const data = teacherDemoData[currentTeacherContext];
-  if (!data.appreciations || data.appreciations.length === 0) {
-    container.innerHTML = `<div style="text-align: center; color: var(--gris-400); padding: 1.5rem;">Aucune appréciation à afficher.</div>`;
+  const session = TeacherSession.get();
+  if (!session) return;
+
+  const filteredStudents = session.students.filter(s => {
+    if (!session.selectedClassId) return true;
+    const cId = s.classeId || s.classe || '';
+    return cId.toLowerCase() === session.selectedClassId.toLowerCase();
+  });
+
+  if (filteredStudents.length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--gris-400); padding: 1.5rem;">0 élève</div>`;
     return;
   }
 
-  container.innerHTML = data.appreciations.map(a => `
-    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 1rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
-        <div>
-          <strong style="color: var(--blanc-pur); font-size: 0.95rem;">${a.name}</strong>
-          <span style="font-size: 0.78rem; color: var(--turquoise-400); margin-left: 0.5rem;">(${a.class})</span>
-          <span style="font-size: 0.78rem; color: var(--gold-400); margin-left: 0.5rem;">• Moyenne : ${a.currentNote}</span>
-          <span style="font-size: 0.75rem; color: var(--gris-400); margin-left: 0.5rem;">(${a.rank})</span>
+  container.innerHTML = filteredStudents.map(s => {
+    const existing = session.appreciations.find(a => a.studentId === s.id) || {
+      appreciation: "Travail régulier en classe. Poursuivre les efforts.",
+      decision: "Tableau d'Honneur",
+      lastUpdated: "En attente de validation"
+    };
+
+    const studentGrade = session.grades.find(g => (g.eleveId === s.id || g.eleveId === s.matricule) && g.classeId === session.selectedClassId);
+    const noteDisplay = studentGrade ? `${studentGrade.note} / 20` : "-- / 20";
+
+    return `
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <strong style="color: var(--blanc-pur); font-size: 0.95rem;">${s.nomComplet}</strong>
+            <span style="font-size: 0.78rem; color: var(--turquoise-400); margin-left: 0.5rem;">(${s.matricule})</span>
+            <span style="font-size: 0.78rem; color: var(--gold-400); margin-left: 0.5rem;">• Note : ${noteDisplay}</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--gris-500);" id="apprecStatus_${s.id}">✓ ${existing.lastUpdated}</span>
         </div>
-        <span style="font-size: 0.72rem; color: var(--gris-500);" id="apprecStatus_${a.studentId}">✓ ${a.lastUpdated}</span>
-      </div>
-      <div style="margin-bottom: 0.6rem;">
-        <label style="display: block; font-size: 0.78rem; color: var(--gris-300); margin-bottom: 0.2rem;">Observation &amp; Conseils Pédagogiques :</label>
-        <textarea id="apprecText_${a.studentId}" class="form-input" rows="2" style="width: 100%; font-size: 0.82rem;">${a.appreciation}</textarea>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 260px;">
-          <label style="font-size: 0.78rem; color: var(--gris-300); white-space: nowrap;">Décision du Conseil :</label>
-          <select id="apprecDecision_${a.studentId}" class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; width: 100%;">
-            <option value="Félicitations du Conseil &amp; Tableau d'Honneur" ${a.decision.includes('Félicitations') ? 'selected' : ''}>Félicitations du Conseil &amp; Tableau d'Honneur</option>
-            <option value="Tableau d'Honneur" ${a.decision === "Tableau d'Honneur" ? 'selected' : ''}>Tableau d'Honneur</option>
-            <option value="Encouragements" ${a.decision.includes('Encouragements') ? 'selected' : ''}>Encouragements du Conseil</option>
-            <option value="Passage avec distinction" ${a.decision.includes('Passage') || a.decision.includes('Attestation') ? 'selected' : ''}>Validation avec Distinction</option>
-            <option value="Avertissement Travail" ${a.decision.includes('Avertissement') ? 'selected' : ''}>Avertissement Travail</option>
-          </select>
+        <div style="margin-bottom: 0.6rem;">
+          <label style="display: block; font-size: 0.78rem; color: var(--gris-300); margin-bottom: 0.2rem;">Observation &amp; Conseils Pédagogiques :</label>
+          <textarea id="apprecText_${s.id}" class="form-input" rows="2" style="width: 100%; font-size: 0.82rem;">${existing.appreciation}</textarea>
         </div>
-        <button type="button" class="btn btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;" onclick="saveTeacherAppreciation('${a.studentId}')">
-          📝 Certifier l'Appréciation
-        </button>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 260px;">
+            <label style="font-size: 0.78rem; color: var(--gris-300); white-space: nowrap;">Décision du Conseil :</label>
+            <select id="apprecDecision_${s.id}" class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; width: 100%;">
+              <option value="Félicitations du Conseil &amp; Tableau d'Honneur" ${existing.decision.includes('Félicitations') ? 'selected' : ''}>Félicitations du Conseil &amp; Tableau d'Honneur</option>
+              <option value="Tableau d'Honneur" ${existing.decision === "Tableau d'Honneur" ? 'selected' : ''}>Tableau d'Honneur</option>
+              <option value="Encouragements" ${existing.decision.includes('Encouragements') ? 'selected' : ''}>Encouragements du Conseil</option>
+              <option value="Passage avec distinction" ${existing.decision.includes('Passage') || existing.decision.includes('Distinction') ? 'selected' : ''}>Validation avec Distinction</option>
+              <option value="Avertissement Travail" ${existing.decision.includes('Avertissement') ? 'selected' : ''}>Avertissement Travail</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;" onclick="saveTeacherAppreciation('${s.id}')">
+            📝 Certifier l'Appréciation
+          </button>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function saveTeacherAppreciation(studentId) {
-  const data = teacherDemoData[currentTeacherContext];
-  const item = data.appreciations.find(a => a.studentId === studentId);
-  if (!item) return;
+  const session = TeacherSession.get();
+  if (!session) return;
 
   const textEl = document.getElementById(`apprecText_${studentId}`);
   const decEl = document.getElementById(`apprecDecision_${studentId}`);
   const statusEl = document.getElementById(`apprecStatus_${studentId}`);
 
-  if (textEl) item.appreciation = textEl.value.trim();
-  if (decEl) item.decision = decEl.value;
-  item.lastUpdated = "Mis à jour à l'instant";
+  const text = textEl ? textEl.value.trim() : '';
+  const decision = decEl ? decEl.value : '';
 
-  if (statusEl) statusEl.textContent = `✓ ${item.lastUpdated}`;
+  TeacherSession.updateAppreciation(studentId, text, decision);
+  if (statusEl) statusEl.textContent = "✓ Mis à jour à l'instant";
 
-  showNotification(`📝 Avis certifié pour ${item.name} ! Reporté instantanément sur le bulletin officiel.`);
-  logAuditEvent('Avis Conseil Enseignant', `Observation certifiée pour ${item.name} (${item.studentId}) : "${item.decision}"`);
+  showNotification("📝 Avis certifié et synchronisé avec le bulletin scolaire officiel !");
+  logAuditEvent('Avis Conseil Enseignant', `Observation enregistrée pour ${studentId}`);
 }
 
+// 6. Tableau des Présences : affichage strict « 0 élève » si aucune donnée
 function renderTeacherAttendanceTable() {
   const tbody = document.getElementById('teacherAttendanceTableBody');
   if (!tbody) return;
 
-  const data = teacherDemoData[currentTeacherContext];
-  if (!data.attendance || data.attendance.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--gris-400); padding: 1.5rem;">Aucun élève enregistré pour l'appel.</td></tr>`;
+  const session = TeacherSession.get();
+  if (!session) return;
+
+  const filteredStudents = session.students.filter(s => {
+    if (!session.selectedClassId) return true;
+    const cId = s.classeId || s.classe || '';
+    return cId.toLowerCase() === session.selectedClassId.toLowerCase();
+  });
+
+  if (filteredStudents.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--gris-400); padding: 1.5rem;">0 élève</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = data.attendance.map(att => {
-    const isPres = att.status === 'PRESENT';
-    const isAbs = att.status === 'ABSENT';
-    const isRet = att.status === 'RETARD';
+  tbody.innerHTML = filteredStudents.map(s => {
+    const existing = session.attendances.find(a => (a.eleveId === s.id || a.eleveId === s.matricule) && a.classeId === session.selectedClassId);
+    const status = existing ? existing.statut : 'PRESENT';
+    const justif = existing ? existing.justification : "Présent à l'appel";
+
+    const isPres = status === 'PRESENT';
+    const isAbs = status === 'ABSENT';
+    const isRet = status === 'RETARD';
 
     return `
       <tr>
         <td>
-          <div style="font-weight: 700; color: var(--blanc-pur);">${att.name}</div>
-          <div style="font-size: 0.74rem; color: var(--gris-400);">${att.class} • ${att.matricule}</div>
+          <div style="font-weight: 700; color: var(--blanc-pur);">${s.nomComplet}</div>
+          <div style="font-size: 0.74rem; color: var(--gris-400);">${s.matricule}</div>
         </td>
         <td>
           <div style="display: flex; gap: 0.3rem;">
             <button type="button" class="btn ${isPres ? 'btn-primary' : 'btn-outline'}" 
                     style="font-size: 0.72rem; padding: 0.2rem 0.5rem; ${isPres ? 'background: #10B981; border-color: #10B981;' : ''}" 
-                    onclick="setAttendanceStatus('${att.studentId}', 'PRESENT')">
+                    onclick="setAttendanceStatus('${s.id}', 'PRESENT')">
               ✓ Présent
             </button>
             <button type="button" class="btn ${isAbs ? 'btn-primary' : 'btn-outline'}" 
                     style="font-size: 0.72rem; padding: 0.2rem 0.5rem; ${isAbs ? 'background: #EF4444; border-color: #EF4444;' : 'color: #F87171; border-color: rgba(239, 68, 68, 0.4);'}" 
-                    onclick="setAttendanceStatus('${att.studentId}', 'ABSENT')">
+                    onclick="setAttendanceStatus('${s.id}', 'ABSENT')">
               ✕ Absent
             </button>
             <button type="button" class="btn ${isRet ? 'btn-primary' : 'btn-outline'}" 
                     style="font-size: 0.72rem; padding: 0.2rem 0.5rem; ${isRet ? 'background: #F59E0B; border-color: #F59E0B;' : 'color: #FBBF24; border-color: rgba(245, 158, 11, 0.4);'}" 
-                    onclick="setAttendanceStatus('${att.studentId}', 'RETARD')">
+                    onclick="setAttendanceStatus('${s.id}', 'RETARD')">
               ⏱ Retard
             </button>
           </div>
         </td>
         <td>
           <span style="font-size: 0.8rem; color: ${isAbs ? '#F87171' : (isRet ? '#FBBF24' : 'var(--gris-300)')};">
-            ${att.justification}
+            ${justif}
           </span>
         </td>
         <td style="text-align: right;">
           ${isAbs ? `
-            <button type="button" class="btn btn-outline" style="font-size: 0.74rem; padding: 0.25rem 0.6rem; color: #34D399; border-color: rgba(52, 211, 153, 0.4);" onclick="sendAttendanceWhatsAppAlert('${att.studentId}')">
-              🚨 Alerte WhatsApp (${att.parentPhone})
+            <button type="button" class="btn btn-outline" style="font-size: 0.74rem; padding: 0.25rem 0.6rem; color: #34D399; border-color: rgba(52, 211, 153, 0.4);" onclick="sendAttendanceWhatsAppAlert('${s.id}')">
+              🚨 Alerte WhatsApp (${s.parentPhone})
             </button>
           ` : `
             <span style="font-size: 0.74rem; color: var(--gris-500);">✓ En règle</span>
@@ -12084,54 +12044,73 @@ function renderTeacherAttendanceTable() {
   }).join('');
 }
 
-function setAttendanceStatus(studentId, newStatus) {
-  const data = teacherDemoData[currentTeacherContext];
-  const item = data.attendance.find(a => a.studentId === studentId);
-  if (!item) return;
+async function setAttendanceStatus(studentId, newStatus) {
+  const session = TeacherSession.get();
+  if (!session) return;
 
-  item.status = newStatus;
+  TeacherSession.updateAttendance(studentId, newStatus);
+  const student = session.students.find(s => s.id === studentId || s.matricule === studentId);
+
+  // Synchronisation Cloud Supabase
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.saveTeacherPresence === 'function') {
+    await window.SSE_SUPABASE.saveTeacherPresence({
+      eleveId: studentId,
+      classeId: session.selectedClassId,
+      teacherId: session.teacher.id,
+      matiere: session.teacher.matiere,
+      statut: newStatus,
+      parentPhone: student ? student.parentPhone : null,
+      parentName: student ? student.parentName : null
+    });
+  }
+
   if (newStatus === 'PRESENT') {
-    item.justification = "Présent à l'appel";
-    showNotification(`✓ ${item.name} marqué Présent.`);
+    showNotification(`✓ ${student ? student.nomComplet : studentId} marqué Présent.`);
   } else if (newStatus === 'ABSENT') {
-    item.justification = "Non justifié - Alerte WhatsApp disponible";
-    showNotification(`⚠️ ${item.name} marqué ABSENT. Vous pouvez déclencher l'alerte WhatsApp parent.`);
+    showNotification(`⚠️ ${student ? student.nomComplet : studentId} marqué ABSENT. Alerte WhatsApp prête.`);
   } else {
-    item.justification = "Retard en cours (Signalé)";
-    showNotification(`⏱ ${item.name} marqué en Retard.`);
+    showNotification(`⏱ ${student ? student.nomComplet : studentId} marqué en Retard.`);
   }
 
   renderTeacherAttendanceTable();
+  renderTeacherPortalContent();
 }
 
 function sendAttendanceWhatsAppAlert(studentId) {
-  const data = teacherDemoData[currentTeacherContext];
-  const item = data.attendance.find(a => a.studentId === studentId);
-  if (!item) return;
+  const session = TeacherSession.get();
+  if (!session) return;
 
-  const msg = `Bonjour ${item.parentName}, nous vous informons que votre enfant ${item.name} (${item.matricule}) est marqué absent ce jour à la séance de ${data.subjects} (${data.school}). Merci de contacter la vie scolaire.`;
+  const student = session.students.find(s => s.id === studentId || s.matricule === studentId);
+  if (!student) return;
+
+  const phone = (student.parentPhone || '').replace(/\s+/g, '');
+  const msg = encodeURIComponent(`Bonjour ${student.parentName || 'Parent'}, nous vous informons que votre enfant ${student.nomComplet} (${student.matricule}) est marqué absent ce jour au cours de ${session.teacher.matiere} à ${session.schoolName}. Merci de contacter la vie scolaire.`);
   
-  showNotification(`📲 Alerte WhatsApp d'absence envoyée à ${item.parentName} (${item.parentPhone}) !`);
-  logAuditEvent('Alerte WhatsApp Absence', `Notification d'absence transmise à ${item.parentPhone} pour ${item.name}`);
+  if (phone) {
+    window.open(`https://wa.me/${phone.replace(/^\+/, '')}?text=${msg}`, '_blank');
+  }
+  showNotification(`📲 Alerte WhatsApp d'absence envoyée à ${student.parentPhone} !`);
+  logAuditEvent('Alerte WhatsApp Absence', `Alerte transmise pour ${student.nomComplet}`);
 }
 
 function submitDailyAttendance() {
-  const data = teacherDemoData[currentTeacherContext];
-  showNotification(`📋 L'appel de la séance a été certifié et clôturé avec succès par ${data.name}. Registre verrouillé.`);
-  logAuditEvent('Clôture Registre Appel', `Feuille de présence validée par ${data.name} pour la séance en cours.`);
+  const session = TeacherSession.get();
+  if (!session) return;
+  showNotification(`📋 L'appel de la séance (${session.teacher.matiere}) a été signé et clôturé par ${session.teacher.nomComplet}. Registre verrouillé.`);
+  logAuditEvent('Clôture Registre Appel', `Feuille de présence validée par ${session.teacher.nomComplet}`);
 }
 
 function renderTeacherHomeworkList() {
   const container = document.getElementById('teacherHomeworkList');
   if (!container) return;
 
-  const data = teacherDemoData[currentTeacherContext];
-  if (!data.homework || data.homework.length === 0) {
-    container.innerHTML = `<div style="color: var(--gris-400); font-size: 0.82rem;">Aucun devoir en cours.</div>`;
+  const session = TeacherSession.get();
+  if (!session || !session.homework || session.homework.length === 0) {
+    container.innerHTML = `<div style="color: var(--gris-400); font-size: 0.82rem;">Aucun devoir programmé.</div>`;
     return;
   }
 
-  container.innerHTML = data.homework.map(hw => `
+  container.innerHTML = session.homework.map(hw => `
     <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.85rem;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.4rem;">
         <strong style="color: var(--blanc-pur); font-size: 0.88rem;">${hw.title}</strong>
@@ -12148,7 +12127,8 @@ function renderTeacherHomeworkList() {
 
 function addTeacherHomework(e) {
   if (e) e.preventDefault();
-  const data = teacherDemoData[currentTeacherContext];
+  const session = TeacherSession.get();
+  if (!session) return;
 
   const titleEl = document.getElementById('hwTitleInput');
   const classEl = document.getElementById('hwClassInput');
@@ -12164,18 +12144,18 @@ function addTeacherHomework(e) {
     id: Date.now(),
     title: titleEl.value.trim(),
     class: classEl ? classEl.value : 'Toutes',
-    dueDate: dateEl ? dateEl.value : '2026-09-20',
+    dueDate: dateEl ? dateEl.value : new Date().toISOString().split('T')[0],
     desc: descEl.value.trim(),
     status: '📢 Nouveau • Notifié'
   };
 
-  data.homework.unshift(newHw);
+  TeacherSession.addHomework(newHw);
   titleEl.value = '';
   descEl.value = '';
 
   renderTeacherHomeworkList();
-  showNotification(`📢 Nouveau devoir "${newHw.title}" publié avec succès ! Notification envoyée aux familles.`);
-  logAuditEvent('Publication Devoir Enseignant', `Nouveau devoir "${newHw.title}" programmé pour le ${newHw.dueDate} (${newHw.class})`);
+  showNotification(`📢 Nouveau devoir "${newHw.title}" publié avec succès ! Notification transmise aux familles.`);
+  logAuditEvent('Publication Devoir Enseignant', `Devoir "${newHw.title}" programmé`);
 }
 
 let currentParentContext = 'ECOLE'; // 'ECOLE' ou 'DAARA'

@@ -225,6 +225,160 @@
         'DELETE'
       );
       return res !== null;
+    },
+
+    // ==========================================================================
+    // ESPACE ENSEIGNANT DÉDIÉ (SUPABASE CLOUD & ISOLATION PAR TEACHER_ID)
+    // ==========================================================================
+
+    // 9. Retrouver un enseignant par correspondance exacte de sa clé d'accès (access_key)
+    async getTeacherByAccessKey(accessKey) {
+      if (!accessKey || typeof accessKey !== 'string') return null;
+      const cleanKey = accessKey.trim();
+      if (!cleanKey) return null;
+
+      // 9.A. Recherche exacte dans public.teachers
+      let rows = await apiRequest(`/rest/v1/teachers?access_key=eq.${encodeURIComponent(cleanKey)}&limit=1`);
+      
+      // 9.B. Fallback si table enseignants (alias)
+      if (!Array.isArray(rows) || rows.length === 0) {
+        rows = await apiRequest(`/rest/v1/enseignants?matricule=eq.${encodeURIComponent(cleanKey)}&limit=1`);
+      }
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return null;
+      }
+
+      const t = rows[0];
+      return {
+        id: t.id,
+        nomComplet: t.nom_complet || t.nom || 'Enseignant',
+        matiere: t.matiere || t.matiere_principale || 'Discipline Générale',
+        accessKey: t.access_key || t.matricule || cleanKey,
+        telephone: t.telephone || '',
+        email: t.email || '',
+        etablissementId: t.etablissement_id || '',
+        statut: t.statut || 'ACTIF',
+        avatar: t.avatar || '👨‍🏫'
+      };
+    },
+
+    // 10. Récupérer les classes assignées à un enseignant via classes.teacher_id
+    async getClassesByTeacherId(teacherId) {
+      if (!teacherId) return [];
+      const rows = await apiRequest(`/rest/v1/classes?teacher_id=eq.${encodeURIComponent(teacherId)}&order=nom.asc`);
+      if (!Array.isArray(rows)) return [];
+      return rows.map(c => ({
+        id: c.id,
+        nom: c.nom,
+        cycle: c.cycle || 'SECONDAIRE',
+        teacherId: c.teacher_id,
+        etablissementId: c.etablissement_id
+      }));
+    },
+
+    // 11. Filtrer les élèves par classes de l'enseignant (classes.teacher_id)
+    async getStudentsByClassIds(classIds) {
+      if (!Array.isArray(classIds) || classIds.length === 0) return [];
+      const formattedIds = classIds.map(c => `"${c}"`).join(',');
+      const rows = await apiRequest(`/rest/v1/eleves?classe_id=in.(${formattedIds})&order=nom.asc`);
+      if (!Array.isArray(rows)) return [];
+      return rows.map(r => ({
+        id: r.id,
+        matricule: r.matricule,
+        nom: r.nom,
+        prenom: r.prenom,
+        nomComplet: `${r.prenom} ${r.nom}`,
+        classeId: r.classe_id,
+        parentPhone: r.parent_phone || r.contact_urgence || '+221 77 000 00 00',
+        parentName: r.parent_name || 'Parent d\'élève',
+        statutPension: r.statut_pension || 'A_JOUR'
+      }));
+    },
+
+    // 12. Récupérer les notes saisies pour les classes de l'enseignant
+    async getNotesByClassIds(classIds) {
+      if (!Array.isArray(classIds) || classIds.length === 0) return [];
+      const formattedIds = classIds.map(c => `"${c}"`).join(',');
+      const rows = await apiRequest(`/rest/v1/notes?classe_id=in.(${formattedIds})&order=date_evaluation.desc`);
+      if (!Array.isArray(rows)) return [];
+      return rows.map(n => ({
+        id: n.id,
+        eleveId: n.eleve_id,
+        classeId: n.classe_id,
+        teacherId: n.teacher_id,
+        matiere: n.matiere,
+        epreuve: n.epreuve || 'COMPO',
+        note: Number(n.valeur_note) || 0,
+        coefficient: Number(n.coefficient) || 1,
+        appreciation: n.appreciation || '',
+        decision: n.decision || '',
+        dateEvaluation: n.date_evaluation
+      }));
+    },
+
+    // 13. Récupérer le pointage des présences du jour pour les classes de l'enseignant
+    async getPresencesByClassIds(classIds, dateStr = null) {
+      if (!Array.isArray(classIds) || classIds.length === 0) return [];
+      const today = dateStr || new Date().toISOString().split('T')[0];
+      const formattedIds = classIds.map(c => `"${c}"`).join(',');
+      const rows = await apiRequest(`/rest/v1/presences?classe_id=in.(${formattedIds})&date_seance=eq.${today}`);
+      if (!Array.isArray(rows)) return [];
+      return rows.map(p => ({
+        id: p.id,
+        eleveId: p.eleve_id,
+        classeId: p.classe_id,
+        teacherId: p.teacher_id,
+        dateSeance: p.date_seance,
+        matiere: p.matiere,
+        statut: p.statut || 'PRESENT',
+        justification: p.justification || '',
+        parentPhone: p.parent_phone || '',
+        parentName: p.parent_name || ''
+      }));
+    },
+
+    // 14. Sauvegarder ou mettre à jour une note dans Supabase
+    async saveTeacherGrade(gradeData) {
+      if (!gradeData || !gradeData.eleveId) return false;
+      const payload = {
+        id: gradeData.id || `not-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        eleve_id: gradeData.eleveId,
+        classe_id: gradeData.classeId,
+        teacher_id: gradeData.teacherId || null,
+        matiere: gradeData.matiere,
+        epreuve: gradeData.epreuve || 'COMPO',
+        valeur_note: Number(gradeData.note) || 0,
+        coefficient: Number(gradeData.coefficient) || 2,
+        appreciation: gradeData.appreciation || null,
+        decision: gradeData.decision || null,
+        date_evaluation: gradeData.dateEvaluation || new Date().toISOString().split('T')[0]
+      };
+      const res = await apiRequest('/rest/v1/notes', 'POST', payload, {
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      });
+      return !!res;
+    },
+
+    // 15. Sauvegarder ou mettre à jour une présence dans Supabase
+    async saveTeacherPresence(presenceData) {
+      if (!presenceData || !presenceData.eleveId) return false;
+      const payload = {
+        id: presenceData.id || `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        eleve_id: presenceData.eleveId,
+        classe_id: presenceData.classeId,
+        teacher_id: presenceData.teacherId || null,
+        date_seance: presenceData.dateSeance || new Date().toISOString().split('T')[0],
+        matiere: presenceData.matiere,
+        statut: presenceData.statut || 'PRESENT',
+        justification: presenceData.justification || '',
+        parent_phone: presenceData.parentPhone || null,
+        parent_name: presenceData.parentName || null
+      };
+      const res = await apiRequest('/rest/v1/presences', 'POST', payload, {
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      });
+      return !!res;
     }
   };
 
