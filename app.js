@@ -11368,6 +11368,76 @@ function getActiveSchoolName() {
   return 'Mon Établissement';
 }
 
+function isStudentInClass(s, selectedClassId, classesList) {
+  if (!selectedClassId) return true;
+  if (!s) return false;
+  const sId = (s.classeId || '').trim().toLowerCase();
+  const sNom = (s.classeNom || s.classe || '').trim().toLowerCase();
+  const target = selectedClassId.trim().toLowerCase();
+
+  if (sId === target || sNom === target) return true;
+
+  const stripAccents = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const norm = str => stripAccents(str).replace(/^cls[-_]/i, '').replace(/[\s\-_]/g, '').toLowerCase();
+
+  if (Array.isArray(classesList)) {
+    const targetClass = classesList.find(c => 
+      (c.id && c.id.toLowerCase() === target) || 
+      (c.nom && c.nom.toLowerCase() === target) ||
+      norm(c.id || '') === norm(target) ||
+      norm(c.nom || '') === norm(target)
+    );
+    if (targetClass) {
+      const tId = (targetClass.id || '').toLowerCase();
+      const tNom = (targetClass.nom || '').toLowerCase();
+      if (sId === tId || sId === tNom || sNom === tId || sNom === tNom) return true;
+      if (norm(sId) === norm(tId) || norm(sId) === norm(tNom) || norm(sNom) === norm(tId) || norm(sNom) === norm(tNom)) return true;
+    }
+
+    const studentClass = classesList.find(c => 
+      (c.id && c.id.toLowerCase() === sId) || 
+      (c.nom && c.nom.toLowerCase() === sId) ||
+      (c.id && c.id.toLowerCase() === sNom) || 
+      (c.nom && c.nom.toLowerCase() === sNom) ||
+      norm(c.id || '') === norm(sId) ||
+      norm(c.nom || '') === norm(sId) ||
+      norm(c.id || '') === norm(sNom) ||
+      norm(c.nom || '') === norm(sNom)
+    );
+    if (studentClass && targetClass && studentClass.id === targetClass.id) return true;
+  }
+
+  return norm(sId) === norm(target) || norm(sNom) === norm(target);
+}
+
+function isClassMatching(cls1, cls2, classesList) {
+  if (!cls1 || !cls2) return false;
+  const c1 = cls1.trim().toLowerCase();
+  const c2 = cls2.trim().toLowerCase();
+  if (c1 === c2) return true;
+
+  const stripAccents = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const norm = str => stripAccents(str).replace(/^cls[-_]/i, '').replace(/[\s\-_]/g, '').toLowerCase();
+
+  if (Array.isArray(classesList)) {
+    const obj1 = classesList.find(c => 
+      (c.id && c.id.toLowerCase() === c1) || 
+      (c.nom && c.nom.toLowerCase() === c1) ||
+      norm(c.id || '') === norm(c1) ||
+      norm(c.nom || '') === norm(c1)
+    );
+    const obj2 = classesList.find(c => 
+      (c.id && c.id.toLowerCase() === c2) || 
+      (c.nom && c.nom.toLowerCase() === c2) ||
+      norm(c.id || '') === norm(c2) ||
+      norm(c.nom || '') === norm(c2)
+    );
+    if (obj1 && obj2 && obj1.id === obj2.id) return true;
+  }
+
+  return norm(c1) === norm(c2);
+}
+
 // 3. Authentification Enseignant par correspondance exacte de access_key & calcul Supabase
 async function openTeacherPortalModal(accessKey) {
   closeAllModals();
@@ -11517,6 +11587,35 @@ async function openTeacherPortalModal(accessKey) {
     attendances = await window.SSE_SUPABASE.getPresencesByClassIds(lookupKeys);
   }
 
+  // 4. Alignement rigoureux des classes et métadonnées parents pour chaque élève
+  if (Array.isArray(students) && Array.isArray(classes)) {
+    students.forEach(s => {
+      const raw = (s.classeId || s.classe || '').trim();
+      const matched = classes.find(c => 
+        (c.id && c.id.toLowerCase() === raw.toLowerCase()) ||
+        (c.nom && c.nom.toLowerCase() === raw.toLowerCase()) ||
+        isClassMatching(c.id, raw, classes) ||
+        isClassMatching(c.nom, raw, classes)
+      );
+      if (matched) {
+        s.classeId = matched.id;
+        s.classeNom = matched.nom;
+        s.classe = matched.nom;
+      } else {
+        s.classeNom = raw;
+      }
+
+      // Compléter avec STUDENT_PARENT_MAP pour les alertes WhatsApp/SMS
+      if (typeof STUDENT_PARENT_MAP !== 'undefined') {
+        const pInfo = STUDENT_PARENT_MAP[s.matricule];
+        if (pInfo) {
+          if (!s.parentPhone || s.parentPhone.includes('000 00')) s.parentPhone = pInfo.parentPhone;
+          if (!s.parentName || s.parentName.includes('Parent d\'élève')) s.parentName = pInfo.parentName;
+        }
+      }
+    });
+  }
+
   // 5. Initialisation de la session strictement encapsulée (zéro localStorage)
   TeacherSession.start({
     teacher,
@@ -11595,23 +11694,32 @@ function switchTeacherInnerTab(tabName) {
   });
 }
 
-function onTeacherClassFilterChange() {
-  const select = document.getElementById('teacherClassSelect');
-  if (!select) return;
-  TeacherSession.setSelectedClass(select.value);
-  renderTeacherGradesTable();
-  renderTeacherAttendanceTable();
-  renderTeacherAppreciations();
+function onTeacherClassFilterChange(selectedVal) {
+  const select1 = document.getElementById('teacherClassSelect');
+  const select2 = document.getElementById('teacherAttendanceClassSelect');
+  const select3 = document.getElementById('teacherAppreciationsClassSelect');
+  const val = selectedVal || (select1 ? select1.value : (select2 ? select2.value : ''));
+  if (!val) return;
 
-  // Mettre à jour l'intitulé de la séance dynamique (Requirement 1)
+  TeacherSession.setSelectedClass(val);
+
+  if (select1 && select1.value !== val) select1.value = val;
+  if (select2 && select2.value !== val) select2.value = val;
+  if (select3 && select3.value !== val) select3.value = val;
+
+  // Mettre à jour l'intitulé de la séance dynamique
   const session = TeacherSession.get();
   if (session) {
-    const curClass = session.classes.find(c => c.id === select.value) || { nom: select.value };
+    const curClass = session.classes.find(c => c.id === val || c.nom === val) || { nom: val };
     const sessionInfo = document.getElementById('teacherCurrentSessionInfo');
     if (sessionInfo) {
       sessionInfo.textContent = `Séance : ${curClass.nom} • ${session.teacher.matiere}`;
     }
   }
+
+  renderTeacherGradesTable();
+  renderTeacherAttendanceTable();
+  renderTeacherAppreciations();
 }
 
 // 1. Calcul dynamique des indicateurs depuis les données Supabase réelles
@@ -11722,23 +11830,29 @@ function renderTeacherPortalContent() {
 
   // 1.F. Séance dynamique (Suppression définitive de "Séance Mathématiques")
   const sessionInfoEl = document.getElementById('teacherCurrentSessionInfo');
-  const currentClass = classes.find(c => c.id === session.selectedClassId) || classes[0];
+  const currentClass = classes.find(c => c.id === session.selectedClassId || c.nom === session.selectedClassId) || classes[0];
   if (sessionInfoEl) {
     sessionInfoEl.textContent = currentClass 
       ? `Séance : ${currentClass.nom} • ${teacher.matiere}`
       : `Discipline : ${teacher.matiere}`;
   }
 
-  // 1.G. Sélecteur de classes
+  // 1.G. Sélecteur de classes synchronisé dans tous les onglets
   const classSelect = document.getElementById('teacherClassSelect');
-  if (classSelect) {
-    if (classes.length === 0) {
-      classSelect.innerHTML = `<option value="">Aucune classe assignée</option>`;
-    } else {
-      classSelect.innerHTML = classes.map(c => 
+  const attClassSelect = document.getElementById('teacherAttendanceClassSelect');
+  const apprecClassSelect = document.getElementById('teacherAppreciationsClassSelect');
+
+  const optionsHtml = (classes.length === 0)
+    ? `<option value="">Aucune classe assignée</option>`
+    : classes.map(c => 
         `<option value="${c.id}" ${c.id === session.selectedClassId ? 'selected' : ''}>${c.nom}</option>`
       ).join('');
-    }
+
+  if (classSelect) classSelect.innerHTML = optionsHtml;
+  if (attClassSelect) attClassSelect.innerHTML = optionsHtml;
+  if (apprecClassSelect) {
+    apprecClassSelect.innerHTML = `<option value="">Toutes les classes</option>` + 
+      classes.map(c => `<option value="${c.id}" ${c.id === session.selectedClassId ? 'selected' : ''}>${c.nom}</option>`).join('');
   }
 
   const hwClassSelect = document.getElementById('hwClassInput');
@@ -11770,9 +11884,7 @@ function renderTeacherGradesTable() {
 
   const selectedClassId = session.selectedClassId;
   const filteredStudents = session.students.filter(s => {
-    if (!selectedClassId) return true;
-    const cId = s.classeId || s.classe || '';
-    return cId.toLowerCase() === selectedClassId.toLowerCase();
+    return isStudentInClass(s, selectedClassId, session.classes);
   });
 
   if (filteredStudents.length === 0) {
@@ -11781,7 +11893,7 @@ function renderTeacherGradesTable() {
   }
 
   tbody.innerHTML = filteredStudents.map(s => {
-    const existingGrade = session.grades.find(g => (g.eleveId === s.id || g.eleveId === s.matricule) && g.classeId === selectedClassId);
+    const existingGrade = session.grades.find(g => (g.eleveId === s.id || g.eleveId === s.matricule) && isClassMatching(g.classeId, selectedClassId, session.classes));
     const gradeVal = existingGrade ? existingGrade.note : '';
     const mention = getTeacherMentionFromGrade(gradeVal);
 
@@ -11873,9 +11985,7 @@ async function saveAllTeacherGrades() {
   if (!session) return;
 
   const filteredStudents = session.students.filter(s => {
-    if (!session.selectedClassId) return true;
-    const cId = s.classeId || s.classe || '';
-    return cId.toLowerCase() === session.selectedClassId.toLowerCase();
+    return isStudentInClass(s, session.selectedClassId, session.classes);
   });
 
   if (filteredStudents.length === 0) {
@@ -11919,9 +12029,7 @@ function renderTeacherAppreciations() {
   if (!session) return;
 
   const filteredStudents = session.students.filter(s => {
-    if (!session.selectedClassId) return true;
-    const cId = s.classeId || s.classe || '';
-    return cId.toLowerCase() === session.selectedClassId.toLowerCase();
+    return isStudentInClass(s, session.selectedClassId, session.classes);
   });
 
   if (filteredStudents.length === 0) {
@@ -11936,7 +12044,7 @@ function renderTeacherAppreciations() {
       lastUpdated: "En attente de validation"
     };
 
-    const studentGrade = session.grades.find(g => (g.eleveId === s.id || g.eleveId === s.matricule) && g.classeId === session.selectedClassId);
+    const studentGrade = session.grades.find(g => (g.eleveId === s.id || g.eleveId === s.matricule) && isClassMatching(g.classeId, session.selectedClassId, session.classes));
     const noteDisplay = studentGrade ? `${studentGrade.note} / 20` : "-- / 20";
 
     return `
@@ -12000,9 +12108,7 @@ function renderTeacherAttendanceTable() {
   if (!session) return;
 
   const filteredStudents = session.students.filter(s => {
-    if (!session.selectedClassId) return true;
-    const cId = s.classeId || s.classe || '';
-    return cId.toLowerCase() === session.selectedClassId.toLowerCase();
+    return isStudentInClass(s, session.selectedClassId, session.classes);
   });
 
   if (filteredStudents.length === 0) {
@@ -12011,7 +12117,7 @@ function renderTeacherAttendanceTable() {
   }
 
   tbody.innerHTML = filteredStudents.map(s => {
-    const existing = session.attendances.find(a => (a.eleveId === s.id || a.eleveId === s.matricule) && a.classeId === session.selectedClassId);
+    const existing = session.attendances.find(a => (a.eleveId === s.id || a.eleveId === s.matricule) && isClassMatching(a.classeId, session.selectedClassId, session.classes));
     const status = existing ? existing.statut : 'PRESENT';
     const justif = existing ? existing.justification : "Présent à l'appel";
 

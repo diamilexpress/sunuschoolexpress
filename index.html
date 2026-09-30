@@ -5047,11 +5047,16 @@
       <!-- ONGLET 2 : Avis & Appréciations du Conseil -->
       <div id="teacherTabAppreciationsContent" style="display: none;">
         <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
             <h5 style="margin: 0; color: var(--gold-400); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
               <span>📝</span> Rédaction des Avis Trimestriels pour le Bulletin Officiel
             </h5>
-            <span style="font-size: 0.78rem; color: var(--gris-400);">Visible instantanément par les Parents</span>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.82rem; color: var(--gris-300);">Classe :</label>
+              <select id="teacherAppreciationsClassSelect" class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.82rem; max-width: 160px;" onchange="onTeacherClassFilterChange(this.value)">
+                <option value="">Toutes les classes</option>
+              </select>
+            </div>
           </div>
           <p style="font-size: 0.82rem; color: var(--gris-300); margin: 0;">
             Chaque observation validée par l'enseignant est certifiée, reportée sur le bulletin PDF officiel et consultable en temps réel sur le portail des parents d'élèves.
@@ -5066,11 +5071,19 @@
       <!-- ONGLET 3 : Appel du Jour & Alertes WhatsApp -->
       <div id="teacherTabAttendanceContent" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem; flex-wrap: wrap; gap: 0.6rem;">
-          <div>
-            <h5 style="margin: 0; color: var(--blanc-pur); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span>📋</span> Émargement Numérique &amp; Pointage en Classe
-            </h5>
-            <span id="teacherCurrentSessionInfo" style="font-size: 0.78rem; color: var(--gris-400);">Séance en cours</span>
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <h5 style="margin: 0; color: var(--blanc-pur); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📋</span> Émargement Numérique &amp; Pointage en Classe
+              </h5>
+              <span id="teacherCurrentSessionInfo" style="font-size: 0.78rem; color: var(--gris-400);">Séance en cours</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.82rem; color: var(--gris-300);">Classe :</label>
+              <select id="teacherAttendanceClassSelect" class="form-input" style="padding: 0.3rem 0.6rem; font-size: 0.82rem; max-width: 160px;" onchange="onTeacherClassFilterChange(this.value)">
+                <option value="">Chargement...</option>
+              </select>
+            </div>
           </div>
           <button type="button" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;" onclick="submitDailyAttendance()">
             ✓ Signer et Clôturer l'Appel du Jour
