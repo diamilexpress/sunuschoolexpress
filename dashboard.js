@@ -189,6 +189,60 @@ function initDataStore() {
       statusPill.className = 'badge-tag badge-blue';
     }
   }
+
+  // Lancer la synchronisation Cloud Supabase bidirectionnelle en arrière-plan
+  syncFromSupabaseCloudDashboard();
+}
+
+// Synchronisation Cloud Supabase bidirectionnelle pour Dashboard (Mobile, Tablette, PC)
+async function syncFromSupabaseCloudDashboard() {
+  if (!window.SSE_SUPABASE) return;
+  try {
+    // 1. Récupérer etablissements depuis Supabase
+    if (typeof window.SSE_SUPABASE.getEtablissements === 'function') {
+      const supaEtabs = await window.SSE_SUPABASE.getEtablissements();
+      if (Array.isArray(supaEtabs) && supaEtabs.length > 0) {
+        supaEtabs.forEach(se => {
+          if (se && se.name) {
+            importOrUpdateEstablishmentInDb(se);
+          }
+        });
+        saveDataStore();
+      }
+    }
+
+    // 2. Récupérer élèves depuis Supabase pour l'établissement actif ou EMF
+    const estKey = getActiveEstablishmentKey();
+    if (typeof window.SSE_SUPABASE.getEleves === 'function') {
+      const cloudEleves = await window.SSE_SUPABASE.getEleves(estKey);
+      if (Array.isArray(cloudEleves) && cloudEleves.length > 0) {
+        let added = 0;
+        cloudEleves.forEach(ce => {
+          const exists = appState.db.eleves.some(el =>
+            (el.id && ce.id && el.id === ce.id) ||
+            (el.matricule && ce.matricule && el.matricule.trim().toUpperCase() === ce.matricule.trim().toUpperCase()) ||
+            (el.prenom && el.nom && ce.prenom && ce.nom && el.prenom.trim().toLowerCase() === ce.prenom.trim().toLowerCase() && el.nom.trim().toLowerCase() === ce.nom.trim().toLowerCase())
+          );
+          if (!exists) {
+            appState.db.eleves.push(ce);
+            added++;
+          }
+        });
+        if (added > 0) {
+          saveDataStore();
+          renderCurrentView();
+        }
+      }
+    }
+
+    const statusPill = document.getElementById('apiStatusPill');
+    if (statusPill) {
+      statusPill.innerHTML = '🟢 Supabase Cloud Synchronisé';
+      statusPill.className = 'badge-tag badge-green';
+    }
+  } catch(err) {
+    console.warn('[Dashboard] Sync Cloud Supabase:', err);
+  }
 }
 
 // --- SYNCHRONISATION MULTI-ORIGINES PORTAIL / SAAS ---
@@ -1655,6 +1709,20 @@ function syncEstablishmentStudents() {
     if (etab && etab.code) localStorage.setItem(`sse_eleves_${etab.code}`, JSON.stringify(activeStudents));
     if (etab && etab.id) localStorage.setItem(`sse_eleves_${etab.id}`, JSON.stringify(activeStudents));
   } catch(e) {}
+
+  if (etab) {
+    etab.effectif = activeStudents.length;
+  }
+
+  // 4. Synchronisation automatique vers Supabase Cloud PostgreSQL
+  if (window.SSE_SUPABASE) {
+    if (etab && (etab.id || etab.code)) {
+      window.SSE_SUPABASE.updateEtablissement(etab.id || etab.code, { effectif: activeStudents.length });
+    }
+    if (activeStudents.length > 0 && typeof window.SSE_SUPABASE.saveElevesBatch === 'function') {
+      window.SSE_SUPABASE.saveElevesBatch(activeStudents);
+    }
+  }
 
   saveDataStore();
 }

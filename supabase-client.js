@@ -127,6 +127,7 @@
       if (updates.requestedPlan !== undefined) dbUpdates.requested_plan = updates.requestedPlan;
       if (updates.statutChangementFormule !== undefined) dbUpdates.statut_changement_formule = updates.statutChangementFormule;
       if (updates.prixMensuel !== undefined) dbUpdates.prix_mensuel = Number(updates.prixMensuel) || 0;
+      if (updates.effectif !== undefined) dbUpdates.effectif = Number(updates.effectif) || 0;
       if (updates.statut !== undefined) dbUpdates.statut = updates.statut;
       if (updates.statutAbonnement !== undefined) dbUpdates.statut_abonnement = updates.statutAbonnement;
       if (updates.fraisAdhesionPayes !== undefined) dbUpdates.frais_adhesion_payes = Boolean(updates.fraisAdhesionPayes);
@@ -179,8 +180,8 @@
       if (!el || !el.matricule) return false;
       const payload = {
         id: el.id || `el-${Date.now()}`,
-        etablissement_id: el.etablissementId || null,
-        etablissement_code: el.etablissementCode || null,
+        etablissement_id: el.etablissementId || el.etablissement_id || null,
+        etablissement_code: el.etablissementCode || el.etablissement_code || null,
         matricule: el.matricule,
         prenom: el.prenom,
         nom: el.nom,
@@ -193,6 +194,37 @@
         'Prefer': 'resolution=merge-duplicates,return=representation'
       });
       return !!res;
+    },
+
+    // 7. Sauvegarder un lot d'élèves dans Supabase Cloud (Batch Upsert)
+    async saveElevesBatch(elevesList) {
+      if (!Array.isArray(elevesList) || elevesList.length === 0) return true;
+      const payload = elevesList.map(el => ({
+        id: el.id || `el-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+        etablissement_id: el.etablissementId || el.etablissement_id || null,
+        etablissement_code: el.etablissementCode || el.etablissement_code || null,
+        matricule: el.matricule,
+        prenom: el.prenom,
+        nom: el.nom,
+        sexe: el.sexe || 'M',
+        type: el.type || 'SCOLAIRE',
+        classe_id: el.classeId || el.classe || null,
+        statut_pension: el.statutPension || 'A_JOUR'
+      }));
+      const res = await apiRequest('/rest/v1/eleves', 'POST', payload, {
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      });
+      return !!res;
+    },
+
+    // 8. Supprimer un élève de Supabase Cloud
+    async deleteEleve(idOrMatricule) {
+      if (!idOrMatricule) return false;
+      const res = await apiRequest(
+        `/rest/v1/eleves?or=(id.eq.${encodeURIComponent(idOrMatricule)},matricule.eq.${encodeURIComponent(idOrMatricule)})`,
+        'DELETE'
+      );
+      return res !== null;
     }
   };
 

@@ -19,7 +19,8 @@ let adminState = {
   etablissements: [],
   auditLogs: [],
   transactions: [],
-  quotes: []
+  quotes: [],
+  cloudEleves: []
 };
 
 let filterState = {
@@ -370,6 +371,16 @@ function mergeEtabRecords(existing, incoming) {
     bestDirecteur = existing.directeurNom;
   }
 
+  // Effectif des élèves : préserver la valeur la plus exacte et à jour (> 0)
+  const mergedEffectif = Math.max(
+    Number(existing.effectif) || 0,
+    Number(incoming.effectif) || 0,
+    Number(existing.studentsCount) || 0,
+    Number(incoming.studentsCount) || 0
+  );
+
+  const mergedPrix = Math.max(Number(existing.prixMensuel) || 0, Number(incoming.prixMensuel) || 0) || existing.prixMensuel || incoming.prixMensuel;
+
   return {
     ...existing,
     ...incoming,
@@ -379,6 +390,8 @@ function mergeEtabRecords(existing, incoming) {
     statut: mergedStatut,
     statutAbonnement: mergedStatutAbo,
     fraisAdhesionPayes: mergedFrais,
+    effectif: mergedEffectif,
+    prixMensuel: mergedPrix,
     waveTransactionRef: bestWaveRef,
     directeurNom: bestDirecteur,
     phone: incoming.phone || existing.phone,
@@ -512,9 +525,17 @@ async function syncCloudEstablishments() {
   // 0. SYNCHRONISATION PRIORITAIRE CLOUD SUPABASE (PostgreSQL En Ligne 24/7)
   if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getEtablissements === 'function') {
     try {
-      const supaList = await window.SSE_SUPABASE.getEtablissements();
-      if (Array.isArray(supaList) && supaList.length > 0) {
-        supaList.forEach(addOrMergeCloudEtab);
+      const [supaListRes, supaElevesRes] = await Promise.allSettled([
+        window.SSE_SUPABASE.getEtablissements(),
+        typeof window.SSE_SUPABASE.getEleves === 'function' ? window.SSE_SUPABASE.getEleves() : Promise.resolve([])
+      ]);
+
+      if (supaElevesRes.status === 'fulfilled' && Array.isArray(supaElevesRes.value)) {
+        adminState.cloudEleves = supaElevesRes.value;
+      }
+
+      if (supaListRes.status === 'fulfilled' && Array.isArray(supaListRes.value) && supaListRes.value.length > 0) {
+        supaListRes.value.forEach(addOrMergeCloudEtab);
         adminState.etablissements = deduplicateEtabList(adminState.etablissements).filter(e => 
           e && e.name && !isFakeDemoSchool(e) && e.type !== 'SUPER_ADMIN' && e.code !== 'SSE-ADMIN-HQ'
         );
@@ -730,8 +751,7 @@ function isMockStudentAdmin(el) {
   if (!el) return true;
   const id = String(el.id || '').toLowerCase();
   const mat = String(el.matricule || '').toUpperCase();
-  if (id.startsWith('emf-el-') || mat.startsWith('EMF-2026-')) return true;
-  if (id.startsWith('mock-') || mat.startsWith('MOCK-')) return true;
+  if (id.startsWith('mock-') || mat.startsWith('MOCK-') || id === 'demo' || mat === 'DEMO') return true;
   return false;
 }
 
@@ -822,12 +842,28 @@ function getStudentsListForEtab(e) {
   });
 
   // Si des apprenants réels ont été trouvés dans les clés directes de l'école, on s'arrête là !
-  // (Évite d'importer une copie désynchronisée ou ré-identifiée depuis un snapshot central)
   if (studentMap.size > 0) {
     return Array.from(studentMap.values());
   }
 
-  // 2. Vérifier dans sunuschool_erp_db uniquement si aucune clé directe n'existait
+  // 2. Vérifier dans adminState.cloudEleves (Supabase Cloud PostgreSQL synchronisé)
+  if (Array.isArray(adminState.cloudEleves) && adminState.cloudEleves.length > 0) {
+    adminState.cloudEleves.forEach(el => {
+      const matchEtab = (
+        (e.id && (el.etablissementId === e.id || el.etablissement_id === e.id)) ||
+        (e.code && (el.etablissementCode === e.code || el.etablissement_code === e.code))
+      );
+      if (matchEtab) {
+        addStudent(el);
+      }
+    });
+  }
+
+  if (studentMap.size > 0) {
+    return Array.from(studentMap.values());
+  }
+
+  // 3. Vérifier dans sunuschool_erp_db uniquement si aucune clé directe n'existait
   try {
     const rawDb = localStorage.getItem('sunuschool_erp_db');
     if (rawDb) {
@@ -846,7 +882,7 @@ function getStudentsListForEtab(e) {
     return Array.from(studentMap.values());
   }
 
-  // 3. Vérifier dans sse_saas_database
+  // 4. Vérifier dans sse_saas_database
   try {
     const rawSse = localStorage.getItem('sse_saas_database');
     if (rawSse) {
@@ -861,7 +897,7 @@ function getStudentsListForEtab(e) {
     }
   } catch(err) {}
 
-  // 4. Propriétés directes sur l'objet
+  // 5. Propriétés directes sur l'objet
   if (Array.isArray(e.eleves)) e.eleves.forEach(addStudent);
   if (Array.isArray(e.talibes)) e.talibes.forEach(addStudent);
 
@@ -874,19 +910,20 @@ function getStudentCountForEtab(e) {
   const list = getStudentsListForEtab(e);
   if (list.length > 0) return list.length;
 
-  // Si pas de liste individuelle détaillée, vérifier sunuschool_establishment
+  // Si l'établissement a un effectif cloud synchronisé > 0, l'utiliser en priorité
+  if (typeof e.effectif === 'number' && e.effectif > 0) return e.effectif;
+  if (typeof e.studentsCount === 'number' && e.studentsCount > 0) return e.studentsCount;
+
+  // Si pas de liste individuelle détaillée, vérifier sunuschool_establishment en local
   try {
     const rawCur = localStorage.getItem('sunuschool_establishment');
     if (rawCur) {
       const cur = JSON.parse(rawCur);
       if (cur && ((e.id && cur.id === e.id) || (e.code && cur.code === e.code) || (e.email && cur.email === e.email) || (e.name && cur.name && e.name.toLowerCase().trim() === cur.name.toLowerCase().trim()))) {
-        if (typeof cur.effectif === 'number' && cur.effectif >= 0) return cur.effectif;
+        if (typeof cur.effectif === 'number' && cur.effectif > 0) return cur.effectif;
       }
     }
   } catch(err) {}
-
-  if (typeof e.effectif === 'number' && e.effectif >= 0) return e.effectif;
-  if (typeof e.studentsCount === 'number' && e.studentsCount >= 0) return e.studentsCount;
 
   return 0;
 }
