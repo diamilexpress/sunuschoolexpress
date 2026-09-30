@@ -11485,7 +11485,7 @@ async function openTeacherPortalModal(accessKey) {
         telephone: '+221 77 521 80 97',
         email: 'fatou.diene@emf.sn',
         avatar: '👩‍🏫',
-        classesAffectees: ['Terminale S2', '1ère S1', '2nde S']
+        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2', 'Terminale S2', '1ère S1', '2nde S']
       };
     } else if (rawKey === 'ENS-2026-02') {
       teacher = {
@@ -11507,7 +11507,7 @@ async function openTeacherPortalModal(accessKey) {
         telephone: '+221 76 150 39 38',
         email: 'aziz.diome@emf.sn',
         avatar: '👨‍🏫',
-        classesAffectees: ['2nde S', 'Terminale S2', '1ère S1']
+        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2', '2nde S', 'Terminale S2', '1ère S1']
       };
     } else if (rawKey === 'ENS-2026-04') {
       teacher = {
