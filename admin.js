@@ -725,58 +725,145 @@ function renderIsoMetrics() {
   el.textContent = `${blockedCount} Intrusion${blockedCount > 1 ? 's' : ''} Bloquée${blockedCount > 1 ? 's' : ''}`;
 }
 
-// Fonction d'extraction du nombre réel et exact d'élèves/talibés pour un établissement
-function getStudentCountForEtab(e) {
-  if (!e) return 0;
-  
-  const possibleKeys = [
-    e.code ? `sse_talibes_${e.code}` : null,
-    e.code ? `sse_eleves_${e.code}` : null,
-    e.id ? `sse_talibes_${e.id}` : null,
-    e.id ? `sse_eleves_${e.id}` : null,
-    e.email ? `sse_talibes_${e.email}` : null,
-    e.email ? `sse_eleves_${e.email}` : null
-  ].filter(Boolean);
+// Détection des élèves fictifs issus des anciennes maquettes pour ne compter QUE les vrais apprenants
+function isMockStudentAdmin(el) {
+  if (!el) return true;
+  const id = String(el.id || '').toLowerCase();
+  const mat = String(el.matricule || '').toUpperCase();
+  if (id.startsWith('emf-el-') || mat.startsWith('EMF-2026-')) return true;
+  if (id.startsWith('mock-') || mat.startsWith('MOCK-')) return true;
+  return false;
+}
 
-  let maxFound = 0;
-  for (const k of possibleKeys) {
+// Extraction de la liste unique et rigoureusement dédoublonnée des élèves/talibés pour un établissement
+function getStudentsListForEtab(e) {
+  if (!e) return [];
+
+  const candidateKeys = new Set();
+  if (e.code) {
+    candidateKeys.add(`sse_eleves_${e.code}`);
+    candidateKeys.add(`sse_talibes_${e.code}`);
+  }
+  if (e.id) {
+    candidateKeys.add(`sse_eleves_${e.id}`);
+    candidateKeys.add(`sse_talibes_${e.id}`);
+  }
+  if (e.email) {
+    candidateKeys.add(`sse_eleves_${e.email}`);
+    candidateKeys.add(`sse_talibes_${e.email}`);
+  }
+  if (e.name) {
+    candidateKeys.add(`sse_eleves_${e.name}`);
+    candidateKeys.add(`sse_talibes_${e.name}`);
+    const slug = e.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (slug) {
+      candidateKeys.add(`sse_eleves_${slug}`);
+      candidateKeys.add(`sse_talibes_${slug}`);
+    }
+  }
+
+  // Vérifier également si sunuschool_establishment correspond à cet établissement
+  try {
+    const rawCur = localStorage.getItem('sunuschool_establishment');
+    if (rawCur) {
+      const cur = JSON.parse(rawCur);
+      if (cur) {
+        const matches = (
+          (e.id && cur.id === e.id) ||
+          (e.code && cur.code === e.code) ||
+          (e.email && cur.email === e.email) ||
+          (e.name && cur.name && e.name.toLowerCase().trim() === cur.name.toLowerCase().trim())
+        );
+        if (matches) {
+          if (cur.code) { candidateKeys.add(`sse_eleves_${cur.code}`); candidateKeys.add(`sse_talibes_${cur.code}`); }
+          if (cur.id) { candidateKeys.add(`sse_eleves_${cur.id}`); candidateKeys.add(`sse_talibes_${cur.id}`); }
+          if (cur.email) { candidateKeys.add(`sse_eleves_${cur.email}`); candidateKeys.add(`sse_talibes_${cur.email}`); }
+        }
+      }
+    }
+  } catch(err) {}
+
+  const studentMap = new Map();
+  const addStudent = (s) => {
+    if (!s || isMockStudentAdmin(s)) return;
+    const uid = String(s.matricule || s.id || `${s.prenom || ''}_${s.nom || ''}`).toUpperCase().trim();
+    if (!uid) return;
+    if (!studentMap.has(uid)) {
+      studentMap.set(uid, s);
+    }
+  };
+
+  // 1. Lire depuis les clés de stockage locales candidates
+  candidateKeys.forEach(k => {
     try {
       const raw = localStorage.getItem(k);
       if (raw) {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) {
-          maxFound = Math.max(maxFound, arr.length);
+          arr.forEach(addStudent);
         }
       }
     } catch(err) {}
-  }
+  });
 
-  // Si pas trouvé dans les clés individuelles, vérifier dans sunuschool_erp_db
-  if (maxFound === 0) {
-    try {
-      const rawDb = localStorage.getItem('sunuschool_erp_db');
-      if (rawDb) {
-        const db = JSON.parse(rawDb);
-        if (Array.isArray(db.eleves)) {
-          const matchCount = db.eleves.filter(el => 
-            (e.id && el.etablissementId === e.id) || 
-            (e.code && el.etablissementCode === e.code)
-          ).length;
-          maxFound = Math.max(maxFound, matchCount);
-        }
+  // 2. Vérifier dans sunuschool_erp_db
+  try {
+    const rawDb = localStorage.getItem('sunuschool_erp_db');
+    if (rawDb) {
+      const db = JSON.parse(rawDb);
+      if (Array.isArray(db.eleves)) {
+        db.eleves.forEach(el => {
+          if ((e.id && el.etablissementId === e.id) || (e.code && el.etablissementCode === e.code)) {
+            addStudent(el);
+          }
+        });
       }
-    } catch(err) {}
-  }
+    }
+  } catch(err) {}
 
-  // Vérifier également les propriétés directes de l'objet établissement
-  if (maxFound === 0) {
-    if (Array.isArray(e.eleves)) maxFound = Math.max(maxFound, e.eleves.length);
-    if (Array.isArray(e.talibes)) maxFound = Math.max(maxFound, e.talibes.length);
-    if (typeof e.studentsCount === 'number') maxFound = Math.max(maxFound, e.studentsCount);
-    if (typeof e.effectif === 'number') maxFound = Math.max(maxFound, e.effectif);
-  }
+  // 3. Vérifier dans sse_saas_database
+  try {
+    const rawSse = localStorage.getItem('sse_saas_database');
+    if (rawSse) {
+      const sseDb = JSON.parse(rawSse);
+      if (Array.isArray(sseDb.eleves)) {
+        sseDb.eleves.forEach(el => {
+          if ((e.id && el.etablissementId === e.id) || (e.code && el.etablissementCode === e.code)) {
+            addStudent(el);
+          }
+        });
+      }
+    }
+  } catch(err) {}
 
-  return maxFound;
+  // 4. Propriétés directes sur l'objet
+  if (Array.isArray(e.eleves)) e.eleves.forEach(addStudent);
+  if (Array.isArray(e.talibes)) e.talibes.forEach(addStudent);
+
+  return Array.from(studentMap.values());
+}
+
+// Fonction d'extraction du nombre réel et exact d'élèves/talibés pour un établissement
+function getStudentCountForEtab(e) {
+  if (!e) return 0;
+  const list = getStudentsListForEtab(e);
+  if (list.length > 0) return list.length;
+
+  // Si pas de liste individuelle détaillée, vérifier sunuschool_establishment
+  try {
+    const rawCur = localStorage.getItem('sunuschool_establishment');
+    if (rawCur) {
+      const cur = JSON.parse(rawCur);
+      if (cur && ((e.id && cur.id === e.id) || (e.code && cur.code === e.code) || (e.email && cur.email === e.email) || (e.name && cur.name && e.name.toLowerCase().trim() === cur.name.toLowerCase().trim()))) {
+        if (typeof cur.effectif === 'number' && cur.effectif >= 0) return cur.effectif;
+      }
+    }
+  } catch(err) {}
+
+  if (typeof e.effectif === 'number' && e.effectif >= 0) return e.effectif;
+  if (typeof e.studentsCount === 'number' && e.studentsCount >= 0) return e.studentsCount;
+
+  return 0;
 }
 
 function getMonthlyPriceForPlan(plan) {
@@ -827,37 +914,25 @@ function updateKpis() {
   const kpiActive = document.getElementById('kpiActiveEtabsCount');
   if (kpiActive) kpiActive.textContent = active.length;
 
-  // Calcul réel et exact des effectifs d'élèves & talibés (sans aucun multiplicateur fictif)
+  // Calcul réel et exact des effectifs d'élèves & talibés (strictement dédoublonné, sans aucune clé fantôme)
   const kpiStudents = document.getElementById('kpiTotalStudents');
   let totalEleves = 0;
-  const countedKeys = new Set();
+  const globalUniqueStudentKeys = new Set();
 
-  adminState.etablissements.forEach(e => {
-    const count = getStudentCountForEtab(e);
-    totalEleves += count;
-    if (e.code) countedKeys.add(e.code);
-    if (e.id) countedKeys.add(e.id);
+  active.forEach(e => {
+    const list = getStudentsListForEtab(e);
+    if (list.length > 0) {
+      list.forEach(s => {
+        const schoolScope = e.code || e.id || e.name || 'etab';
+        const uid = `${schoolScope}_${s.matricule || s.id || `${s.prenom}_${s.nom}`}`.toUpperCase();
+        globalUniqueStudentKeys.add(uid);
+      });
+    } else {
+      totalEleves += getStudentCountForEtab(e);
+    }
   });
 
-  // Parcourir également les clés localStorage sse_talibes_ et sse_eleves_ pour inclure toute inscription réelle
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('sse_talibes_') || key.startsWith('sse_eleves_'))) {
-        const keySuffix = key.replace('sse_talibes_', '').replace('sse_eleves_', '');
-        if (!countedKeys.has(keySuffix)) {
-          try {
-            const arr = JSON.parse(localStorage.getItem(key));
-            if (Array.isArray(arr)) {
-              totalEleves += arr.length;
-              countedKeys.add(keySuffix);
-            }
-          } catch(err) {}
-        }
-      }
-    }
-  } catch(e) {}
-
+  totalEleves += globalUniqueStudentKeys.size;
   if (kpiStudents) kpiStudents.textContent = totalEleves;
 
   const kpiMrr = document.getElementById('kpiTotalMrr');
@@ -2153,7 +2228,7 @@ function exportISO27001AuditReport() {
   const activeEtabsCount = (adminState.etablissements || []).filter(e => e.statut === 'ACTIF' || e.statutAbonnement === 'ACTIF').length;
   
   let totalEleves = 0;
-  (adminState.etablissements || []).forEach(e => { totalEleves += getStudentCountForEtab(e); });
+  (adminState.etablissements || []).filter(e => e.statut === 'ACTIF' || e.statutAbonnement === 'ACTIF').forEach(e => { totalEleves += getStudentCountForEtab(e); });
 
   const blockedCount = Array.isArray(adminState.auditLogs) ? adminState.auditLogs.filter(log => {
     const act = (log.action || '').toUpperCase();

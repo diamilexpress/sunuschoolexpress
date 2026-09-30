@@ -5602,8 +5602,47 @@ function saveEstablishmentActiveStudents(list, isDaara) {
 
   // Mettre à jour l'effectif exact sur l'objet établissement
   currentEstablishment.effectif = list.length;
+  currentEstablishment.studentsCount = list.length;
   try {
     localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+  } catch(e) {}
+
+  // Synchroniser immédiatement le registre global des établissements
+  try {
+    const regRaw = localStorage.getItem('sunuschool_establishments_registry');
+    if (regRaw) {
+      let reg = JSON.parse(regRaw);
+      if (Array.isArray(reg)) {
+        reg = reg.map(e => {
+          if ((currentEstablishment.id && e.id === currentEstablishment.id) ||
+              (currentEstablishment.code && e.code === currentEstablishment.code) ||
+              (currentEstablishment.email && e.email === currentEstablishment.email)) {
+            return { ...e, effectif: list.length, studentsCount: list.length };
+          }
+          return e;
+        });
+        localStorage.setItem('sunuschool_establishments_registry', JSON.stringify(reg));
+      }
+    }
+  } catch(e) {}
+
+  // Synchroniser la base SaaS centrale sse_saas_database
+  try {
+    const sseDbRaw = localStorage.getItem('sse_saas_database');
+    if (sseDbRaw) {
+      let sseDb = JSON.parse(sseDbRaw);
+      if (Array.isArray(sseDb.etablissements)) {
+        sseDb.etablissements = sseDb.etablissements.map(e => {
+          if ((currentEstablishment.id && e.id === currentEstablishment.id) ||
+              (currentEstablishment.code && e.code === currentEstablishment.code) ||
+              (currentEstablishment.email && e.email === currentEstablishment.email)) {
+            return { ...e, effectif: list.length, studentsCount: list.length };
+          }
+          return e;
+        });
+        localStorage.setItem('sse_saas_database', JSON.stringify(sseDb));
+      }
+    }
   } catch(e) {}
 
   // Synchroniser les compteurs DOM si présents

@@ -1206,8 +1206,11 @@ function renderOverviewKpis() {
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
 
-  const eleves = appState.db.eleves.filter(e => etabId ? e.etablissementId === etabId : true);
-  const tx = appState.db.transactions.filter(t => etabId ? t.etablissementId === etabId : true);
+  const eleves = appState.db.eleves.filter(e => {
+    if (!etabId) return true;
+    return e.etablissementId === etabId || (etab && etab.code && e.etablissementCode === etab.code) || (etab && etab.id && e.etablissementId === etab.id);
+  });
+  const tx = appState.db.transactions.filter(t => etabId ? (t.etablissementId === etabId || (etab && etab.id && t.etablissementId === etab.id)) : true);
 
   const total = eleves.length;
   const aJour = eleves.filter(e => e.statutPension === 'A_JOUR').length;
@@ -1548,43 +1551,51 @@ const EMF_DEFAULT_TEACHER = {
   statut: 'ACTIF'
 };
 
-const EMF_DEFAULT_STUDENTS = [
-  { id: 'emf-el-01', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-001', prenom: 'Moussa', nom: 'Diop', sexe: 'M', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '18/09/2026', parentTel: '+221 77 150 78 78', moyenne: 16.5, rang: '1er', cleAcces: 'EMF-2026-001' },
-  { id: 'emf-el-02', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-002', prenom: 'Fatou Binetou', nom: 'Ndiaye', sexe: 'F', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '18/09/2026', parentTel: '+221 77 234 56 78', moyenne: 15.8, rang: '2ème', cleAcces: 'EMF-2026-002' },
-  { id: 'emf-el-03', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-003', prenom: 'Cheikh Ahmadou', nom: 'Fall', sexe: 'M', type: 'SCOLAIRE', classe: 'Terminale Numérique', classeId: 'Terminale', statutPension: 'A_JOUR', dateInscription: '19/09/2026', parentTel: '+221 77 345 67 89', moyenne: 14.5, rang: '3ème', cleAcces: 'EMF-2026-003' },
-  { id: 'emf-el-04', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-004', prenom: 'Aïssatou', nom: 'Sow', sexe: 'F', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '19/09/2026', parentTel: '+221 77 456 78 90', moyenne: 17.2, rang: '1ère', cleAcces: 'EMF-2026-004' },
-  { id: 'emf-el-05', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-005', prenom: 'Ibrahima', nom: 'Ba', sexe: 'M', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '20/09/2026', parentTel: '+221 77 567 89 01', moyenne: 13.5, rang: '2ème', cleAcces: 'EMF-2026-005' },
-  { id: 'emf-el-06', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-006', prenom: 'Mariama', nom: 'Diallo', sexe: 'F', type: 'SCOLAIRE', classe: '1ère Informatique', classeId: '1ère', statutPension: 'A_JOUR', dateInscription: '20/09/2026', parentTel: '+221 77 678 90 12', moyenne: 16.0, rang: '3ème', cleAcces: 'EMF-2026-006' },
-  { id: 'emf-el-07', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-007', prenom: 'Abdoulaye', nom: 'Seck', sexe: 'M', type: 'SCOLAIRE', classe: '2nde Technique', classeId: '2nde', statutPension: 'A_JOUR', dateInscription: '21/09/2026', parentTel: '+221 77 789 01 23', moyenne: 14.8, rang: '1er', cleAcces: 'EMF-2026-007' },
-  { id: 'emf-el-08', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-008', prenom: 'Khadija', nom: 'Gueye', sexe: 'F', type: 'SCOLAIRE', classe: '2nde Technique', classeId: '2nde', statutPension: 'A_JOUR', dateInscription: '21/09/2026', parentTel: '+221 77 890 12 34', moyenne: 15.2, rang: '2ème', cleAcces: 'EMF-2026-008' },
-  { id: 'emf-el-09', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-009', prenom: 'Modou', nom: 'Cissé', sexe: 'M', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '22/09/2026', parentTel: '+221 77 901 23 45', moyenne: 16.8, rang: '1er', cleAcces: 'EMF-2026-009' },
-  { id: 'emf-el-10', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-010', prenom: 'Aminata', nom: 'Sy', sexe: 'F', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '22/09/2026', parentTel: '+221 78 112 34 56', moyenne: 14.2, rang: '2ème', cleAcces: 'EMF-2026-010' },
-  { id: 'emf-el-11', etablissementId: 'etab-2901', etablissementCode: 'SSE-SN-2901', matricule: 'EMF-2026-011', prenom: 'Ousmane', nom: 'Sarr', sexe: 'M', type: 'SCOLAIRE', classe: '3ème A', classeId: '3ème', statutPension: 'A_JOUR', dateInscription: '23/09/2026', parentTel: '+221 78 223 45 67', moyenne: 15.5, rang: '3ème', cleAcces: 'EMF-2026-011' }
-];
+const EMF_DEFAULT_STUDENTS = [];
 
 function syncEstablishmentStudents() {
   if (!appState.db) return;
   if (!Array.isArray(appState.db.eleves)) appState.db.eleves = [];
   const estKey = getActiveEstablishmentKey();
   const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
 
   const isMockStudent = (el) => {
     if (!el) return true;
     const id = (el.id || '').toLowerCase();
     const mat = (el.matricule || '').toUpperCase();
-    return id.startsWith('emf-el-') || mat.startsWith('EMF-2026-');
+    return id.startsWith('emf-el-') || mat.startsWith('EMF-2026-') || id.startsWith('mock-') || mat.startsWith('MOCK-');
   };
 
   // 1. Purge immédiate de toute donnée fictive résiduelle
   appState.db.eleves = appState.db.eleves.filter(el => !isMockStudent(el));
 
   // 2. Importer depuis les clés localStorage réelles de l'établissement
-  const candidateKeys = [
+  const candidateKeys = new Set([
     `sse_eleves_${estKey}`,
     `sse_talibes_${estKey}`
-  ].filter(Boolean);
+  ]);
 
-  for (const k of candidateKeys) {
+  if (etab) {
+    if (etab.code) { candidateKeys.add(`sse_eleves_${etab.code}`); candidateKeys.add(`sse_talibes_${etab.code}`); }
+    if (etab.id) { candidateKeys.add(`sse_eleves_${etab.id}`); candidateKeys.add(`sse_talibes_${etab.id}`); }
+    if (etab.email) { candidateKeys.add(`sse_eleves_${etab.email}`); candidateKeys.add(`sse_talibes_${etab.email}`); }
+  }
+
+  // Vérifier également sunuschool_establishment
+  try {
+    const rawCur = localStorage.getItem('sunuschool_establishment');
+    if (rawCur) {
+      const cur = JSON.parse(rawCur);
+      if (cur) {
+        if (cur.code) { candidateKeys.add(`sse_eleves_${cur.code}`); candidateKeys.add(`sse_talibes_${cur.code}`); }
+        if (cur.id) { candidateKeys.add(`sse_eleves_${cur.id}`); candidateKeys.add(`sse_talibes_${cur.id}`); }
+        if (cur.email) { candidateKeys.add(`sse_eleves_${cur.email}`); candidateKeys.add(`sse_talibes_${cur.email}`); }
+      }
+    }
+  } catch(e) {}
+
+  candidateKeys.forEach(k => {
     try {
       const raw = localStorage.getItem(k);
       if (raw) {
@@ -1598,8 +1609,8 @@ function syncEstablishmentStudents() {
             if (!exists) {
               appState.db.eleves.push({
                 id: pel.id || `el-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-                etablissementId: etabId || pel.etablissementId || 'etab-default',
-                etablissementCode: pel.etablissementCode || estKey,
+                etablissementId: etabId || (etab ? etab.id : null) || pel.etablissementId || 'etab-default',
+                etablissementCode: pel.etablissementCode || (etab ? etab.code : null) || estKey,
                 matricule: pel.matricule,
                 prenom: pel.prenom,
                 nom: pel.nom,
@@ -1619,12 +1630,17 @@ function syncEstablishmentStudents() {
         }
       }
     } catch(e) {}
-  }
+  });
 
   // 3. Synchronisation miroir vers les clés individuelles (uniquement élèves réels)
-  const activeStudents = appState.db.eleves.filter(e => etabId ? e.etablissementId === etabId : true);
+  const activeStudents = appState.db.eleves.filter(e => {
+    if (!etabId) return true;
+    return e.etablissementId === etabId || (etab && etab.code && e.etablissementCode === etab.code) || (etab && etab.id && e.etablissementId === etab.id);
+  });
   try {
     localStorage.setItem(`sse_eleves_${estKey}`, JSON.stringify(activeStudents));
+    if (etab && etab.code) localStorage.setItem(`sse_eleves_${etab.code}`, JSON.stringify(activeStudents));
+    if (etab && etab.id) localStorage.setItem(`sse_eleves_${etab.id}`, JSON.stringify(activeStudents));
   } catch(e) {}
 
   saveDataStore();
