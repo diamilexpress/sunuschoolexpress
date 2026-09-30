@@ -280,7 +280,7 @@
     // 11. Filtrer les élèves par classes de l'enseignant (classes.teacher_id)
     async getStudentsByClassIds(classIds) {
       if (!Array.isArray(classIds) || classIds.length === 0) return [];
-      const formattedIds = classIds.map(c => `"${c}"`).join(',');
+      const formattedIds = classIds.map(c => encodeURIComponent(c.includes(' ') ? `"${c}"` : c)).join(',');
       const rows = await apiRequest(`/rest/v1/eleves?classe_id=in.(${formattedIds})&order=nom.asc`);
       if (!Array.isArray(rows)) return [];
       return rows.map(r => ({
@@ -299,7 +299,7 @@
     // 12. Récupérer les notes saisies pour les classes de l'enseignant
     async getNotesByClassIds(classIds) {
       if (!Array.isArray(classIds) || classIds.length === 0) return [];
-      const formattedIds = classIds.map(c => `"${c}"`).join(',');
+      const formattedIds = classIds.map(c => encodeURIComponent(c.includes(' ') ? `"${c}"` : c)).join(',');
       const rows = await apiRequest(`/rest/v1/notes?classe_id=in.(${formattedIds})&order=date_evaluation.desc`);
       if (!Array.isArray(rows)) return [];
       return rows.map(n => ({
@@ -321,7 +321,7 @@
     async getPresencesByClassIds(classIds, dateStr = null) {
       if (!Array.isArray(classIds) || classIds.length === 0) return [];
       const today = dateStr || new Date().toISOString().split('T')[0];
-      const formattedIds = classIds.map(c => `"${c}"`).join(',');
+      const formattedIds = classIds.map(c => encodeURIComponent(c.includes(' ') ? `"${c}"` : c)).join(',');
       const rows = await apiRequest(`/rest/v1/presences?classe_id=in.(${formattedIds})&date_seance=eq.${today}`);
       if (!Array.isArray(rows)) return [];
       return rows.map(p => ({
