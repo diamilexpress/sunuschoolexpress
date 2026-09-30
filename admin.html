@@ -659,8 +659,80 @@
     .logout-text-mobile {
       display: none;
     }
+    .reset-text-mobile {
+      display: none;
+    }
 
-    @media (max-width: 680px) {
+    /* MEDIA QUERIES RESPONSIVES MOBILES ET TABLETTES (Prend en compte l'affichage standard et le mode smartphone) */
+    @media (max-width: 1024px) {
+      .admin-layout {
+        position: relative;
+        flex-direction: column;
+        width: 100%;
+        overflow-x: hidden;
+      }
+      .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 290px;
+        max-width: 85vw;
+        height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 0 40px rgba(0,0,0,0.85);
+        overflow-y: auto;
+      }
+      .admin-sidebar.open {
+        transform: translateX(0);
+      }
+      .admin-menu-toggle {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+      }
+      .admin-sidebar-close {
+        display: block;
+      }
+      .admin-topbar {
+        padding: 0 1rem;
+        height: 60px;
+      }
+      .admin-topbar-left h1 {
+        font-size: 1rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 220px;
+      }
+      .admin-content {
+        padding: 1rem 0.8rem;
+      }
+      .kpi-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.8rem;
+        margin-bottom: 1.2rem;
+      }
+      .kpi-card-admin {
+        padding: 0.9rem;
+      }
+      .admin-table-container {
+        padding: 1rem 0.8rem;
+      }
+      .admin-search-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .admin-search-row > div,
+      .admin-search-row > select,
+      .admin-search-row > button {
+        width: 100% !important;
+      }
+    }
+
+    @media (max-width: 768px) {
       .cloud-text-full {
         display: none !important;
       }
@@ -674,48 +746,174 @@
         display: inline !important;
         font-size: 1.05rem;
       }
-      .admin-logout-btn {
-        padding: 0.35rem 0.55rem !important;
-        min-width: 36px;
-        height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+      .reset-text-desktop {
+        display: none !important;
       }
-      .admin-cloud-badge {
-        padding: 0.3rem 0.55rem;
-        font-size: 0.72rem;
+      .reset-text-mobile {
+        display: inline !important;
       }
-    }
-
-    @media (max-width: 580px) {
+      .admin-user-pill {
+        display: none !important;
+      }
       .admin-topbar {
-        padding: 0 0.8rem;
-        gap: 0.4rem;
-        height: 58px;
+        padding: 0 0.65rem !important;
+        height: 56px !important;
+        gap: 0.4rem !important;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(7, 16, 32, 0.95);
+        backdrop-filter: blur(10px);
       }
       .admin-topbar-left {
-        gap: 0.5rem;
-        max-width: 55%;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
       }
       .admin-topbar-left h1 {
         font-size: 0.92rem !important;
-        max-width: 100%;
+        max-width: 145px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
       }
       .admin-menu-toggle {
-        width: 36px;
-        height: 36px;
-        font-size: 1.15rem;
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 1.25rem !important;
+        border-radius: 8px !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        flex-shrink: 0 !important;
       }
+      .admin-topbar-right {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.3rem !important;
+        flex-shrink: 0 !important;
+      }
+      .admin-logout-btn {
+        padding: 0.35rem 0.55rem !important;
+        min-width: 36px !important;
+        height: 34px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .btn-reset-slate {
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.76rem !important;
+        height: 34px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.2rem !important;
+      }
+      .admin-cloud-badge {
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.72rem !important;
+        height: 34px !important;
+        box-sizing: border-box !important;
+      }
+      .admin-content {
+        padding: 0.75rem 0.55rem !important;
+      }
+
+      /* KPI EN GRILLE 2x2 ULTRA MODERNE ET ERGONOMIQUE */
       .kpi-row {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.55rem !important;
+        margin-bottom: 0.9rem !important;
       }
       .kpi-card-admin {
-        padding: 0.9rem;
+        padding: 0.75rem 0.75rem !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        min-width: 0 !important;
       }
-      .admin-topbar-right .admin-user-pill {
-        display: none;
+      .kpi-card-admin > div:first-child {
+        margin-bottom: 0.25rem !important;
+      }
+      .kpi-card-admin > div:first-child > span:first-child {
+        font-size: 0.66rem !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0.2px !important;
+        font-weight: 700 !important;
+      }
+      .kpi-card-admin > div:first-child > span:last-child {
+        font-size: 1.15rem !important;
+      }
+      .kpi-card-admin #kpiPendingCount,
+      .kpi-card-admin #kpiActiveEtabsCount,
+      .kpi-card-admin #kpiTotalStudents {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+        line-height: 1.1 !important;
+      }
+      .kpi-card-admin #kpiTotalMrr {
+        font-size: 1.12rem !important;
+        font-weight: 800 !important;
+        line-height: 1.15 !important;
+      }
+      .kpi-card-admin > div:last-child {
+        font-size: 0.64rem !important;
+        line-height: 1.2 !important;
+        margin-top: 0.2rem !important;
+      }
+
+      /* Conteneurs et tables responsives */
+      .admin-table-container {
+        padding: 0.85rem 0.65rem !important;
+        border-radius: 12px !important;
+        margin-bottom: 1.2rem !important;
+      }
+      .admin-table th,
+      .admin-table td {
+        padding: 0.6rem 0.5rem !important;
+        font-size: 0.8rem !important;
+      }
+      .admin-table th {
+        font-size: 0.72rem !important;
+      }
+
+      /* En-tête des vues et boutons d'actions empilés proprement */
+      .admin-view-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.65rem !important;
+      }
+      .admin-view-header h2 {
+        font-size: 1.05rem !important;
+        line-height: 1.25 !important;
+      }
+      .admin-view-header p {
+        font-size: 0.76rem !important;
+        line-height: 1.35 !important;
+      }
+      .admin-view-actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.35rem !important;
+        width: 100% !important;
+      }
+      .admin-view-actions button,
+      .admin-view-actions a {
+        flex: 1 1 calc(50% - 0.35rem) !important;
+        min-width: 120px !important;
+        font-size: 0.76rem !important;
+        padding: 0.5rem 0.6rem !important;
+        justify-content: center !important;
+        text-align: center !important;
+      }
+      .admin-search-input,
+      .admin-filter-select {
+        height: 42px !important;
+        font-size: 0.82rem !important;
+        padding: 0.5rem 0.7rem !important;
       }
       .admin-modal-card {
         padding: 1.2rem;
@@ -724,6 +922,25 @@
       .master-login-card {
         padding: 1.6rem 1.2rem;
         max-width: 92vw;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .admin-topbar-left h1 {
+        display: none !important;
+      }
+      .admin-topbar-left {
+        max-width: 44px !important;
+      }
+      .kpi-row {
+        gap: 0.45rem !important;
+      }
+      .kpi-card-admin {
+        padding: 0.65rem 0.6rem !important;
+      }
+      .admin-view-actions button,
+      .admin-view-actions a {
+        flex: 1 1 100% !important;
       }
     }
   </style>
@@ -862,8 +1079,9 @@
             <span>sunuschoolexpress@gmail.com</span>
           </div>
 
-          <button onclick="confirmResetToCleanSlate()" class="btn-action-view" style="padding: 0.45rem 0.85rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #F87171;" title="Réinitialiser le système à l'état 100% vierge pour tests réels sur le terrain">
-            <span>🧹 Remise à Zéro (Terrain)</span>
+          <button onclick="confirmResetToCleanSlate()" class="btn-action-view btn-reset-slate" style="padding: 0.45rem 0.85rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #F87171;" title="Réinitialiser le système à l'état 100% vierge pour tests réels sur le terrain">
+            <span class="reset-text-desktop">🧹 Remise à Zéro (Terrain)</span>
+            <span class="reset-text-mobile">🧹 Reset</span>
           </button>
 
           <button onclick="logoutAdmin()" class="btn-action-reject admin-logout-btn" style="padding: 0.45rem 0.85rem; font-weight: 700;" title="Verrouiller et fermer la session admin">
@@ -918,14 +1136,14 @@
         <!-- ==================== VUE 1 : ADHÉSIONS WAVE EN ATTENTE ==================== -->
         <section id="viewPending" class="admin-tab-view">
           <div class="admin-table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+            <div class="admin-view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
               <div>
                 <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">📋 Demandes d'Adhésion en Attente de Validation</h2>
                 <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
                   Établissements ayant soumis le virement Wave (10 000 FCFA). Vérifiez votre compte Wave puis cliquez sur « Valider &amp; Débloquer ».
                 </p>
               </div>
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <div class="admin-view-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <button id="btnForceSyncCloud" onclick="forceSyncFromCloudUI()" class="btn-action-validate" style="font-weight: 800; background: linear-gradient(135deg, #00D2B4, #008775); border: none; color: #FFF; box-shadow: 0 2px 10px rgba(0,210,180,0.3); padding: 0.55rem 1rem; border-radius: 6px; cursor: pointer;" title="Interroge le serveur Cloud Render et télécharge immédiatement les demandes">
                   ⚡ Synchroniser Cloud (Direct)
                 </button>
@@ -964,16 +1182,18 @@
         <!-- ==================== VUE 1.5 : DEMANDES DE DEVIS ENTERPRISE & SURCLASSEMENTS ==================== -->
         <section id="viewQuotes" class="admin-tab-view" style="display: none;">
           <div class="admin-table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+            <div class="admin-view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
               <div>
                 <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">📋 Demandes de Devis Enterprise &amp; Surclassements</h2>
                 <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
                   Demandes de devis réseau multi-campus et demandes de passage vers les formules supérieures.
                 </p>
               </div>
-              <button onclick="loadAdminData()" class="btn-action-reject" style="color: #94A3B8; border-color: rgba(255,255,255,0.2);">
-                🔄 Actualiser
-              </button>
+              <div class="admin-view-actions">
+                <button onclick="loadAdminData()" class="btn-action-reject" style="color: #94A3B8; border-color: rgba(255,255,255,0.2);">
+                  🔄 Actualiser
+                </button>
+              </div>
             </div>
 
             <!-- Recherche & filtre Devis -->
@@ -1004,14 +1224,14 @@
         <!-- ==================== VUE 2 : PARC COMPLET ÉTABLISSEMENTS ==================== -->
         <section id="viewEtabs" class="admin-tab-view" style="display: none;">
           <div class="admin-table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+            <div class="admin-view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
               <div>
                 <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">🏫 Parc des Établissements Partenaires</h2>
                 <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
                   Tous les comptes scolaires enregistrés sur la plateforme SunuSchool-Express.
                 </p>
               </div>
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <div class="admin-view-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <button onclick="exportEtabsCSV()" class="btn-action-export" title="Exporter la liste au format CSV Excel">
                   📥 Exporter CSV
                 </button>
@@ -1019,10 +1239,10 @@
                   🔄 Actualiser
                 </button>
                 <button onclick="promptImportMobileData()" class="btn-action-reject" style="color: #00D2B4; border-color: rgba(0,210,180,0.35); background: rgba(0,210,180,0.1);" title="Rapatrier / Importer les établissements créés depuis le téléphone mobile">
-                  📱 Importer Écoles du Mobile
+                  📱 Importer Mobile
                 </button>
                 <button onclick="purgeAllEstablishments()" class="btn-action-reject" style="color: #EF4444; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.1);" title="Purger définitivement tous les établissements de test et vider le parc">
-                  🧹 Purger Tous les Établissements de Test
+                  🧹 Purger Tests
                 </button>
               </div>
             </div>
@@ -1071,16 +1291,18 @@
         <!-- ==================== VUE 3 : TRÉSORERIE SAAS ==================== -->
         <section id="viewFinance" class="admin-tab-view" style="display: none;">
           <div class="admin-table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+            <div class="admin-view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
               <div>
                 <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">💰 Suivi Financier des Abonnements SaaS</h2>
                 <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
                   Comptabilité SYSCOHADA des encaissements d'adhésion Wave et renouvellements mensuels.
                 </p>
               </div>
-              <button onclick="exportFinanceCSV()" class="btn-action-export" title="Télécharger l'historique comptable au format CSV">
-                📥 Exporter Grand Livre SYSCOHADA (CSV)
-              </button>
+              <div class="admin-view-actions">
+                <button onclick="exportFinanceCSV()" class="btn-action-export" title="Télécharger l'historique comptable au format CSV">
+                  📥 Exporter Grand Livre SYSCOHADA (CSV)
+                </button>
+              </div>
             </div>
 
             <table class="admin-table">
@@ -1128,14 +1350,14 @@
         <!-- ==================== VUE 5 : MONITORING PROMETHEUS & ISO/IEC 27001 ==================== -->
         <section id="viewIso" class="admin-tab-view" style="display: none;">
           <div class="admin-table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.2rem;">
+            <div class="admin-view-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.2rem;">
               <div>
                 <h2 style="margin: 0 0 0.4rem; font-size: 1.25rem; color: #FFFFFF;">🛡️ Monitoring Temps Réel &amp; Conformité ISO/IEC 27001</h2>
                 <p style="margin: 0; font-size: 0.82rem; color: #94A3B8;">
                   Surveillance des métriques Prometheus/Grafana, statut du pare-feu et génération de rapports d'audit de sécurité.
                 </p>
               </div>
-              <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <div class="admin-view-actions" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
                 <button class="btn-action-validate" onclick="exportISO27001AuditReport()" style="background: linear-gradient(135deg, #059669, #10B981); color: #FFF; padding: 0.55rem 1rem; font-weight: 800;">
                   📄 Télécharger Rapport ISO 27001
                 </button>
@@ -1373,6 +1595,6 @@
   </div>
 
   <script src="supabase-client.js"></script>
-  <script src="admin.js?v=4.1.1"></script>
+  <script src="admin.js?v=4.1.2"></script>
 </body>
 </html>
