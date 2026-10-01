@@ -167,25 +167,41 @@
 
     // 5. Récupérer les élèves depuis Supabase Cloud
     async getEleves(etabIdOrCode) {
-      const query = etabIdOrCode 
-        ? `?or=(etablissement_id.eq.${encodeURIComponent(etabIdOrCode)},etablissement_code.eq.${encodeURIComponent(etabIdOrCode)})` 
-        : '';
+      let query = '';
+      if (etabIdOrCode) {
+        const clean = String(etabIdOrCode).trim();
+        const upper = clean.toUpperCase();
+        if (upper.includes('1125') || upper.includes('2901') || upper === 'EMF' || clean.toLowerCase().includes('emf')) {
+          query = `?or=(etablissement_id.eq.etab-1790685533712,etablissement_code.eq.SSE-SN-1125,etablissement_code.eq.SSE-SN-2901,etablissement_id.eq.etab-2901)&order=nom.asc`;
+        } else {
+          query = `?or=(etablissement_id.eq.${encodeURIComponent(clean)},etablissement_code.eq.${encodeURIComponent(clean)})&order=nom.asc`;
+        }
+      }
       const rows = await apiRequest(`/rest/v1/eleves${query}`);
       if (!Array.isArray(rows)) return null;
-      return rows.map(r => ({
-        id: r.id,
-        etablissementId: r.etablissement_id,
-        etablissementCode: r.etablissement_code,
-        matricule: r.matricule,
-        prenom: r.prenom,
-        nom: r.nom,
-        sexe: r.sexe || 'M',
-        type: r.type || 'SCOLAIRE',
-        classe: r.classe_id,
-        classeId: r.classe_id,
-        statutPension: r.statut_pension || 'A_JOUR',
-        cleAcces: r.matricule
-      }));
+      return rows.map(r => {
+        const parentInfo = (typeof STUDENT_PARENT_MAP !== 'undefined' && STUDENT_PARENT_MAP[r.matricule]) ? STUDENT_PARENT_MAP[r.matricule] : {};
+        return {
+          id: r.id,
+          etablissementId: r.etablissement_id,
+          etablissementCode: r.etablissement_code,
+          matricule: r.matricule,
+          prenom: r.prenom,
+          nom: r.nom,
+          nomComplet: `${r.prenom || ''} ${r.nom || ''}`.trim(),
+          sexe: r.sexe || 'M',
+          type: r.type || 'SCOLAIRE',
+          classe: r.classe_id,
+          classeId: r.classe_id,
+          classeNom: r.classe_id,
+          statutPension: r.statut_pension || 'A_JOUR',
+          cleAcces: r.matricule,
+          parentName: parentInfo.parentName || r.parent_nom || '',
+          parentPhone: parentInfo.parentPhone || r.parent_tel || '',
+          parentTel: parentInfo.parentPhone || r.parent_tel || '',
+          parentNom: parentInfo.parentName || r.parent_nom || ''
+        };
+      });
     },
 
     // 6. Sauvegarder un élève dans Supabase Cloud

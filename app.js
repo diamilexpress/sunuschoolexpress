@@ -332,6 +332,22 @@ const defaultEstablishmentsRegistry = [
     code: "SSE-ADMIN-HQ",
     phone: "+221 77 888 12 34",
     isSuperAdmin: true
+  },
+  {
+    id: "etab-1790685533712",
+    code: "SSE-SN-1125",
+    name: "EMF",
+    type: "ECOLE",
+    city: "Dakar",
+    phone: "+221 77 106 48 77",
+    email: "emf@gmail.com",
+    secretKey: "ADM-1125",
+    directeurNom: "Dir. EMF",
+    plan: "Formule Pro",
+    effectif: 9,
+    statut: "ACTIF",
+    statutAbonnement: "ACTIF",
+    fraisAdhesionPayes: true
   }
 ];
 
@@ -793,6 +809,15 @@ function fillLoginDemo(email) {
 
 // --- ÉTABLISSEMENT ACTIF & SÉCURITÉ ---
 let currentEstablishment = null;
+if (typeof window !== 'undefined') {
+  try {
+    Object.defineProperty(window, 'currentEstablishment', {
+      get: () => currentEstablishment,
+      set: (v) => { currentEstablishment = v; },
+      configurable: true
+    });
+  } catch(e) {}
+}
 
 const isFakeDemoSchool = (item) => {
   if (!item) return false;
@@ -4905,6 +4930,11 @@ function activateDedicatedWorkspace(est) {
     return;
   }
 
+  currentEstablishment = est;
+  if (typeof window !== 'undefined') {
+    window.currentEstablishment = est;
+  }
+
   // Sauvegarde de l'état actif pour reprise automatique après perte de connexion
   try {
     localStorage.setItem('sunuschool_active_workspace', 'true');
@@ -5370,11 +5400,36 @@ function activateDedicatedWorkspace(est) {
   // Remplir les données du workspace
   renderWsData(isDaara);
 
+  // Synchronisation Cloud automatique des élèves pour tous les appareils (Mobiles & PC)
+  syncEstablishmentStudentsFromCloud(est, isDaara);
+
   // Réinitialiser la vue sur le premier onglet actif (Vue d'ensemble)
   switchWsTab('wsOverview', document.querySelector('.ws-nav-item'));
 
   showNotification(`🎉 Bienvenue dans l'espace "${est.name}" ! Formule ${est.plan} active.`);
 }
+
+async function syncEstablishmentStudentsFromCloud(est, isDaara) {
+  if (!est || !window.SSE_SUPABASE || typeof window.SSE_SUPABASE.getEleves !== 'function') return;
+  try {
+    const key = est.code || est.id || est.email || (isEmfEstablishment(est) ? 'SSE-SN-1125' : null);
+    if (!key) return;
+    const cloudEleves = await window.SSE_SUPABASE.getEleves(key);
+    if (Array.isArray(cloudEleves) && cloudEleves.length > 0) {
+      saveEstablishmentActiveStudents(cloudEleves, isDaara);
+      est.effectif = cloudEleves.length;
+      try {
+        localStorage.setItem('sunuschool_establishment', JSON.stringify(est));
+      } catch(e) {}
+      if (typeof renderWsData === 'function') {
+        renderWsData(isDaara);
+      }
+    }
+  } catch(err) {
+    console.warn('[Sync Cloud Eleves Error]', err);
+  }
+}
+window.syncEstablishmentStudentsFromCloud = syncEstablishmentStudentsFromCloud;
 
 function exitWorkspaceView() {
   try {
@@ -5579,29 +5634,119 @@ function switchWsTab(tabId, navItem) {
   }
 }
 
-// --- JEUX DE DONNÉES OFFICIELS POUR ÉCOLE DES MÉTIERS DU FUTUR (SSE-SN-2901) ---
-const EMF_DEFAULT_CLASSES = [
-  { id: 'cls-emf-t', nom: 'Terminale Numérique', cycle: 'Lycée', salle: 'Lab 1', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 3 },
-  { id: 'cls-emf-1', nom: '1ère Informatique', cycle: 'Lycée', salle: 'Lab 2', capacite: 35, profPrincipal: 'M. Ousmane Niang', effectif: 3 },
-  { id: 'cls-emf-2', nom: '2nde Technique', cycle: 'Lycée', salle: 'Salle 101', capacite: 40, profPrincipal: 'M. Ousmane Niang', effectif: 2 },
-  { id: 'cls-emf-3', nom: '3ème A', cycle: 'Collège', salle: 'Salle 102', capacite: 40, profPrincipal: 'M. Ousmane Niang', effectif: 3 }
-];
-
-const EMF_DEFAULT_TEACHER = {
-  id: 'ens-ousmane-niang-emf',
-  etablissementId: 'etab-2901',
-  nom: 'M. Ousmane Niang',
-  mat: 'ENS-2026-04',
-  matiere: 'Anglais (Collège & Lycée)',
-  classes: ['2nde L', '1ère L1', 'Terminale L2'],
-  volume: '20h / semaine',
-  contrat: 'CDI Titulaire',
-  salaire: 250000,
-  tel: '+221 77 650 44 12',
-  statut: 'ACTIF',
-  ipres: true
+// --- REGISTRE OFFICIEL DE RÉFÉRENCE EMF (ENSEIGNANTS, CLASSES, ÉLÈVES & PARENTS) ---
+const STUDENT_PARENT_MAP = {
+  'ELE-2026-745': { parentName: 'Mr Mbaye', parentPhone: '+221775637435' },       // Astou Mbaye (2nde L)
+  'ELE-2026-385': { parentName: 'Mr Seck', parentPhone: '+221771064877' },        // Cheikh Seck (Terminale L2)
+  'ELE-2026-114': { parentName: 'Fatou Diene', parentPhone: '+221775218097' },    // Mariama Diéne (Terminale L2)
+  'ELE-2026-400': { parentName: 'Mr Sow', parentPhone: '+221775637435' },         // Ibrahima Sow (1ère L1)
+  'ELE-2026-452': { parentName: 'M. O Niang', parentPhone: '+221777572706' },     // Sokhna Niang (1ère L1)
+  'ELE-2026-992': { parentName: 'Mr Fall', parentPhone: '+221761503938' },        // Khadim Fall (1ère L1)
+  'ELE-2026-259': { parentName: 'Aminata Sy', parentPhone: '+221771064877' },     // Fatou Sy (2nde L)
+  'ELE-2026-411': { parentName: 'Nabou Diome', parentPhone: '+221771685148' },    // Mamadou Diome (2nde L)
+  'ELE-2026-807': { parentName: 'Bachir Diop', parentPhone: '+221773557877' }     // Awa Diop (2nde L)
 };
 
+const PARENT_DIRECTORY = {
+  '775637435': 'Mr Mbaye / Mr Sow',
+  '771064877': 'Mr Seck / Aminata Sy',
+  '775218097': 'Fatou Diene',
+  '777572706': 'M. O Niang',
+  '761503938': 'Mr Fall',
+  '771685148': 'Nabou Diome',
+  '773557877': 'Bachir Diop'
+};
+
+const EMF_OFFICIAL_CLASSES = [
+  { id: 'cls-2nde-l', nom: '2nde L', cycle: 'Lycée', salle: 'Salle 1', capacite: 35, profPrincipal: 'Mme Fatou Diéne' },
+  { id: 'cls-1ere-l1', nom: '1ère L1', cycle: 'Lycée', salle: 'Salle 2', capacite: 35, profPrincipal: 'M. Nabou Diome' },
+  { id: 'cls-term-l2', nom: 'Terminale L2', cycle: 'Lycée', salle: 'Salle 3', capacite: 35, profPrincipal: 'M. Aziz Diome' },
+  { id: 'cls-2nde-s', nom: '2nde S', cycle: 'Lycée', salle: 'Salle 4', capacite: 35, profPrincipal: 'Mme Fatou Diéne' },
+  { id: 'cls-1ere-s1', nom: '1ère S1', cycle: 'Lycée', salle: 'Salle 5', capacite: 35, profPrincipal: 'M. Aziz Diome' },
+  { id: 'cls-term-s2', nom: 'Terminale S2', cycle: 'Lycée', salle: 'Salle 6', capacite: 35, profPrincipal: 'Mme Fatou Diéne' }
+];
+
+const EMF_OFFICIAL_TEACHERS = [
+  {
+    id: 'ens-fatou-diene',
+    accessKey: 'ENS-2026-01',
+    code: 'ENS-2026-01',
+    mat: 'ENS-2026-01',
+    nom: 'Mme Fatou Diéne',
+    matiere: 'Mathématiques',
+    classes: ['2nde L', '1ère L1', 'Terminale L2', '2nde S', '1ère S1', 'Terminale S2'],
+    tel: '+221 77 521 80 97',
+    telephone: '+221 77 521 80 97',
+    contrat: 'CDI Titulaire',
+    volume: '20h / semaine',
+    salaire: 260000,
+    statut: 'ACTIF',
+    ipres: true
+  },
+  {
+    id: 'ens-nabou-diome',
+    accessKey: 'ENS-2026-02',
+    code: 'ENS-2026-02',
+    mat: 'ENS-2026-02',
+    nom: 'M. Nabou Diome',
+    matiere: 'Français',
+    classes: ['2nde L', '1ère L1', 'Terminale L2'],
+    tel: '+221 77 168 51 48',
+    telephone: '+221 77 168 51 48',
+    contrat: 'CDI Titulaire',
+    volume: '18h / semaine',
+    salaire: 240000,
+    statut: 'ACTIF',
+    ipres: true
+  },
+  {
+    id: 'ens-aziz-diome',
+    accessKey: 'ENS-2026-03',
+    code: 'ENS-2026-03',
+    mat: 'ENS-2026-03',
+    nom: 'M. Aziz Diome',
+    matiere: 'Sciences Physiques',
+    classes: ['2nde L', '1ère L1', 'Terminale L2', '2nde S', '1ère S1', 'Terminale S2'],
+    tel: '+221 76 150 39 38',
+    telephone: '+221 76 150 39 38',
+    contrat: 'CDI Titulaire',
+    volume: '20h / semaine',
+    salaire: 260000,
+    statut: 'ACTIF',
+    ipres: true
+  },
+  {
+    id: 'ens-ousmane-niang',
+    accessKey: 'ENS-2026-04',
+    code: 'ENS-2026-04',
+    mat: 'ENS-2026-04',
+    nom: 'M. Ousmane Niang',
+    matiere: 'Anglais',
+    classes: ['2nde L', '1ère L1', 'Terminale L2'],
+    tel: '+221 77 757 27 06',
+    telephone: '+221 77 757 27 06',
+    contrat: 'CDI Titulaire',
+    volume: '20h / semaine',
+    salaire: 250000,
+    statut: 'ACTIF',
+    ipres: true
+  }
+];
+
+const EMF_REFERENCE_STUDENTS = [
+  { id: 'el-2026-745', matricule: 'ELE-2026-745', nom: 'Mbaye', prenom: 'Astou', nomComplet: 'Astou Mbaye', classeId: '2nde L', classe: '2nde L', classeNom: '2nde L', parentName: 'Mr Mbaye', parentPhone: '+221775637435', statutPension: 'A_JOUR', dateNaissance: '2008-04-12', lieuNaissance: 'Dakar', sexe: 'F' },
+  { id: 'el-2026-259', matricule: 'ELE-2026-259', nom: 'Sy', prenom: 'Fatou', nomComplet: 'Fatou Sy', classeId: '2nde L', classe: '2nde L', classeNom: '2nde L', parentName: 'Aminata Sy', parentPhone: '+221771064877', statutPension: 'A_JOUR', dateNaissance: '2008-09-21', lieuNaissance: 'Dakar', sexe: 'F' },
+  { id: 'el-2026-411', matricule: 'ELE-2026-411', nom: 'Diome', prenom: 'Mamadou', nomComplet: 'Mamadou Diome', classeId: '2nde L', classe: '2nde L', classeNom: '2nde L', parentName: 'Nabou Diome', parentPhone: '+221771685148', statutPension: 'A_JOUR', dateNaissance: '2008-01-15', lieuNaissance: 'Thies', sexe: 'M' },
+  { id: 'el-2026-807', matricule: 'ELE-2026-807', nom: 'Diop', prenom: 'Awa', nomComplet: 'Awa Diop', classeId: '2nde L', classe: '2nde L', classeNom: '2nde L', parentName: 'Bachir Diop', parentPhone: '+221773557877', statutPension: 'A_JOUR', dateNaissance: '2008-11-03', lieuNaissance: 'Dakar', sexe: 'F' },
+  { id: 'el-2026-400', matricule: 'ELE-2026-400', nom: 'Sow', prenom: 'Ibrahima', nomComplet: 'Ibrahima Sow', classeId: '1ère L1', classe: '1ère L1', classeNom: '1ère L1', parentName: 'Mr Sow', parentPhone: '+221775637435', statutPension: 'A_JOUR', dateNaissance: '2007-06-18', lieuNaissance: 'Dakar', sexe: 'M' },
+  { id: 'el-2026-452', matricule: 'ELE-2026-452', nom: 'Niang', prenom: 'Sokhna', nomComplet: 'Sokhna Niang', classeId: '1ère L1', classe: '1ère L1', classeNom: '1ère L1', parentName: 'M. O Niang', parentPhone: '+221777572706', statutPension: 'A_JOUR', dateNaissance: '2007-08-25', lieuNaissance: 'Saint-Louis', sexe: 'F' },
+  { id: 'el-2026-992', matricule: 'ELE-2026-992', nom: 'Fall', prenom: 'Khadim', nomComplet: 'Khadim Fall', classeId: '1ère L1', classe: '1ère L1', classeNom: '1ère L1', parentName: 'Mr Fall', parentPhone: '+221761503938', statutPension: 'A_JOUR', dateNaissance: '2007-03-30', lieuNaissance: 'Touba', sexe: 'M' },
+  { id: 'el-2026-385', matricule: 'ELE-2026-385', nom: 'Seck', prenom: 'Cheikh', nomComplet: 'Cheikh Seck', classeId: 'Terminale L2', classe: 'Terminale L2', classeNom: 'Terminale L2', parentName: 'Mr Seck', parentPhone: '+221771064877', statutPension: 'A_JOUR', dateNaissance: '2006-05-14', lieuNaissance: 'Dakar', sexe: 'M' },
+  { id: 'el-2026-114', matricule: 'ELE-2026-114', nom: 'Diéne', prenom: 'Mariama', nomComplet: 'Mariama Diéne', classeId: 'Terminale L2', classe: 'Terminale L2', classeNom: 'Terminale L2', parentName: 'Fatou Diene', parentPhone: '+221775218097', statutPension: 'A_JOUR', dateNaissance: '2006-12-09', lieuNaissance: 'Dakar', sexe: 'F' }
+];
+
+const EMF_DEFAULT_CLASSES = EMF_OFFICIAL_CLASSES;
+const EMF_DEFAULT_TEACHER = EMF_OFFICIAL_TEACHERS[3];
 const EMF_DEFAULT_STUDENTS = [];
 
 function isEmfEstablishment(est) {
@@ -5610,12 +5755,27 @@ function isEmfEstablishment(est) {
   const id = (est.id || '').toLowerCase();
   const name = (est.name || '').toLowerCase();
   const email = (est.email || '').toLowerCase();
-  return code === 'SSE-SN-2901' || id === 'etab-2901' || email === 'emf@gmail.com' || name.includes('métiers du futur') || name.includes('metiers du futur');
+  const sec = (est.secretKey || '').toUpperCase();
+  return code.includes('1125') || code.includes('2901') || code.includes('3938') ||
+         id.includes('1125') || id.includes('2901') || id.includes('1790685533712') || id.includes('emf') ||
+         sec.includes('1125') || sec.includes('2901') ||
+         name === 'emf' || name.startsWith('emf') || name.includes('emf') ||
+         name.includes('métiers du futur') || name.includes('metiers du futur') ||
+         email.includes('emf');
 }
 
 function isRealRegisteredEstablishment() {
+  if (!currentEstablishment && typeof window !== 'undefined' && window.currentEstablishment) {
+    currentEstablishment = window.currentEstablishment;
+  }
+  if (!currentEstablishment) {
+    try {
+      const saved = localStorage.getItem('sunuschool_establishment');
+      if (saved) currentEstablishment = JSON.parse(saved);
+    } catch(e) {}
+  }
   if (!currentEstablishment) return false;
-  return Boolean(currentEstablishment.code || currentEstablishment.email || currentEstablishment.dateAdhesion);
+  return Boolean(currentEstablishment.code || currentEstablishment.email || currentEstablishment.dateAdhesion || isEmfEstablishment(currentEstablishment));
 }
 
 function getEstablishmentActiveStudents(isDaara) {
@@ -5638,6 +5798,10 @@ function getEstablishmentActiveStudents(isDaara) {
     currentEstablishment.id ? `sse_${isDaara ? 'talibes' : 'eleves'}_${currentEstablishment.id}` : null,
     currentEstablishment.email ? `sse_${isDaara ? 'talibes' : 'eleves'}_${currentEstablishment.email}` : null
   ].filter(Boolean);
+
+  if (isEmfEstablishment(currentEstablishment)) {
+    candidateKeys.push('sse_eleves_SSE-SN-1125', 'sse_eleves_etab-1790685533712', 'sse_eleves_EMF', 'sse_eleves_SSE-SN-2901', 'sse_eleves_etab-2901', 'sse_eleves_emf@gmail.com');
+  }
 
   for (const sk of candidateKeys) {
     const stored = localStorage.getItem(sk);
@@ -5686,6 +5850,21 @@ function getEstablishmentActiveStudents(isDaara) {
     }
   } catch(e) {}
 
+  // Si c'est EMF et que la mémoire locale est vierge (premier accès mobile ou autre appareil) :
+  // Restaurer immédiatement les 9 élèves officiels de référence et synchroniser avec Supabase Cloud
+  if (isEmfEstablishment(currentEstablishment)) {
+    const refStudents = EMF_REFERENCE_STUDENTS.map(s => ({
+      ...s,
+      etablissementId: currentEstablishment.id || 'etab-1790685533712',
+      etablissementCode: currentEstablishment.code || 'SSE-SN-1125'
+    }));
+    saveEstablishmentActiveStudents(refStudents, isDaara);
+    if (typeof syncEstablishmentStudentsFromCloud === 'function') {
+      setTimeout(() => syncEstablishmentStudentsFromCloud(currentEstablishment, isDaara), 50);
+    }
+    return refStudents;
+  }
+
   // 100% VIERGE PAR DÉFAUT : aucun élève fictif n'est pré-rempli !
   return [];
 }
@@ -5701,6 +5880,15 @@ function saveEstablishmentActiveStudents(list, isDaara) {
   if (currentEstablishment.code) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.code}` : `sse_eleves_${currentEstablishment.code}`, serialized);
   if (currentEstablishment.id) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.id}` : `sse_eleves_${currentEstablishment.id}`, serialized);
   if (currentEstablishment.email) localStorage.setItem(isDaara ? `sse_talibes_${currentEstablishment.email}` : `sse_eleves_${currentEstablishment.email}`, serialized);
+
+  if (isEmfEstablishment(currentEstablishment)) {
+    localStorage.setItem('sse_eleves_SSE-SN-1125', serialized);
+    localStorage.setItem('sse_eleves_etab-1790685533712', serialized);
+    localStorage.setItem('sse_eleves_EMF', serialized);
+    localStorage.setItem('sse_eleves_SSE-SN-2901', serialized);
+    localStorage.setItem('sse_eleves_etab-2901', serialized);
+    localStorage.setItem('sse_eleves_emf@gmail.com', serialized);
+  }
 
   // Mettre à jour l'effectif exact sur l'objet établissement
   currentEstablishment.effectif = list.length;
@@ -5885,6 +6073,10 @@ function getEstablishmentTeachers() {
     currentEstablishment.email ? `sse_teachers_${currentEstablishment.email}` : null
   ].filter(Boolean);
 
+  if (isEmfEstablishment(currentEstablishment)) {
+    candidateKeys.push('sse_teachers_SSE-SN-1125', 'sse_teachers_etab-1790685533712', 'sse_teachers_EMF', 'sse_teachers_SSE-SN-2901', 'sse_teachers_etab-2901');
+  }
+
   for (const sk of candidateKeys) {
     const stored = localStorage.getItem(sk);
     if (stored !== null) {
@@ -5900,6 +6092,12 @@ function getEstablishmentTeachers() {
       } catch(e) {}
     }
   }
+
+  if (isEmfEstablishment(currentEstablishment)) {
+    saveEstablishmentTeachers(EMF_OFFICIAL_TEACHERS);
+    return EMF_OFFICIAL_TEACHERS;
+  }
+
   // Vierge par défaut : l'établissement enregistre ses propres enseignants
   return [];
 }
@@ -5913,6 +6111,14 @@ function saveEstablishmentTeachers(list) {
   if (currentEstablishment.code) localStorage.setItem(`sse_teachers_${currentEstablishment.code}`, serialized);
   if (currentEstablishment.id) localStorage.setItem(`sse_teachers_${currentEstablishment.id}`, serialized);
   if (currentEstablishment.email) localStorage.setItem(`sse_teachers_${currentEstablishment.email}`, serialized);
+
+  if (isEmfEstablishment(currentEstablishment)) {
+    localStorage.setItem('sse_teachers_SSE-SN-1125', serialized);
+    localStorage.setItem('sse_teachers_etab-1790685533712', serialized);
+    localStorage.setItem('sse_teachers_EMF', serialized);
+    localStorage.setItem('sse_teachers_SSE-SN-2901', serialized);
+    localStorage.setItem('sse_teachers_etab-2901', serialized);
+  }
 }
 
 // 5. GESTION DES CLASSES ET NIVEAUX PEDAGOGIQUES PAR ECOLE (Zéro fausse donnée)
@@ -5933,6 +6139,10 @@ function getEstablishmentClasses() {
     currentEstablishment.email ? `sse_classes_${currentEstablishment.email}` : null
   ].filter(Boolean);
 
+  if (isEmfEstablishment(currentEstablishment)) {
+    candidateKeys.push('sse_classes_SSE-SN-1125', 'sse_classes_etab-1790685533712', 'sse_classes_EMF', 'sse_classes_SSE-SN-2901', 'sse_classes_etab-2901');
+  }
+
   for (const sk of candidateKeys) {
     const stored = localStorage.getItem(sk);
     if (stored !== null) {
@@ -5947,6 +6157,11 @@ function getEstablishmentClasses() {
         }
       } catch(e) {}
     }
+  }
+
+  if (isEmfEstablishment(currentEstablishment)) {
+    saveEstablishmentClasses(EMF_OFFICIAL_CLASSES);
+    return EMF_OFFICIAL_CLASSES;
   }
   
   if (!isRealRegisteredEstablishment()) {
@@ -5973,6 +6188,14 @@ function saveEstablishmentClasses(list) {
   if (currentEstablishment.code) localStorage.setItem(`sse_classes_${currentEstablishment.code}`, serialized);
   if (currentEstablishment.id) localStorage.setItem(`sse_classes_${currentEstablishment.id}`, serialized);
   if (currentEstablishment.email) localStorage.setItem(`sse_classes_${currentEstablishment.email}`, serialized);
+
+  if (isEmfEstablishment(currentEstablishment)) {
+    localStorage.setItem('sse_classes_SSE-SN-1125', serialized);
+    localStorage.setItem('sse_classes_etab-1790685533712', serialized);
+    localStorage.setItem('sse_classes_EMF', serialized);
+    localStorage.setItem('sse_classes_SSE-SN-2901', serialized);
+    localStorage.setItem('sse_classes_etab-2901', serialized);
+  }
   const badge = document.getElementById('wsClassesBadge');
   if (badge) badge.textContent = list.length;
 }
@@ -11369,41 +11592,9 @@ function getActiveSchoolName() {
 }
 
 // -------------------------------------------------------------
-// REGISTRE OFFICIEL DE RÉFÉRENCE EMF (ENSEIGNANTS & ÉLÈVES)
+// REGISTRE OFFICIEL DE RÉFÉRENCE EMF (ENSEIGNANTS, CLASSES & ÉLÈVES)
+// (Déclarés en tête de fichier pour disponibilité globale sur tous les modules)
 // -------------------------------------------------------------
-const STUDENT_PARENT_MAP = {
-  'ELE-2026-745': { parentName: 'Mr Mbaye', parentPhone: '+221775637435' },       // Astou Mbaye (2nde L)
-  'ELE-2026-385': { parentName: 'Mr Seck', parentPhone: '+221771064877' },        // Cheikh Seck (Terminale L2)
-  'ELE-2026-114': { parentName: 'Fatou Diene', parentPhone: '+221775218097' },    // Mariama Diéne (Terminale L2)
-  'ELE-2026-400': { parentName: 'Mr Sow', parentPhone: '+221775637435' },         // Ibrahima Sow (1ère L1)
-  'ELE-2026-452': { parentName: 'M. O Niang', parentPhone: '+221777572706' },     // Sokhna Niang (1ère L1)
-  'ELE-2026-992': { parentName: 'Mr Fall', parentPhone: '+221761503938' },        // Khadim Fall (1ère L1)
-  'ELE-2026-259': { parentName: 'Aminata Sy', parentPhone: '+221771064877' },     // Fatou Sy (2nde L)
-  'ELE-2026-411': { parentName: 'Nabou Diome', parentPhone: '+221771685148' },    // Mamadou Diome (2nde L)
-  'ELE-2026-807': { parentName: 'Bachir Diop', parentPhone: '+221773557877' }     // Awa Diop (2nde L)
-};
-
-const PARENT_DIRECTORY = {
-  '775637435': 'Mr Mbaye / Mr Sow',
-  '771064877': 'Mr Seck / Aminata Sy',
-  '775218097': 'Fatou Diene',
-  '777572706': 'M. O Niang',
-  '761503938': 'Mr Fall',
-  '771685148': 'Nabou Diome',
-  '773557877': 'Bachir Diop'
-};
-
-const EMF_REFERENCE_STUDENTS = [
-  { id: 'el-2026-745', matricule: 'ELE-2026-745', nom: 'Mbaye', prenom: 'Astou', nomComplet: 'Astou Mbaye', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Mr Mbaye', parentPhone: '+221775637435', statutPension: 'A_JOUR' },
-  { id: 'el-2026-259', matricule: 'ELE-2026-259', nom: 'Sy', prenom: 'Fatou', nomComplet: 'Fatou Sy', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Aminata Sy', parentPhone: '+221771064877', statutPension: 'A_JOUR' },
-  { id: 'el-2026-411', matricule: 'ELE-2026-411', nom: 'Diome', prenom: 'Mamadou', nomComplet: 'Mamadou Diome', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Nabou Diome', parentPhone: '+221771685148', statutPension: 'A_JOUR' },
-  { id: 'el-2026-807', matricule: 'ELE-2026-807', nom: 'Diop', prenom: 'Awa', nomComplet: 'Awa Diop', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Bachir Diop', parentPhone: '+221773557877', statutPension: 'A_JOUR' },
-  { id: 'el-2026-400', matricule: 'ELE-2026-400', nom: 'Sow', prenom: 'Ibrahima', nomComplet: 'Ibrahima Sow', classeId: 'cls-1ere-l1', classeNom: '1ère L1', parentName: 'Mr Sow', parentPhone: '+221775637435', statutPension: 'A_JOUR' },
-  { id: 'el-2026-452', matricule: 'ELE-2026-452', nom: 'Niang', prenom: 'Sokhna', nomComplet: 'Sokhna Niang', classeId: 'cls-1ere-l1', classeNom: '1ère L1', parentName: 'M. O Niang', parentPhone: '+221777572706', statutPension: 'A_JOUR' },
-  { id: 'el-2026-992', matricule: 'ELE-2026-992', nom: 'Fall', prenom: 'Khadim', nomComplet: 'Khadim Fall', classeId: 'cls-1ere-l1', classeNom: '1ère L1', parentName: 'Mr Fall', parentPhone: '+221761503938', statutPension: 'A_JOUR' },
-  { id: 'el-2026-385', matricule: 'ELE-2026-385', nom: 'Seck', prenom: 'Cheikh', nomComplet: 'Cheikh Seck', classeId: 'cls-term-l2', classeNom: 'Terminale L2', parentName: 'Mr Seck', parentPhone: '+221771064877', statutPension: 'A_JOUR' },
-  { id: 'el-2026-114', matricule: 'ELE-2026-114', nom: 'Diéne', prenom: 'Mariama', nomComplet: 'Mariama Diéne', classeId: 'cls-term-l2', classeNom: 'Terminale L2', parentName: 'Fatou Diene', parentPhone: '+221775218097', statutPension: 'A_JOUR' }
-];
 
 function isStudentInClass(s, selectedClassId, classesList) {
   if (!selectedClassId) return true;
