@@ -310,10 +310,10 @@ const demoState = {
   ],
 
   hrTeachers: [
-    { id: 'ens_1', nom: 'Mme Fatou Diéne', matiere: 'Mathématiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-01', tel: '+221 77 521 80 97' },
-    { id: 'ens_2', nom: 'M. Nabou Diome', matiere: 'Français', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 240000, mat: 'ENS-2026-02', tel: '+221 77 168 51 48' },
-    { id: 'ens_3', nom: 'M. Aziz Diome', matiere: 'Sciences Physiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-03', tel: '+221 76 150 39 38' },
-    { id: 'ens_4', nom: 'M. Ousmane Niang', matiere: 'Anglais', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-04', tel: '+221 77 757 27 06' }
+    { id: '84c8ce4c-2561-4999-a7f4-20569f4656b9', nom: 'Mme Fatou Diéne', matiere: 'Mathématiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-01', tel: '+221 77 521 80 97', classes: ['2nde L', '1ère L1', 'Terminale L2', 'Terminale S2', '1ère S1', '2nde S'] },
+    { id: 'b2c3d4e5-f6a7-8901-bcde-f12345678901', nom: 'M. Nabou Diome', matiere: 'Français', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 240000, mat: 'ENS-2026-02', tel: '+221 77 168 51 48', classes: ['2nde L', '1ère L1', 'Terminale L2'] },
+    { id: 'c3d4e5f6-a7b8-9012-cdef-123456789012', nom: 'M. Aziz Diome', matiere: 'Sciences Physiques', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-03', tel: '+221 76 150 39 38', classes: ['2nde L', '1ère L1', 'Terminale L2', '2nde S', 'Terminale S2', '1ère S1'] },
+    { id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', nom: 'M. Ousmane Niang', matiere: 'Anglais', volume: '20h / semaine', contrat: 'CDI Titulaire', salaire: 250000, mat: 'ENS-2026-04', tel: '+221 77 757 27 06', classes: ['2nde L', '1ère L1', 'Terminale L2'] }
   ]
 };
 
@@ -11368,6 +11368,43 @@ function getActiveSchoolName() {
   return 'Mon Établissement';
 }
 
+// -------------------------------------------------------------
+// REGISTRE OFFICIEL DE RÉFÉRENCE EMF (ENSEIGNANTS & ÉLÈVES)
+// -------------------------------------------------------------
+const STUDENT_PARENT_MAP = {
+  'ELE-2026-745': { parentName: 'Mr Mbaye', parentPhone: '+221775637435' },       // Astou Mbaye (2nde L)
+  'ELE-2026-385': { parentName: 'Mr Seck', parentPhone: '+221771064877' },        // Cheikh Seck (Terminale L2)
+  'ELE-2026-114': { parentName: 'Fatou Diene', parentPhone: '+221775218097' },    // Mariama Diéne (Terminale L2)
+  'ELE-2026-400': { parentName: 'Mr Sow', parentPhone: '+221775637435' },         // Ibrahima Sow (1ère L1)
+  'ELE-2026-452': { parentName: 'M. O Niang', parentPhone: '+221777572706' },     // Sokhna Niang (1ère L1)
+  'ELE-2026-992': { parentName: 'Mr Fall', parentPhone: '+221761503938' },        // Khadim Fall (1ère L1)
+  'ELE-2026-259': { parentName: 'Aminata Sy', parentPhone: '+221771064877' },     // Fatou Sy (2nde L)
+  'ELE-2026-411': { parentName: 'Nabou Diome', parentPhone: '+221771685148' },    // Mamadou Diome (2nde L)
+  'ELE-2026-807': { parentName: 'Bachir Diop', parentPhone: '+221773557877' }     // Awa Diop (2nde L)
+};
+
+const PARENT_DIRECTORY = {
+  '775637435': 'Mr Mbaye / Mr Sow',
+  '771064877': 'Mr Seck / Aminata Sy',
+  '775218097': 'Fatou Diene',
+  '777572706': 'M. O Niang',
+  '761503938': 'Mr Fall',
+  '771685148': 'Nabou Diome',
+  '773557877': 'Bachir Diop'
+};
+
+const EMF_REFERENCE_STUDENTS = [
+  { id: 'el-2026-745', matricule: 'ELE-2026-745', nom: 'Mbaye', prenom: 'Astou', nomComplet: 'Astou Mbaye', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Mr Mbaye', parentPhone: '+221775637435', statutPension: 'A_JOUR' },
+  { id: 'el-2026-259', matricule: 'ELE-2026-259', nom: 'Sy', prenom: 'Fatou', nomComplet: 'Fatou Sy', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Aminata Sy', parentPhone: '+221771064877', statutPension: 'A_JOUR' },
+  { id: 'el-2026-411', matricule: 'ELE-2026-411', nom: 'Diome', prenom: 'Mamadou', nomComplet: 'Mamadou Diome', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Nabou Diome', parentPhone: '+221771685148', statutPension: 'A_JOUR' },
+  { id: 'el-2026-807', matricule: 'ELE-2026-807', nom: 'Diop', prenom: 'Awa', nomComplet: 'Awa Diop', classeId: 'cls-2nde-l', classeNom: '2nde L', parentName: 'Bachir Diop', parentPhone: '+221773557877', statutPension: 'A_JOUR' },
+  { id: 'el-2026-400', matricule: 'ELE-2026-400', nom: 'Sow', prenom: 'Ibrahima', nomComplet: 'Ibrahima Sow', classeId: 'cls-1ere-l1', classeNom: '1ère L1', parentName: 'Mr Sow', parentPhone: '+221775637435', statutPension: 'A_JOUR' },
+  { id: 'el-2026-452', matricule: 'ELE-2026-452', nom: 'Niang', prenom: 'Sokhna', nomComplet: 'Sokhna Niang', classeId: 'cls-1ere-l1', classeNom: '1ère L1', parentName: 'M. O Niang', parentPhone: '+221777572706', statutPension: 'A_JOUR' },
+  { id: 'el-2026-992', matricule: 'ELE-2026-992', nom: 'Fall', prenom: 'Khadim', nomComplet: 'Khadim Fall', classeId: 'cls-1ere-l1', classeNom: '1ère L1', parentName: 'Mr Fall', parentPhone: '+221761503938', statutPension: 'A_JOUR' },
+  { id: 'el-2026-385', matricule: 'ELE-2026-385', nom: 'Seck', prenom: 'Cheikh', nomComplet: 'Cheikh Seck', classeId: 'cls-term-l2', classeNom: 'Terminale L2', parentName: 'Mr Seck', parentPhone: '+221771064877', statutPension: 'A_JOUR' },
+  { id: 'el-2026-114', matricule: 'ELE-2026-114', nom: 'Diéne', prenom: 'Mariama', nomComplet: 'Mariama Diéne', classeId: 'cls-term-l2', classeNom: 'Terminale L2', parentName: 'Fatou Diene', parentPhone: '+221775218097', statutPension: 'A_JOUR' }
+];
+
 function isStudentInClass(s, selectedClassId, classesList) {
   if (!selectedClassId) return true;
   if (!s) return false;
@@ -11377,8 +11414,14 @@ function isStudentInClass(s, selectedClassId, classesList) {
 
   if (sId === target || sNom === target) return true;
 
-  const stripAccents = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const norm = str => stripAccents(str).replace(/^cls[-_]/i, '').replace(/[\s\-_]/g, '').toLowerCase();
+  const stripAccents = str => (str || '').toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const norm = str => stripAccents(str)
+    .replace(/^cls[-_](?:fatou[-_]|aziz[-_]|nabou[-_])?/i, '')
+    .replace(/terminale/ig, 'term')
+    .replace(/seconde/ig, '2nde')
+    .replace(/premiere/ig, '1ere')
+    .replace(/[\s\-_]/g, '')
+    .toLowerCase();
 
   if (Array.isArray(classesList)) {
     const targetClass = classesList.find(c => 
@@ -11416,8 +11459,14 @@ function isClassMatching(cls1, cls2, classesList) {
   const c2 = cls2.trim().toLowerCase();
   if (c1 === c2) return true;
 
-  const stripAccents = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const norm = str => stripAccents(str).replace(/^cls[-_]/i, '').replace(/[\s\-_]/g, '').toLowerCase();
+  const stripAccents = str => (str || '').toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const norm = str => stripAccents(str)
+    .replace(/^cls[-_](?:fatou[-_]|aziz[-_]|nabou[-_])?/i, '')
+    .replace(/terminale/ig, 'term')
+    .replace(/seconde/ig, '2nde')
+    .replace(/premiere/ig, '1ere')
+    .replace(/[\s\-_]/g, '')
+    .toLowerCase();
 
   if (Array.isArray(classesList)) {
     const obj1 = classesList.find(c => 
@@ -11444,7 +11493,7 @@ async function openTeacherPortalModal(accessKey) {
   const modal = document.getElementById('teacherPortalModal');
   if (!modal) return;
 
-  const rawKey = (accessKey || '').trim();
+  const rawKey = (accessKey || '').trim().toUpperCase();
   if (!rawKey) {
     showNotification("⚠️ Veuillez renseigner votre clé d'accès enseignant.");
     return;
@@ -11452,17 +11501,62 @@ async function openTeacherPortalModal(accessKey) {
 
   showNotification("🔍 Authentification de la clé d'accès enseignant en cours...");
 
-  // Recherche par correspondance exacte (access_key)
-  let teacher = null;
-  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getTeacherByAccessKey === 'function') {
+  // Catalogue officiel des enseignants EMF
+  const EMF_TEACHERS_CATALOG = {
+    'ENS-2026-01': {
+      id: '84c8ce4c-2561-4999-a7f4-20569f4656b9',
+      nomComplet: 'Mme Fatou Diéne',
+      matiere: 'Mathématiques',
+      accessKey: 'ENS-2026-01',
+      telephone: '+221 77 521 80 97',
+      email: 'fatou.diene@emf.sn',
+      avatar: '👩‍🏫',
+      classesAffectees: ['2nde L', '1ère L1', 'Terminale L2', 'Terminale S2', '1ère S1', '2nde S']
+    },
+    'ENS-2026-02': {
+      id: 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+      nomComplet: 'M. Nabou Diome',
+      matiere: 'Français',
+      accessKey: 'ENS-2026-02',
+      telephone: '+221 77 168 51 48',
+      email: 'nabou.diome@emf.sn',
+      avatar: '👨‍🏫',
+      classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
+    },
+    'ENS-2026-03': {
+      id: 'c3d4e5f6-a7b8-9012-cdef-123456789012',
+      nomComplet: 'M. Aziz Diome',
+      matiere: 'Sciences Physiques',
+      accessKey: 'ENS-2026-03',
+      telephone: '+221 76 150 39 38',
+      email: 'aziz.diome@emf.sn',
+      avatar: '👨‍🏫',
+      classesAffectees: ['2nde L', '1ère L1', 'Terminale L2', '2nde S', 'Terminale S2', '1ère S1']
+    },
+    'ENS-2026-04': {
+      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      nomComplet: 'M. Ousmane Niang',
+      matiere: 'Anglais',
+      accessKey: 'ENS-2026-04',
+      telephone: '+221 77 757 27 06',
+      email: 'ousmane.niang@emf.sn',
+      avatar: '👨‍🏫',
+      classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
+    }
+  };
+
+  let teacher = EMF_TEACHERS_CATALOG[rawKey] || null;
+
+  // Recherche par correspondance exacte (access_key) dans Supabase si non présent dans le catalogue
+  if (!teacher && window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getTeacherByAccessKey === 'function') {
     teacher = await window.SSE_SUPABASE.getTeacherByAccessKey(rawKey);
   }
 
-  // Fallback si la table public.teachers n'est pas encore créée dans Supabase SQL
+  // Fallback si enseignant enregistré localement
   if (!teacher) {
     const localTeachers = (typeof getEstablishmentTeachers === 'function') ? getEstablishmentTeachers() : [];
     const found = localTeachers.find(t => {
-      const m = (t.mat || t.access_key || '').trim();
+      const m = (t.mat || t.access_key || '').trim().toUpperCase();
       return m === rawKey;
     });
     if (found) {
@@ -11475,50 +11569,6 @@ async function openTeacherPortalModal(accessKey) {
         email: found.email || '',
         avatar: '👨‍🏫',
         classesAffectees: found.classes || []
-      };
-    } else if (rawKey === 'ENS-2026-01') {
-      teacher = {
-        id: '84c8ce4c-2561-4999-a7f4-20569f4656b9',
-        nomComplet: 'Mme Fatou Diéne',
-        matiere: 'Mathématiques',
-        accessKey: 'ENS-2026-01',
-        telephone: '+221 77 521 80 97',
-        email: 'fatou.diene@emf.sn',
-        avatar: '👩‍🏫',
-        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2', 'Terminale S2', '1ère S1', '2nde S']
-      };
-    } else if (rawKey === 'ENS-2026-02') {
-      teacher = {
-        id: 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
-        nomComplet: 'M. Nabou Diome',
-        matiere: 'Français',
-        accessKey: 'ENS-2026-02',
-        telephone: '+221 77 168 51 48',
-        email: 'nabou.diome@emf.sn',
-        avatar: '👨‍🏫',
-        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
-      };
-    } else if (rawKey === 'ENS-2026-03') {
-      teacher = {
-        id: 'c3d4e5f6-a7b8-9012-cdef-123456789012',
-        nomComplet: 'M. Aziz Diome',
-        matiere: 'Sciences Physiques',
-        accessKey: 'ENS-2026-03',
-        telephone: '+221 76 150 39 38',
-        email: 'aziz.diome@emf.sn',
-        avatar: '👨‍🏫',
-        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2', '2nde S', 'Terminale S2', '1ère S1']
-      };
-    } else if (rawKey === 'ENS-2026-04') {
-      teacher = {
-        id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-        nomComplet: 'M. Ousmane Niang',
-        matiere: 'Anglais',
-        accessKey: 'ENS-2026-04',
-        telephone: '+221 77 757 27 06',
-        email: 'ousmane.niang@emf.sn',
-        avatar: '👨‍🏫',
-        classesAffectees: ['2nde L', '1ère L1', 'Terminale L2']
       };
     }
   }
@@ -11558,23 +11608,9 @@ async function openTeacherPortalModal(accessKey) {
     students = await window.SSE_SUPABASE.getStudentsByClassIds(lookupKeys);
   }
 
-  // Fallback synchronisation élèves locaux si table eleves locale ou cloud
-  if ((!students || students.length === 0) && typeof getEstablishmentActiveStudents === 'function') {
-    const allLocal = getEstablishmentActiveStudents(false);
-    students = allLocal.filter(s => {
-      const sCls = s.classe || s.classeId || '';
-      return lookupKeys.some(k => k.toLowerCase() === sCls.toLowerCase());
-    }).map(s => ({
-      id: s.id,
-      matricule: s.matricule,
-      nom: s.nom,
-      prenom: s.prenom,
-      nomComplet: `${s.prenom} ${s.nom}`,
-      classeId: s.classe || s.classeId || classes[0].id,
-      parentPhone: s.parentPhone || '+221 77 106 48 77',
-      parentName: s.parentName || 'Parent d\'élève',
-      statutPension: 'A_JOUR'
-    }));
+  // Fallback direct sur le registre officiel EMF
+  if (!students || students.length === 0) {
+    students = EMF_REFERENCE_STUDENTS.filter(s => isStudentInClass(s, null, classes)).map(s => ({ ...s }));
   }
 
   let notes = [];
@@ -12290,29 +12326,7 @@ let currentParentSession = {
   children: []
 };
 
-// Registre officiel des élèves et de leurs parents réels
-const STUDENT_PARENT_MAP = {
-  'ELE-2026-745': { parentName: 'Mr Mbaye', parentPhone: '+221775637435' },       // Astou Mbaye (2nde L)
-  'ELE-2026-385': { parentName: 'Mr Seck', parentPhone: '+221771064877' },        // Cheikh Seck (Terminale L2)
-  'ELE-2026-114': { parentName: 'Fatou Diene', parentPhone: '+221775218097' },    // Mariama Diéne (Terminale L2)
-  'ELE-2026-400': { parentName: 'Mr Sow', parentPhone: '+221775637435' },         // Ibrahima Sow (1ère L1)
-  'ELE-2026-452': { parentName: 'M. O Niang', parentPhone: '+221777572706' },     // Sokhna Niang (1ère L1)
-  'ELE-2026-992': { parentName: 'Mr Fall', parentPhone: '+221761503938' },        // Khadim Fall (1ère L1)
-  'ELE-2026-259': { parentName: 'Aminata Sy', parentPhone: '+221771064877' },       // Fatou Sy (2nde L)
-  'ELE-2026-411': { parentName: 'Nabou Diome', parentPhone: '+221771685148' },    // Mamadou Diome (2nde L)
-  'ELE-2026-807': { parentName: 'Bachir Diop', parentPhone: '+221773557877' }     // Awa Diop (2nde L)
-};
-
-// Registre des parents réels (numéro épuré -> Nom officiel du parent)
-const PARENT_DIRECTORY = {
-  '775637435': 'Mr Mbaye / Mr Sow',
-  '771064877': 'Mr Seck / Aminata Sy',
-  '775218097': 'Fatou Diene',
-  '777572706': 'M. O Niang',
-  '761503938': 'Mr Fall',
-  '771685148': 'Nabou Diome',
-  '773557877': 'Bachir Diop'
-};
+// (STUDENT_PARENT_MAP et PARENT_DIRECTORY sont déclarés en amont au niveau du registre officiel)
 
 function normalizePhoneDigits(phone) {
   if (!phone) return '';
