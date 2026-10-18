@@ -3,6 +3,53 @@
  * Logique Métier & Pont API REST / Persistance Locale
  */
 
+// Cycles officiels pour Instituts de formation professionnelle & études supérieures
+const INSTITUT_CYCLES = [
+  { value: "BTS", label: "BTS" },
+  { value: "CAP", label: "CAP" },
+  { value: "BEP", label: "BEP" },
+  { value: "BT", label: "BT" },
+  { value: "Licence", label: "Licence" },
+  { value: "Master", label: "Master" },
+  { value: "Formation Continue", label: "Formation Continue" },
+  { value: "Certification Professionnelle", label: "Certification Professionnelle" },
+  { value: "Formation Qualifiante", label: "Formation Qualifiante" },
+  { value: "Formation Modulaire", label: "Formation Modulaire" }
+];
+
+function isInstitutEstablishment(est) {
+  if (!est) return false;
+  const typeUpper = String(est.type || '').toUpperCase().trim();
+  if (typeUpper === 'DAARA') return false;
+
+  const planLower = String(est.plan || est.formule || '').toLowerCase().trim();
+  const typeLower = String(est.type || '').toLowerCase().trim();
+  const nameLower = String(est.name || est.nom || '').toLowerCase().trim();
+
+  // 1. Formules / types explicites de la commande utilisateur :
+  // "Institut Starter", "Institut Pro", "Grande École / Multi-Campus"
+  if (planLower.includes('institut starter') || typeLower.includes('institut starter')) return true;
+  if (planLower.includes('institut pro') || typeLower.includes('institut pro')) return true;
+  if (planLower.includes('grande école') || planLower.includes('grande ecole') || planLower.includes('multi-campus') || planLower.includes('multicampus')) return true;
+  if (typeLower.includes('grande école') || typeLower.includes('grande ecole') || typeLower.includes('multi-campus') || typeLower.includes('multicampus')) return true;
+
+  // 2. Types reconnus
+  if (typeUpper === 'FORMATION_PRO' || typeUpper === 'INSTITUT' || typeUpper === 'INSTITUT_STARTER' || typeUpper === 'INSTITUT_PRO' || typeUpper === 'GRANDE_ECOLE' || typeUpper === 'SUPERIEUR') return true;
+
+  // 3. Plans contenant institut, bts, formation pro
+  if (planLower.includes('institut') || planLower.includes('bts') || planLower.includes('formation pro') || planLower.includes('formation_pro') || planLower.includes('formation professionnelle')) return true;
+
+  // 4. Noms d'instituts si non typé explicitement ECOLE
+  if (typeUpper !== 'ECOLE' && (nameLower.includes('institut') || nameLower.includes('formation pro') || nameLower.includes('centre de formation'))) return true;
+
+  return false;
+}
+
+if (typeof window !== 'undefined') {
+  window.INSTITUT_CYCLES = INSTITUT_CYCLES;
+  window.isInstitutEstablishment = isInstitutEstablishment;
+}
+
 // Initial Seed data pour mode autonome / fallback immédiat
 const DEFAULT_DATABASE = {
   etablissements: [],
@@ -11,6 +58,8 @@ const DEFAULT_DATABASE = {
   transactions: [],
   auditLogs: [],
   enseignants: [],
+  conventions: [],
+  certificatsIssued: [],
   adminsPlateforme: [
     {
       id: "admin-platform-001",
@@ -116,23 +165,42 @@ function initDataStore() {
         if (typeof item === 'object') {
           if (item.isUserCreated || item.phone || item.email || item.dateAdhesion) return false;
           const id = (item.id || '').toLowerCase();
-          const code = (item.code || '').toUpperCase();
-          const mat = (item.matricule || '').toUpperCase();
+          const code = (item.code || item.accessKey || '').toUpperCase();
+          const mat = (item.matricule || item.mat || '').toUpperCase();
           return id === 'etab-001' || id === 'etab-002' || id === 'etab-003' || id === 'etab-demo' || id === 'demo' ||
                  id.startsWith('emf-el-') || id.startsWith('cls-emf-') || id.includes('ousmane-niang-emf') ||
                  mat.startsWith('EMF-2026-') ||
+                 id === 'form-01' || id === 'form-02' || id === 'form-03' || id === 'form-04' ||
+                 code.startsWith('FOR-2026-') || mat.startsWith('FOR-2026-') ||
+                 id === 'cls-bts-gl1' || id === 'cls-bts-gl2' || id === 'cls-bts-cg1' || id === 'cls-bts-cg2' ||
+                 id === 'cls-bts-ci1' || id === 'cls-bts-ci2' || id === 'cls-l3-gl' || id === 'cls-l3-cge' ||
+                 id.startsWith('etu_') || mat.startsWith('SSE-BTS-') || id.startsWith('demo_etu_') ||
+                 id === 'conv-001' || id === 'conv-002' || id === 'conv-003' ||
+                 id === 'cert-001' || id === 'cert-002' || id === 'cert-003' ||
                  code === 'SSE-SN-1001' || code === 'SSE-SN-1002' || code === 'SSE-SN-1003' || code === 'DEMO';
         }
         const s = (item || '').toLowerCase().trim();
         return s === 'etab-001' || s === 'etab-002' || s === 'etab-003' || s === 'etab-demo' || s === 'demo' ||
                s === 'sse-sn-1001' || s === 'sse-sn-1002' || s === 'sse-sn-1003' ||
-               s.startsWith('emf-el-') || s.startsWith('cls-emf-') || s.includes('ousmane-niang-emf') || s.startsWith('emf-2026-');
+               s.startsWith('emf-el-') || s.startsWith('cls-emf-') || s.includes('ousmane-niang-emf') || s.startsWith('emf-2026-') ||
+               s === 'form-01' || s === 'form-02' || s === 'form-03' || s === 'form-04' || s.startsWith('for-2026-') ||
+               s === 'cls-bts-gl1' || s === 'cls-bts-gl2' || s === 'cls-bts-cg1' || s === 'cls-bts-cg2' ||
+               s === 'cls-bts-ci1' || s === 'cls-bts-ci2' || s === 'cls-l3-gl' || s === 'cls-l3-cge' ||
+               s.startsWith('etu_') || s.startsWith('sse-bts-') ||
+               s === 'conv-001' || s === 'conv-002' || s === 'conv-003' ||
+               s === 'cert-001' || s === 'cert-002' || s === 'cert-003';
       };
       appState.db.etablissements = appState.db.etablissements.filter(e => !isFakeDemoEntry(e));
       appState.db.classes = appState.db.classes.filter(c => !isFakeDemoEntry(c) && !isFakeDemoEntry(c.etablissementId));
       appState.db.eleves = appState.db.eleves.filter(el => !isFakeDemoEntry(el) && !isFakeDemoEntry(el.etablissementId));
       appState.db.transactions = appState.db.transactions.filter(t => !isFakeDemoEntry(t.etablissementId));
       appState.db.enseignants = appState.db.enseignants.filter(en => !isFakeDemoEntry(en) && !isFakeDemoEntry(en.etablissementId));
+      if (Array.isArray(appState.db.conventions)) {
+        appState.db.conventions = appState.db.conventions.filter(c => !isFakeDemoEntry(c) && !isFakeDemoEntry(c.etablissementId));
+      }
+      if (Array.isArray(appState.db.certificatsIssued)) {
+        appState.db.certificatsIssued = appState.db.certificatsIssued.filter(c => !isFakeDemoEntry(c) && !isFakeDemoEntry(c.etablissementId));
+      }
 
       if (!appState.db.adminsPlateforme || !appState.db.adminsPlateforme.some(a => a.email && a.email.toLowerCase() === 'sunushoolexpress@gmail.com')) {
         appState.db.adminsPlateforme = JSON.parse(JSON.stringify(DEFAULT_DATABASE.adminsPlateforme));
@@ -302,6 +370,29 @@ function syncEstablishmentsFromPortalAndRegistry() {
     console.warn("Erreur lecture sunuschool_establishments_registry:", e);
   }
 
+  // 4. S'assurer de la présence du pilote Institut Supérieur de Formation Professionnelle (ISFP Thiès)
+  const isfpExists = appState.db.etablissements.some(e => 
+    e.code === 'SSE-SN-7001' || (e.name && e.name.toLowerCase().includes('isfp'))
+  );
+  if (!isfpExists) {
+    importOrUpdateEstablishmentInDb({
+      id: "etab-thies-formation-01",
+      code: "SSE-SN-7001",
+      name: "Institut Supérieur de Formation Professionnelle (ISFP Thiès)",
+      type: "FORMATION_PRO",
+      city: "Thiès (Cité Malick Sy)",
+      phone: "+221 77 654 32 10",
+      email: "contact@isfp-thies.sn",
+      secretKey: "ADM-7001",
+      directeurNom: "Dr. Mamadou Cissé",
+      plan: "Formule Institut & BTS",
+      effectif: 85,
+      statut: "ACTIF",
+      statutAbonnement: "ACTIF",
+      fraisAdhesionPayes: true
+    });
+  }
+
   saveDataStore();
 }
 
@@ -318,6 +409,7 @@ function importOrUpdateEstablishmentInDb(portalEst) {
   const pPlan = (portalEst.plan || '').toLowerCase();
   if (pPlan.includes('85') || pPlan.includes('premium')) price = 85000;
   else if (pPlan.includes('75')) price = 75000;
+  else if (pPlan.includes('65') || pPlan.includes('institut')) price = 65000;
   else if (pPlan.includes('55') || pPlan.includes('pro')) price = 55000;
   else if (pPlan.includes('20') || pPlan.includes('starter')) price = 20000;
   else if (pPlan.includes('35') || pPlan.includes('daara')) price = 35000;
@@ -398,6 +490,7 @@ function switchTab(tabId) {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   // Contrôle d'accès strict selon le rôle (RBAC)
   if (role === 'OUSTAZ') {
@@ -443,43 +536,67 @@ function switchTab(tabId) {
     overview: { 
       title: isDaara 
         ? (role === 'OUSTAZ' ? "Espace Pédagogique Oustaz" : (role === 'COMPTABLE' ? "Suivi Recouvrement Pensions" : "Tableau de Bord Daara Moderne"))
-        : (role === 'ENSEIGNANT' ? "Espace Classe & Moyennes" : (role === 'COMPTABLE' ? "Suivi Recouvrement Scolarités" : "Tableau de Bord École Privée")), 
+        : (isInstitut 
+            ? "Tableau de Bord Institut & Formation Pro" 
+            : (role === 'ENSEIGNANT' ? "Espace Classe & Moyennes" : (role === 'COMPTABLE' ? "Suivi Recouvrement Scolarités" : "Tableau de Bord École Privée"))), 
       desc: isDaara 
         ? "Supervision en direct des effectifs talibés, pensions et mémorisation coranique" 
-        : "Supervision en direct des effectifs scolaires, scolarités et moyennes de classe" 
+        : (isInstitut 
+            ? "Supervision en direct des filières BTS/CAP, inscriptions, scolarités et formateurs" 
+            : "Supervision en direct des effectifs scolaires, scolarités et moyennes de classe")
     },
     daara: { title: "Daara Moderne & Suivi Coranique", desc: "Progression Hizb 1 à 60, Tajwîd, Internat & Cartes PVC" },
-    school: { title: "Gestion Scolaire & Effectifs", desc: "Cycles Primaire, Collège et Lycée (CI à Terminale)" },
+    school: { 
+      title: isInstitut ? "Gestion des Étudiants & Stagiaires (BTS & Métiers)" : "Gestion Scolaire & Effectifs", 
+      desc: isInstitut ? "Filières Professionnelles, BTS, CAP, CQP et Conventions de stage" : "Cycles Primaire, Collège et Lycée (CI à Terminale)" 
+    },
     classes: { 
-      title: isDaara ? "Classes & Niveaux Coraniques (Daara)" : "Gestion des Classes & Niveaux Pédagogiques", 
+      title: isDaara ? "Classes & Niveaux Coraniques (Daara)" : (isInstitut ? "Filières & Spécialités Professionnelles" : "Gestion des Classes & Niveaux Pédagogiques"), 
       desc: isDaara 
         ? "Packs de mémorisation en 1 clic (Hifz 1-2 & Fiqh), effectifs de pensionnaires et emplois du temps" 
-        : "Packs officiels en 1 clic (Primaire, Collège, Lycée), effectifs réels, professeurs principaux et emplois du temps" 
+        : (isInstitut 
+            ? "Packs BTS/CAP/CQP en 1 clic (Comptabilité, Génie Logiciel, Réseaux, Électricité), ateliers et laboratoires" 
+            : "Packs officiels en 1 clic (Primaire, Collège, Lycée), effectifs réels, professeurs principaux et emplois du temps")
     },
-    grades: { title: "Notes & Bulletins Officiels", desc: "Coefficients officiels sénégalais, moyennes pondérées et impression PDF" },
+    grades: { 
+      title: isInstitut ? "Relevés Semestriels LMD & Crédits" : "Notes & Bulletins Officiels", 
+      desc: isInstitut ? "Gestion des crédits ECTS, unités d'enseignement (UE), moyennes semestrielles et attestations" : "Coefficients officiels sénégalais, moyennes pondérées et impression PDF" 
+    },
     timetable: { 
-      title: isDaara ? "Emploi du Temps Hebdomadaire (Daara Moderne)" : "Emploi du Temps & Planning Pédagogique (École)", 
+      title: isDaara ? "Emploi du Temps Hebdomadaire (Daara Moderne)" : (isInstitut ? "Planning des Cours Magistraux & Ateliers" : "Emploi du Temps & Planning Pédagogique (École)"), 
       desc: isDaara 
         ? "Grille horaire hebdomadaire adaptée aux séances de Tahfîz, Allouwa, Tajwîd et Murâja'ah" 
-        : "Gestion des créneaux de cours, matières officielles, salles et enseignants par classe" 
+        : (isInstitut 
+            ? "Planning des séances théoriques, travaux pratiques en atelier et laboratoires spécialisés" 
+            : "Gestion des créneaux de cours, matières officielles, salles et enseignants par classe")
     },
     teachers: {
-      title: isDaara ? "Corps des Oustazs & Personnel Daara" : "Corps Professoral, Enseignants & RH",
+      title: isDaara ? "Corps des Oustazs & Personnel Daara" : (isInstitut ? "Corps des Formateurs & Professionnels Vacataires" : "Corps Professoral, Enseignants & RH"),
       desc: isDaara
         ? "Gestion des maîtres coraniques, contrats d'enseignement, affectations de groupes et salaires"
-        : "Gestion des enseignants titulaires et vacataires, contrats de travail, affectations de classes et fiches de paie"
+        : (isInstitut 
+            ? "Gestion des enseignants titulaires, experts métier, vacations et fiches de paie" 
+            : "Gestion des enseignants titulaires et vacataires, contrats de travail, affectations de classes et fiches de paie")
     },
     caisse: { 
-      title: isDaara ? "Caisse & Pensions SYSCOHADA (Daara)" : "Caisse & Scolarités SYSCOHADA (École)", 
+      title: isDaara ? "Caisse & Pensions SYSCOHADA (Daara)" : (isInstitut ? "Caisse Scolarités & Droits d'Examen (SYSCOHADA)" : "Caisse & Scolarités SYSCOHADA (École)"), 
       desc: "Passerelle Wave, Orange Money et Grand Livre de caisse certifié" 
     },
     finconfig: { 
-      title: isDaara ? "Comptes d'Encaissement & Wave Marchand (Daara)" : "Comptes d'Encaissement & Coordonnées Bancaires (École)", 
+      title: isDaara ? "Comptes d'Encaissement & Wave Marchand (Daara)" : (isInstitut ? "Comptes d'Encaissement Institut & Coordonnées Bancaires" : "Comptes d'Encaissement & Coordonnées Bancaires (École)"), 
       desc: "Configuration des comptes Wave Business, Orange Money et RIB bancaire pour encaissement direct des scolarités" 
     },
     comms: { 
-      title: isDaara ? "Communication Parents & Tuteurs (Daara)" : "Communication Familles & Clés d'Accès (École)", 
+      title: isDaara ? "Communication Parents & Tuteurs (Daara)" : (isInstitut ? "Communication Étudiants & Entreprises Partenaires" : "Communication Familles & Clés d'Accès (École)"), 
       desc: "Notifications SMS/WhatsApp et distribution des clés d'accès" 
+    },
+    stages: { 
+      title: "Conventions Tripartites de Stage & Immersion Pro", 
+      desc: "Gestion contractuelle des stages en entreprise (BTS, Licences Pro, CAP/CQP) et suivi des tuteurs" 
+    },
+    certificats: { 
+      title: "Diplômes, Attestations Officielles & QR Codes de Vérification", 
+      desc: "Délivrance conforme LMD des attestations de scolarité, réussites annuelles et certificats de qualification" 
     },
     audit: { title: "Sécurité & Journal d'Audit", desc: "Traçabilité intégrale de toutes les opérations administratives" },
     superadmin: { title: "👑 Supervision Centrale Super Admin SaaS", desc: "Suivi du parc d'établissements abonnés, MRR récurrent et gestion des licences" }
@@ -511,6 +628,7 @@ function renderSidebar() {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   const etabPill = document.getElementById('sidebarEtabPill');
   const etabAvatar = document.getElementById('sidebarEtabAvatar');
@@ -521,12 +639,14 @@ function renderSidebar() {
   const userAvatar = document.getElementById('userAvatar');
 
   // Mise à jour du rappel de la formule souscrite (Sidebar & Header)
-  const rawPlan = etab && etab.plan ? etab.plan : (isDaara ? 'Pack Internat Promo Daara (20 000 FCFA/mois)' : 'Formule École Pro (55 000 FCFA/mois)');
+  const rawPlan = etab && etab.plan ? etab.plan : (isDaara ? 'Pack Internat Promo Daara (20 000 FCFA/mois)' : (isInstitut ? 'Institut Pro (75 000 FCFA/mois)' : 'Formule École Pro (55 000 FCFA/mois)'));
   const cleanPlan = rawPlan.toLowerCase().startsWith('formule') || rawPlan.toLowerCase().startsWith('pack') || rawPlan.toLowerCase().startsWith('option') ? rawPlan : `Formule ${rawPlan}`;
   const planLower = cleanPlan.toLowerCase();
   
   let planIcon = '⭐';
-  if (isDaara || planLower.includes('daara')) {
+  if (isInstitut || planLower.includes('institut')) {
+    planIcon = '🎓';
+  } else if (isDaara || planLower.includes('daara')) {
     planIcon = planLower.includes('annuel') || planLower.includes('sérénité') || planLower.includes('350') ? '👑' : (planLower.includes('promo') || planLower.includes('20') ? '🏷️' : '🕌');
   } else {
     planIcon = planLower.includes('premium') || planLower.includes('85') ? '👑' : (planLower.includes('pro') || planLower.includes('55') ? '⚡' : '🌱');
@@ -794,6 +914,92 @@ function renderSidebar() {
           <span class="nav-text">Journal d'Audit (Logs)</span>
         </a>
       `;
+    } else if (isInstitut) {
+      if (etabPill) etabPill.className = 'establishment-pill institut-mode';
+      if (etabAvatar) etabAvatar.textContent = '🎓';
+      if (etabName) etabName.textContent = etab.name;
+      if (etabType) etabType.textContent = `🎓 Institut Pro • ${etab.city}`;
+
+      if (userRoleBadge) {
+        userRoleBadge.textContent = 'DIRECTION DES ÉTUDES (INSTITUT)';
+        userRoleBadge.style.color = '#38BDF8';
+      }
+      if (userNameEl) userNameEl.textContent = etab.directeurNom ? `Direction des Études (${etab.directeurNom})` : 'Dr. Mamadou Cissé (Directeur des Études)';
+      if (userAvatar) userAvatar.textContent = '🏛️';
+
+      sidebarNav.innerHTML = `
+        <div class="nav-section-title">PILOTAGE FORMATION PROFESSIONNELLE</div>
+
+        <a class="nav-link ${appState.activeTab === 'overview' ? 'active' : ''}" data-tab="overview" onclick="switchTab('overview')">
+          <span class="nav-link-icon">📊</span>
+          <span class="nav-text">Vue d'Ensemble Institut</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'school' ? 'active' : ''}" data-tab="school" onclick="switchTab('school')">
+          <span class="nav-link-icon">🎓</span>
+          <span class="nav-text">Étudiants & Stagiaires</span>
+          <span class="nav-counter" style="background: rgba(56,189,248,0.15); color: #38BDF8;">BTS & Métiers</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'classes' ? 'active' : ''}" data-tab="classes" onclick="switchTab('classes')">
+          <span class="nav-link-icon">🏛️</span>
+          <span class="nav-text">Filières & Spécialités</span>
+          <span class="nav-counter" id="sidebarClassesCount" style="background: rgba(56,189,248,0.15); color: #38BDF8;">Packs BTS/CAP</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'grades' ? 'active' : ''}" data-tab="grades" onclick="switchTab('grades')">
+          <span class="nav-link-icon">📑</span>
+          <span class="nav-text">Relevés Semestriels LMD</span>
+          <span class="nav-counter" style="background: rgba(168,85,247,0.15); color: #A855F7;">Crédits & Modules</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'timetable' ? 'active' : ''}" data-tab="timetable" onclick="switchTab('timetable')">
+          <span class="nav-link-icon">📅</span>
+          <span class="nav-text">Planning Cours & Ateliers</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'teachers' ? 'active' : ''}" data-tab="teachers" onclick="switchTab('teachers')">
+          <span class="nav-link-icon">👨‍🏫</span>
+          <span class="nav-text">Formateurs & Vacataires</span>
+          <span class="nav-counter" id="sidebarTeachersCount" style="background: rgba(168,85,247,0.15); color: #A855F7;">Formateurs</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'caisse' ? 'active' : ''}" data-tab="caisse" onclick="switchTab('caisse')">
+          <span class="nav-link-icon">💳</span>
+          <span class="nav-text">Scolarités & Droits d'Examen</span>
+          <span class="nav-counter" style="background: rgba(16,185,129,0.2); color: #10B981;">SYSCOHADA</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'finconfig' ? 'active' : ''}" data-tab="finconfig" onclick="switchTab('finconfig')">
+          <span class="nav-link-icon">⚙️</span>
+          <span class="nav-text">Comptes d'Encaissement</span>
+          <span class="nav-counter" style="background: rgba(0,210,180,0.15); color: #00D2B4;">Wave / OM</span>
+        </a>
+
+        <div class="nav-section-title">COMMUNICATION & CONVENTIONS</div>
+
+        <a class="nav-link ${appState.activeTab === 'stages' ? 'active' : ''}" data-tab="stages" onclick="switchTab('stages')">
+          <span class="nav-link-icon">🤝</span>
+          <span class="nav-text">Stages & Conventions</span>
+          <span class="nav-counter" id="sidebarStagesCount" style="background: rgba(16,185,129,0.15); color: #10B981;">Tripartites</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'certificats' ? 'active' : ''}" data-tab="certificats" onclick="switchTab('certificats')">
+          <span class="nav-link-icon">📜</span>
+          <span class="nav-text">Attestations & Diplômes</span>
+          <span class="nav-counter" id="sidebarCertificatsCount" style="background: rgba(245,158,11,0.15); color: #F59E0B;">QR Codes</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'comms' ? 'active' : ''}" data-tab="comms" onclick="switchTab('comms')">
+          <span class="nav-link-icon">💬</span>
+          <span class="nav-text">WhatsApp & Étudiants</span>
+        </a>
+
+        <a class="nav-link ${appState.activeTab === 'audit' ? 'active' : ''}" data-tab="audit" onclick="switchTab('audit')">
+          <span class="nav-link-icon">🛡️</span>
+          <span class="nav-text">Journal d'Audit (Logs)</span>
+        </a>
+      `;
     } else {
       if (etabPill) etabPill.className = 'establishment-pill ecole-mode';
       if (etabAvatar) etabAvatar.textContent = '🏫';
@@ -891,11 +1097,12 @@ function updateHeaderActions() {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   if (isSuperAdmin) {
     if (btnNewIcon) btnNewIcon.textContent = "+";
     if (btnNewText) btnNewText.textContent = "Inscrire Établissement";
-    btnNew.title = "Ajouter un Daara Moderne ou une École Privée au SaaS SunuSchool";
+    btnNew.title = "Ajouter un Daara Moderne, une École Privée ou un Institut au SaaS SunuSchool";
 
     if (btnPayIcon) btnPayIcon.textContent = "📢";
     if (btnPayText) btnPayText.textContent = "Message Global";
@@ -916,13 +1123,13 @@ function updateHeaderActions() {
   } else if (role === 'ENSEIGNANT') {
     // Boutons de travail quotidiens pour l'Enseignant
     if (btnNewIcon) btnNewIcon.textContent = "📑";
-    if (btnNewText) btnNewText.textContent = "Saisir Notes";
-    btnNew.title = "Saisir les notes et devoirs pour le bulletin officiel";
+    if (btnNewText) btnNewText.textContent = isInstitut ? "Saisir Notes (LMD)" : "Saisir Notes";
+    btnNew.title = isInstitut ? "Saisir les notes semestrielles et crédits LMD" : "Saisir les notes et devoirs pour le bulletin officiel";
 
     if (btnPayIcon) btnPayIcon.textContent = "⚡";
     if (btnPayText) btnPayText.textContent = "Faire l'Appel";
     btnPay.style.background = 'linear-gradient(135deg, #0284C7, #0369A1)';
-    btnPay.title = "Pointer les présences des élèves de la classe";
+    btnPay.title = isInstitut ? "Pointer les présences des étudiants aux cours/ateliers" : "Pointer les présences des apprenants de la classe";
 
   } else if (role === 'COMPTABLE') {
     // Boutons financiers pour le Comptable
@@ -946,6 +1153,15 @@ function updateHeaderActions() {
       if (btnPayText) btnPayText.textContent = "Encaisser Pension";
       btnPay.style.background = 'linear-gradient(135deg, #10B981, #00D2B4)';
       btnPay.title = "Encaisser pension internat ou scolarité coranique (Wave, OM, Cash)";
+    } else if (isInstitut) {
+      if (btnNewIcon) btnNewIcon.textContent = "+";
+      if (btnNewText) btnNewText.textContent = "Nouvel Étudiant";
+      btnNew.title = "Inscrire un nouvel étudiant à l'institut (BTS, Licence, Formation Pro)";
+
+      if (btnPayIcon) btnPayIcon.textContent = "💳";
+      if (btnPayText) btnPayText.textContent = "Encaisser Formation";
+      btnPay.style.background = 'linear-gradient(135deg, #38BDF8, #0284C7)';
+      btnPay.title = "Encaisser frais de formation, scolarité ou droit d'examen (Wave, OM, Cash)";
     } else {
       if (btnNewIcon) btnNewIcon.textContent = "+";
       if (btnNewText) btnNewText.textContent = "Nouvel Élève";
@@ -973,13 +1189,13 @@ function handleHeaderNewBtn() {
       showToast("Aucun talibé enregistré à évaluer.", true);
     }
   } else if (role === 'ENSEIGNANT') {
-    const firstEleve = appState.db.eleves.find(e => e.etablissementId === appState.activeEstablishmentId && e.type === 'SCOLAIRE');
+    const firstEleve = appState.db.eleves.find(e => e.etablissementId === appState.activeEstablishmentId && (e.type === 'SCOLAIRE' || e.type === 'ETUDIANT'));
     if (firstEleve) {
       openGradesEntryModal(firstEleve.id);
     } else {
       const firstTalibe = appState.db.eleves.find(e => e.etablissementId === appState.activeEstablishmentId && e.type === 'TALIBE');
       if (firstTalibe) openHizbEvalModal(firstTalibe.id);
-      else showToast("Aucun élève scolaire enregistré pour cette classe.", true);
+      else showToast("Aucun apprenant enregistré pour cette classe.", true);
     }
   } else if (role === 'COMPTABLE') {
     openEncaissementMultiModal();
@@ -987,7 +1203,8 @@ function handleHeaderNewBtn() {
     // ADMIN_DIRECTEUR
     const etab = appState.db.etablissements.find(e => e.id === appState.activeEstablishmentId);
     const isDaara = etab && etab.type === 'DAARA';
-    openNewEleveModal(isDaara ? 'TALIBE' : 'SCOLAIRE');
+    const isInstitut = !isDaara && isInstitutEstablishment(etab);
+    openNewEleveModal(isDaara ? 'TALIBE' : (isInstitut ? 'ETUDIANT' : 'SCOLAIRE'));
   }
 }
 
@@ -1250,6 +1467,8 @@ function renderCurrentView() {
   renderAuditLogs();
   renderSuperAdminClients();
   renderTimetable();
+  renderStagesView();
+  renderCertificatsView();
 }
 
 // 1. KPI VUE D'ENSEMBLE
@@ -1259,6 +1478,7 @@ function renderOverviewKpis() {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   const eleves = appState.db.eleves.filter(e => {
     if (!etabId) return true;
@@ -1315,8 +1535,35 @@ function renderOverviewKpis() {
     if (elKpi4Value) elKpi4Value.textContent = talibes.length > 0 ? `Hizb ${hizbMoyen}` : `-- / 60`;
     if (elKpi4Meta) elKpi4Meta.innerHTML = `<span class="badge-tag badge-green">Tajwîd Certifié</span><span>${talibes.length > 0 ? 'Progression continue' : '0 talibé évalué'}</span>`;
 
+  } else if (isInstitut) {
+    // Spécifique Institut & Formation Professionnelle
+    const etudiants = eleves.filter(e => e.type === 'ETUDIANT' || e.type === 'SCOLAIRE');
+    const etWithNotes = etudiants.filter(s => typeof s.moyenneGenerale === 'number' || typeof s.moyenne === 'number');
+    const moyGenerale = etWithNotes.length > 0 
+      ? (etWithNotes.reduce((acc, s) => acc + (Number(s.moyenneGenerale || s.moyenne) || 0), 0) / etWithNotes.length).toFixed(2)
+      : null;
+
+    const enAttenteInst = total - aJour;
+    const tauxInst = total > 0 ? Math.round((aJour / total) * 100) : 100;
+
+    if (elKpi1Title) elKpi1Title.textContent = "Effectif Étudiants Actifs";
+    if (elKpi1Meta) elKpi1Meta.innerHTML = `<span class="badge-tag badge-blue">${total} Inscrits</span><span>Filières BTS &amp; Métiers</span>`;
+    if (elKpi2Title) elKpi2Title.textContent = "Frais de Formation du Mois";
+    if (elKpi2Meta) elKpi2Meta.innerHTML = `<span class="badge-tag badge-blue">Wave + OM</span><span>Trésorerie SYSCOHADA</span>`;
+    if (elKpi3Title) elKpi3Title.textContent = "Taux de Recouvrement";
+    if (elKpi3Meta) elKpi3Meta.innerHTML = `<span class="badge-tag badge-gold">${enAttenteInst} en attente</span><span>Recouvrement ${tauxInst}%</span>`;
+
+    if (elKpi4Title) elKpi4Title.textContent = "Moyenne Semestrielle (LMD)";
+    if (elKpi4Icon) {
+      elKpi4Icon.textContent = "📊";
+      elKpi4Icon.style.background = "rgba(59, 130, 246, 0.15)";
+      elKpi4Icon.style.color = "#3B82F6";
+    }
+    if (elKpi4Value) elKpi4Value.textContent = moyGenerale ? `${moyGenerale} / 20` : `-- / 20`;
+    if (elKpi4Meta) elKpi4Meta.innerHTML = `<span class="badge-tag badge-blue">Crédits ECTS</span><span>${moyGenerale ? 'Moyenne calculée' : 'En cours de validation'}</span>`;
+
   } else {
-    // Spécifique École Privée
+    // Spécifique École Privée (Terminologie Universelle Apprenant)
     const scolaires = eleves.filter(e => e.type === 'SCOLAIRE');
     const scWithNotes = scolaires.filter(s => typeof s.moyenneGenerale === 'number' || typeof s.moyenne === 'number');
     const moyGenerale = scWithNotes.length > 0 
@@ -1326,7 +1573,7 @@ function renderOverviewKpis() {
     const enAttenteEcole = total - aJour;
     const tauxEcole = total > 0 ? Math.round((aJour / total) * 100) : 100;
 
-    if (elKpi1Title) elKpi1Title.textContent = "Effectif Scolaire Actif";
+    if (elKpi1Title) elKpi1Title.textContent = "Effectif Apprenants Actifs";
     if (elKpi1Meta) elKpi1Meta.innerHTML = `<span class="badge-tag badge-green">${total} Inscrits</span><span>Classes CI à Terminale</span>`;
     if (elKpi2Title) elKpi2Title.textContent = "Scolarités du Mois";
     if (elKpi2Meta) elKpi2Meta.innerHTML = `<span class="badge-tag badge-blue">Wave + OM</span><span>Trésorerie SYSCOHADA</span>`;
@@ -1350,14 +1597,19 @@ function renderOverviewKpis() {
   const thPension = document.getElementById('overviewThPension');
   const tableTitle = document.getElementById('overviewTableTitle');
 
-  if (thStudent) thStudent.textContent = isDaara ? "Talibé (Matricule)" : "Élève (Matricule)";
-  if (thClass) thClass.textContent = isDaara ? "Cycle Tahfiz / Internat" : "Classe Scolaire";
-  if (thLevel) thLevel.textContent = isDaara ? "Avancement Coran (Hizb)" : "Moyenne Scolaire (/20)";
-  if (thPension) thPension.textContent = isDaara ? "Statut Pension" : "Statut Scolarité";
+  if (thStudent) thStudent.textContent = isDaara ? "Talibé (Matricule)" : (isInstitut ? "Étudiant (Matricule)" : "Apprenant (Matricule)");
+  if (thClass) thClass.textContent = isDaara ? "Cycle Tahfiz / Internat" : (isInstitut ? "Filière / Promotion" : "Niveau / Classe");
+  if (thLevel) thLevel.textContent = isDaara ? "Avancement Coran (Hizb)" : (isInstitut ? "Moyenne / Crédits" : "Moyenne Scolaire (/20)");
+  if (thPension) thPension.textContent = isDaara ? "Statut Pension" : (isInstitut ? "Frais Formation" : "Statut Scolarité");
   if (tableTitle) {
     tableTitle.textContent = isDaara 
       ? "Derniers Talibés & Mémorisation Coranique" 
-      : "Derniers Dossiers & Mises à Jour Scolaires";
+      : (isInstitut ? "Derniers Étudiants & Promotions Professionnelles" : "Derniers Apprenants & Mises à Jour Pédagogiques");
+  }
+
+  const searchInput = document.getElementById('overviewSearchInput');
+  if (searchInput) {
+    searchInput.placeholder = isDaara ? "🔍 Rechercher un talibé, matricule..." : (isInstitut ? "🔍 Rechercher un étudiant, matricule..." : "🔍 Rechercher un apprenant, matricule...");
   }
 
   // Rendu de la table d'activité récente
@@ -1365,19 +1617,20 @@ function renderOverviewKpis() {
   if (tbody) {
     tbody.innerHTML = '';
     if (eleves.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">Aucun dossier enregistré pour cet établissement.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">${isInstitut ? 'Aucun étudiant enregistré pour cet établissement.' : (isDaara ? 'Aucun talibé enregistré pour cet établissement.' : 'Aucun apprenant enregistré pour cet établissement.')}</td></tr>`;
       return;
     }
     eleves.slice(0, 5).forEach(e => {
       const tr = document.createElement('tr');
       const isTalibe = e.type === 'TALIBE';
+      const isEtu = e.type === 'ETUDIANT' || isInstitut;
       tr.innerHTML = `
         <td>
           <div class="avatar-cell">
-            <div class="avatar-round" style="background: ${isTalibe ? 'rgba(255,184,0,0.2)' : 'rgba(0,210,180,0.2)'}; color: ${isTalibe ? 'var(--gold)' : 'var(--primary)'};">${e.prenom[0]}${e.nom[0]}</div>
+            <div class="avatar-round" style="background: ${isTalibe ? 'rgba(255,184,0,0.2)' : (isEtu ? 'rgba(56,189,248,0.2)' : 'rgba(0,210,180,0.2)')}; color: ${isTalibe ? 'var(--gold)' : (isEtu ? '#38BDF8' : 'var(--primary)')};">${e.prenom[0]}${e.nom[0]}</div>
             <div>
               <div class="cell-main-text">${e.prenom} ${e.nom}</div>
-              <div class="cell-sub-text">${e.matricule} • ${isTalibe ? '🕌 Talibé' : '🏫 Élève'}</div>
+              <div class="cell-sub-text">${e.matricule} • ${isTalibe ? '🕌 Talibé' : (isEtu ? '🎓 Étudiant' : '🏫 Apprenant')}</div>
             </div>
           </div>
         </td>
@@ -1499,9 +1752,31 @@ function renderDaaraTalibes() {
 function renderSchoolClasses() {
   syncEstablishmentStudents();
   const etabId = appState.activeEstablishmentId;
-  const eleves = appState.db.eleves.filter(e => e.type === 'SCOLAIRE' && (etabId ? e.etablissementId === etabId : true));
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+  const eleves = appState.db.eleves.filter(e => (isInstitut ? (e.type === 'ETUDIANT' || e.type === 'SCOLAIRE') : e.type === 'SCOLAIRE') && (etabId ? e.etablissementId === etabId : true));
   const tbody = document.getElementById('schoolStudentsTable');
   if (!tbody) return;
+
+  const schoolCardTitle = document.getElementById('schoolViewCardTitle');
+  if (schoolCardTitle) {
+    schoolCardTitle.innerHTML = isInstitut
+      ? `<span>🎓</span> <span>Répertoire des Étudiants &amp; Promotions Professionnelles</span>`
+      : `<span>🏫</span> <span>Répertoire des Apprenants &amp; Classes (CI à Terminale)</span>`;
+  }
+
+  const thStudent = document.getElementById('thSchoolStudent');
+  if (thStudent) thStudent.textContent = isInstitut ? "Étudiant (Nom & Matricule)" : "Apprenant (Nom & Matricule)";
+  const thClass = document.getElementById('thSchoolClass');
+  if (thClass) thClass.textContent = isInstitut ? "Filière / Promotion" : "Niveau / Classe";
+  const thGrades = document.getElementById('thSchoolGrades');
+  if (thGrades) thGrades.textContent = isInstitut ? "Moyenne Semestrielle / Crédits" : "Moyenne & Rang";
+  const thParent = document.getElementById('thSchoolParent');
+  if (thParent) thParent.textContent = isInstitut ? "Contact de l'étudiant / Responsable" : "Parent / Tuteur légal";
+  const thStatus = document.getElementById('thSchoolStatus');
+  if (thStatus) thStatus.textContent = isInstitut ? "Frais de Formation" : "Statut Frais";
+  const thAction = document.getElementById('thSchoolAction');
+  if (thAction) thAction.textContent = isInstitut ? "Dossier & Relevé" : "Dossier & Bulletin";
 
   const role = appState.activeRole;
   const isEnseignant = role === 'ENSEIGNANT';
@@ -1510,26 +1785,26 @@ function renderSchoolClasses() {
   const schoolHeaderBtn = document.getElementById('schoolHeaderActionBtn');
   if (schoolHeaderBtn) {
     if (isEnseignant) {
-      schoolHeaderBtn.textContent = "📑 Saisir les Notes de Classe";
+      schoolHeaderBtn.textContent = isInstitut ? "📑 Saisir les Notes Semestrielles (LMD)" : "📑 Saisir les Notes de Classe";
       schoolHeaderBtn.onclick = () => switchTab('grades');
-      schoolHeaderBtn.title = "Accéder à la saisie des notes et calcul des bulletins";
+      schoolHeaderBtn.title = isInstitut ? "Accéder à la saisie des notes et calcul des crédits" : "Accéder à la saisie des notes et calcul des bulletins";
       schoolHeaderBtn.className = "btn btn-primary btn-sm";
     } else if (isComptable) {
-      schoolHeaderBtn.textContent = "💳 Encaisser Scolarité Wave/OM";
+      schoolHeaderBtn.textContent = isInstitut ? "💳 Encaisser Formation Wave/OM" : "💳 Encaisser Scolarité Wave/OM";
       schoolHeaderBtn.onclick = () => openEncaissementMultiModal();
-      schoolHeaderBtn.title = "Encaisser scolarité ou frais d'inscription";
+      schoolHeaderBtn.title = isInstitut ? "Encaisser frais de scolarité ou de formation" : "Encaisser scolarité ou frais d'inscription";
       schoolHeaderBtn.className = "btn btn-primary btn-sm";
     } else {
-      schoolHeaderBtn.textContent = "+ Nouvel Élève";
-      schoolHeaderBtn.onclick = () => openNewEleveModal('SCOLAIRE');
-      schoolHeaderBtn.title = "Inscrire un nouvel élève à l'école";
+      schoolHeaderBtn.textContent = isInstitut ? "+ Nouvel Étudiant" : "+ Inscrire un Apprenant";
+      schoolHeaderBtn.onclick = () => openNewEleveModal(isInstitut ? 'ETUDIANT' : 'SCOLAIRE');
+      schoolHeaderBtn.title = isInstitut ? "Inscrire un nouvel étudiant à l'institut (BTS, Licence, Formation Pro)" : "Inscrire un nouvel apprenant à l'école";
       schoolHeaderBtn.className = "btn btn-primary btn-sm";
     }
   }
 
   tbody.innerHTML = '';
   if (eleves.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">Aucun élève scolaire pour cet établissement.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">${isInstitut ? "Aucun étudiant enregistré pour cet établissement." : "Aucun apprenant enregistré pour cet établissement."}</td></tr>`;
     return;
   }
 
@@ -1538,15 +1813,15 @@ function renderSchoolClasses() {
     tr.innerHTML = `
       <td>
         <div class="avatar-cell">
-          <div class="avatar-round">${e.prenom[0]}${e.nom[0]}</div>
+          <div class="avatar-round" style="${isInstitut ? 'background: rgba(56,189,248,0.2); color: #38BDF8;' : ''}">${e.prenom[0]}${e.nom[0]}</div>
           <div>
             <div class="cell-main-text">${e.prenom} ${e.nom}</div>
             <div class="cell-sub-text">${e.matricule} • Clé: <code style="color:var(--primary);">${e.cleAcces}</code></div>
           </div>
         </div>
       </td>
-      <td><span class="badge-tag badge-blue">${e.classeNom}</span></td>
-      <td><strong>${e.moyenneGenerale || 14.5}/20</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(Rang: ${e.rang || 1}er)</span></td>
+      <td><span class="badge-tag ${isInstitut ? 'badge-purple' : 'badge-blue'}">${e.classeNom}</span></td>
+      <td><strong>${e.moyenneGenerale || 14.5}/20</strong> <span style="font-size:0.75rem; color:var(--text-muted);">${isInstitut ? '(Crédits: 30/30)' : `(Rang: ${e.rang || 1}er)`}</span></td>
       <td>${e.parentNom}<br><span style="font-size:0.75rem; color:var(--text-muted);">${e.parentTelephone}</span></td>
       <td>
         <span class="badge-tag ${e.statutPension === 'A_JOUR' ? 'badge-green' : 'badge-red'}">
@@ -1557,12 +1832,12 @@ function renderSchoolClasses() {
         <div style="display: flex; gap: 0.4rem;">
           ${isEnseignant ? `
             <button class="btn btn-primary btn-sm" onclick="switchTab('grades')">📑 Noter</button>
-            <button class="btn btn-outline btn-sm" onclick="generateOfficialBulletin('${e.id}')">Bulletin</button>
+            <button class="btn btn-outline btn-sm" onclick="generateOfficialBulletin('${e.id}')">${isInstitut ? 'Relevé' : 'Bulletin'}</button>
           ` : isComptable ? `
             <button class="btn btn-primary btn-sm" onclick="openEncaissementMultiModal('${e.id}')" style="background: linear-gradient(135deg, #10B981, #00D2B4);">💳 Encaisser</button>
             <button class="btn btn-outline btn-sm" onclick="previewReceiptModal('${e.id}')">🧾 Reçu</button>
           ` : `
-            <button class="btn btn-outline btn-sm" onclick="generateOfficialBulletin('${e.id}')">📑 Bulletin</button>
+            <button class="btn btn-outline btn-sm" onclick="generateOfficialBulletin('${e.id}')">${isInstitut ? '📑 Relevé' : '📑 Bulletin'}</button>
             <button class="btn btn-outline btn-sm" onclick="previewPvcBadge('${e.id}')">🪪 Badge</button>
             <button class="btn btn-primary btn-sm" onclick="openEncaissementMultiModal('${e.id}')">💳 Payer</button>
           `}
@@ -1617,7 +1892,9 @@ function syncEstablishmentStudents() {
     if (!el) return true;
     const id = (el.id || '').toLowerCase();
     const mat = (el.matricule || '').toUpperCase();
-    return id.startsWith('emf-el-') || mat.startsWith('EMF-2026-') || id.startsWith('mock-') || mat.startsWith('MOCK-');
+    return id.startsWith('emf-el-') || mat.startsWith('EMF-2026-') ||
+           id.startsWith('etu_') || mat.startsWith('SSE-BTS-') ||
+           id.startsWith('demo_etu_') || id.startsWith('mock-') || mat.startsWith('MOCK-');
   };
 
   // 1. Purge immédiate de toute donnée fictive résiduelle
@@ -1700,7 +1977,7 @@ function syncEstablishmentStudents() {
 
   // 3. Synchronisation miroir vers les clés individuelles (uniquement élèves réels)
   const activeStudents = appState.db.eleves.filter(e => {
-    if (!etabId) return true;
+    if (!etabId) return false;
     return e.etablissementId === etabId || (etab && etab.code && e.etablissementCode === etab.code) || (etab && etab.id && e.etablissementId === etab.id);
   });
   try {
@@ -1735,7 +2012,11 @@ function syncEstablishmentClasses() {
   const isMockClass = (c) => {
     if (!c) return true;
     const id = (c.id || '').toLowerCase();
-    return id.startsWith('cls-emf-');
+    return id.startsWith('cls-emf-') ||
+           id === 'cls-bts-gl1' || id === 'cls-bts-gl2' ||
+           id === 'cls-bts-cg1' || id === 'cls-bts-cg2' ||
+           id === 'cls-bts-ci1' || id === 'cls-bts-ci2' ||
+           id === 'cls-l3-gl' || id === 'cls-l3-cge';
   };
 
   // 1. Purge immédiate des classes de maquette
@@ -1755,7 +2036,7 @@ function syncEstablishmentClasses() {
           portalClasses.filter(pc => !isMockClass(pc)).forEach(pc => {
             const exists = appState.db.classes.some(c => 
               (c.id === pc.id || c.nom.toLowerCase().trim() === pc.nom.toLowerCase().trim()) &&
-              (c.etablissementId === etabId || !c.etablissementId)
+              (c.etablissementId === etabId)
             );
             if (!exists) {
               appState.db.classes.push({
@@ -1778,7 +2059,7 @@ function syncEstablishmentClasses() {
   }
 
   // 3. Synchronisation miroir vers sse_classes_${estKey}
-  const currentEstClasses = appState.db.classes.filter(c => etabId ? c.etablissementId === etabId : true);
+  const currentEstClasses = appState.db.classes.filter(c => etabId ? c.etablissementId === etabId : false);
   try {
     localStorage.setItem(`sse_classes_${estKey}`, JSON.stringify(currentEstClasses));
   } catch (e) {}
@@ -1797,28 +2078,46 @@ function renderClassesView() {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  // Mise à jour dynamique de l'en-tête de section (Filières vs Sections vs Classes)
+  const headerIcon = document.getElementById('dashboardClassesHeaderIcon');
+  const headerTitle = document.getElementById('dashboardClassesHeaderTitle');
+  const headerSubtitle = document.getElementById('dashboardClassesHeaderSubtitle');
+  const addBtn = document.getElementById('dashboardClassesAddBtn');
+
+  if (headerIcon) headerIcon.textContent = isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫');
+  if (headerTitle) headerTitle.textContent = isInstitut ? 'Gestion des Filières & Spécialités Professionnelles' : (isDaara ? 'Sections Coraniques & Niveaux Daara' : 'Gestion des Classes & Niveaux Pédagogiques');
+  if (headerSubtitle) headerSubtitle.textContent = isInstitut ? 'Packs officiels BTS, CAP, Licences Pro en 1 clic, gestion des salles, effectifs et plannings de cours.' : 'Packs en 1 clic selon les cycles officiels sénégalais et Daaras, gestion des salles, effectifs et accès directs aux emplois du temps.';
+  if (addBtn) addBtn.textContent = isInstitut ? '+ Nouvelle Filière / Promotion' : (isDaara ? '+ Nouvelle Section Coranique' : '+ Nouvelle Classe');
+
+  updateDashboardClassPresetPacksVisibility(isInstitut, isDaara);
 
   const classes = (appState.db.classes || []).filter(c => etabId ? c.etablissementId === etabId : true);
   const eleves = (appState.db.eleves || []).filter(e => etabId ? e.etablissementId === etabId : true);
 
-  const countText = `${classes.length} Classe${classes.length > 1 ? 's' : ''} Active${classes.length > 1 ? 's' : ''}`;
+  const countText = isInstitut
+    ? `${classes.length} Filière${classes.length > 1 ? 's' : ''} / Promo${classes.length > 1 ? 's' : ''}`
+    : (isDaara
+      ? `${classes.length} Section${classes.length > 1 ? 's' : ''} Active${classes.length > 1 ? 's' : ''}`
+      : `${classes.length} Classe${classes.length > 1 ? 's' : ''} Active${classes.length > 1 ? 's' : ''}`);
   if (badgeEl) badgeEl.textContent = countText;
-  if (sidebarBadge) sidebarBadge.textContent = `${classes.length} Classe${classes.length > 1 ? 's' : ''}`;
+  if (sidebarBadge) sidebarBadge.textContent = isInstitut ? `${classes.length} Filière${classes.length > 1 ? 's' : ''}` : `${classes.length} Classe${classes.length > 1 ? 's' : ''}`;
   if (sidebarBadgeDaara) sidebarBadgeDaara.textContent = `${classes.length} Section${classes.length > 1 ? 's' : ''}`;
 
   if (classes.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1.5rem; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: var(--radius-sm);">
-        <div style="font-size: 2.2rem; margin-bottom: 0.6rem;">🏫</div>
-        <div style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;">Aucune classe configurée pour le moment</div>
+        <div style="font-size: 2.2rem; margin-bottom: 0.6rem;">${isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫')}</div>
+        <div style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;">${isInstitut ? 'Aucune filière ou promotion configurée' : (isDaara ? 'Aucune section coranique configurée' : 'Aucune classe configurée pour le moment')}</div>
         <p style="font-size: 0.85rem; color: var(--text-secondary); max-width: 480px; margin: 0 auto 1.25rem;">
-          Gagnez du temps en générant instantanément les grilles officielles en 1 clic grâce aux packs ci-dessus, ou ajoutez vos classes manuellement.
+          ${isInstitut ? 'Gagnez du temps en générant instantanément les filières officielles BTS en 1 clic grâce aux packs ci-dessus, ou créez vos filières sur-mesure.' : 'Gagnez du temps en générant instantanément les grilles officielles en 1 clic grâce aux packs ci-dessus, ou ajoutez vos classes manuellement.'}
         </p>
         <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="applyClassPresetPack('${isDaara ? 'daara' : 'primaire'}')" style="background: linear-gradient(135deg, #10B981, #00D2B4); font-weight: 700;">
-            ⚡ Injecter le Pack ${isDaara ? 'Daara Moderne' : 'Primaire'}
+          <button type="button" class="btn btn-primary btn-sm" onclick="applyClassPresetPack('${isInstitut ? 'formation_pro' : (isDaara ? 'daara' : 'primaire')}')" style="background: linear-gradient(135deg, #10B981, #00D2B4); font-weight: 700;">
+            ⚡ Injecter le Pack ${isInstitut ? 'Filières BTS' : (isDaara ? 'Daara Moderne' : 'Primaire')}
           </button>
-          <button type="button" class="btn btn-outline btn-sm" onclick="openNewClassModal()">+ Créer une Classe sur-mesure</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="openNewClassModal()">+ Créer une ${isInstitut ? 'Filière' : 'Classe'} sur-mesure</button>
         </div>
       </div>
     `;
@@ -1833,7 +2132,12 @@ function renderClassesView() {
     'moyen': { bg: 'rgba(0, 210, 180, 0.15)', text: '#00D2B4', border: 'rgba(0, 210, 180, 0.35)', icon: '🏫' },
     'lycée': { bg: 'rgba(168, 85, 247, 0.15)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.35)', icon: '🎓' },
     'secondaire': { bg: 'rgba(168, 85, 247, 0.15)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.35)', icon: '🎓' },
-    'daara': { bg: 'rgba(245, 158, 11, 0.15)', text: '#FBBF24', border: 'rgba(245, 158, 11, 0.35)', icon: '🕌' }
+    'daara': { bg: 'rgba(245, 158, 11, 0.15)', text: '#FBBF24', border: 'rgba(245, 158, 11, 0.35)', icon: '🕌' },
+    'bts': { bg: 'rgba(56, 189, 248, 0.15)', text: '#38BDF8', border: 'rgba(56, 189, 248, 0.35)', icon: '🎓' },
+    'licence': { bg: 'rgba(168, 85, 247, 0.15)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.35)', icon: '📜' },
+    'licence pro': { bg: 'rgba(168, 85, 247, 0.15)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.35)', icon: '📜' },
+    'formation pro': { bg: 'rgba(16, 185, 129, 0.15)', text: '#34D399', border: 'rgba(16, 185, 129, 0.35)', icon: '⚙️' },
+    'cap/cqp': { bg: 'rgba(245, 158, 11, 0.15)', text: '#FBBF24', border: 'rgba(245, 158, 11, 0.35)', icon: '🛠️' }
   };
 
   let cardsHtml = '';
@@ -1841,7 +2145,7 @@ function renderClassesView() {
     const cNameLow = (c.nom || '').toLowerCase();
     const cIdLow = (c.id || '').toLowerCase();
     const cycleKey = (c.cycle || '').toLowerCase().trim();
-    const theme = cycleColors[cycleKey] || (cycleKey.includes('daara') ? cycleColors.daara : (cycleKey.includes('coll') ? cycleColors['collège'] : (cycleKey.includes('lyc') ? cycleColors['lycée'] : cycleColors['élémentaire'])));
+    const theme = cycleColors[cycleKey] || (cycleKey.includes('daara') ? cycleColors.daara : (cycleKey.includes('bts') ? cycleColors.bts : (cycleKey.includes('lic') ? cycleColors.licence : (cycleKey.includes('form') ? cycleColors['formation pro'] : (cycleKey.includes('coll') ? cycleColors['collège'] : (cycleKey.includes('lyc') ? cycleColors['lycée'] : cycleColors['élémentaire']))))));
 
     // Compter les élèves réellement inscrits dans cette classe
     const count = eleves.filter(el => {
@@ -1860,18 +2164,18 @@ function renderClassesView() {
               ${c.nom}
             </div>
             <span style="font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 9999px; background: ${theme.bg}; color: ${theme.text}; border: 1px solid ${theme.border}; display: inline-flex; align-items: center; gap: 0.3rem;">
-              <span>${theme.icon}</span> <span>${c.cycle || 'Section'}</span>
+              <span>${theme.icon}</span> <span>${c.cycle || (isInstitut ? 'Filière Pro' : 'Section')}</span>
             </span>
           </div>
 
           <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem;">
-            <span>🚪</span> <span>${c.salle || 'Salle Principale'}</span>
+            <span>🚪</span> <span>${c.salle || (isInstitut ? 'Amphithéâtre / Salle TD' : 'Salle Principale')}</span>
           </div>
 
           <div style="margin: 0.85rem 0;">
             <div style="display: flex; justify-content: space-between; font-size: 0.76rem; margin-bottom: 0.35rem;">
-              <span style="color: var(--text-secondary);">Effectif Enregistré :</span>
-              <strong style="color: ${count > 0 ? '#00D2B4' : '#fff'};">${count} / ${maxCap} Apprenants</strong>
+              <span style="color: var(--text-secondary);">${isInstitut ? 'Effectif Étudiants :' : (isDaara ? 'Effectif Talibés :' : 'Effectif Enregistré :')}</span>
+              <strong style="color: ${count > 0 ? '#00D2B4' : '#fff'};">${count} / ${maxCap} ${isInstitut ? (count > 1 ? 'Étudiants' : 'Étudiant') : (isDaara ? (count > 1 ? 'Talibés' : 'Talibé') : (count > 1 ? 'Apprenants' : 'Apprenant'))}</strong>
             </div>
             <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden;">
               <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, #00D2B4, #10B981); border-radius: 3px; transition: width 0.3s ease;"></div>
@@ -1879,18 +2183,18 @@ function renderClassesView() {
           </div>
 
           <div style="font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 1rem;">
-            👨‍🏫 <strong>Prof. Référent :</strong> <span style="color: #fff;">${c.profPrincipal || 'Non assigné'}</span>
+            ${isInstitut ? '👨‍🏫 <strong>Responsable Pédagogique :</strong>' : (isDaara ? '👳 <strong>Oustaz Référent :</strong>' : '👨‍🏫 <strong>Prof. Référent :</strong>')} <span style="color: #fff;">${c.profPrincipal || (isInstitut ? 'Coordination Pédagogique' : 'Non assigné')}</span>
           </div>
         </div>
 
         <div style="display: flex; gap: 0.45rem; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 0.85rem; flex-wrap: wrap;">
-          <button type="button" class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.76rem; padding: 0.4rem 0.6rem; font-weight: 700; background: linear-gradient(135deg, #F59E0B, #D97706); color: #fff;" onclick="selectClassForTimetable('${c.nom}')" title="Voir ou générer l'emploi du temps de cette classe">
-            📅 Emploi du Temps
+          <button type="button" class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.76rem; padding: 0.4rem 0.6rem; font-weight: 700; background: linear-gradient(135deg, #F59E0B, #D97706); color: #fff;" onclick="selectClassForTimetable('${c.nom}')" title="Voir ou générer le planning de cette filière">
+            📅 ${isInstitut ? 'Planning Cours' : 'Emploi du Temps'}
           </button>
-          <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.76rem; padding: 0.4rem 0.6rem;" onclick="openNewClassModal('${c.id}')" title="Modifier cette classe">
+          <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.76rem; padding: 0.4rem 0.6rem;" onclick="openNewClassModal('${c.id}')" title="Modifier cette ${isInstitut ? 'filière' : 'classe'}">
             ✏️
           </button>
-          <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.76rem; padding: 0.4rem 0.6rem; color: #F87171; border-color: rgba(239, 68, 68, 0.3);" onclick="deleteClass('${c.id}')" title="Supprimer cette classe">
+          <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.76rem; padding: 0.4rem 0.6rem; color: #F87171; border-color: rgba(239, 68, 68, 0.3);" onclick="deleteClass('${c.id}')" title="Supprimer cette ${isInstitut ? 'filière' : 'classe'}">
             🗑️
           </button>
         </div>
@@ -1900,6 +2204,81 @@ function renderClassesView() {
 
   container.innerHTML = cardsHtml;
 }
+
+function updateDashboardClassPresetPacksVisibility(isInstitut, isDaara) {
+  const schoolBtns = document.querySelectorAll('.dash-pack-school');
+  const daaraBtns = document.querySelectorAll('.dash-pack-daara');
+  const institutBtns = document.querySelectorAll('.dash-pack-institut');
+  const titleEl = document.getElementById('dashClassPacksTitle');
+  const subtitleEl = document.getElementById('dashClassPacksSubtitle');
+
+  const btnMaternelle = document.getElementById('dashBtnPackMaternelle');
+  const btnPrimaire = document.getElementById('dashBtnPackPrimaire');
+  const btnCollege = document.getElementById('dashBtnPackCollege');
+  const btnLycee = document.getElementById('dashBtnPackLycee');
+  const btnDaara = document.getElementById('dashBtnPackDaara');
+  const btnFormationPro = document.getElementById('dashBtnPackFormationPro');
+  const btnLicencesPro = document.getElementById('dashBtnPackLicencesPro');
+  const btnCapCqp = document.getElementById('dashBtnPackCapCqp');
+
+  if (isInstitut) {
+    // 1. SUPPRIMER / MASQUER TOTALEMENT TOUS LES PACKS SCOLAIRES ET DAARA SUR INSTITUT
+    schoolBtns.forEach(b => { b.style.display = 'none'; });
+    daaraBtns.forEach(b => { b.style.display = 'none'; });
+    if (btnMaternelle) btnMaternelle.style.display = 'none';
+    if (btnPrimaire) btnPrimaire.style.display = 'none';
+    if (btnCollege) btnCollege.style.display = 'none';
+    if (btnLycee) btnLycee.style.display = 'none';
+    if (btnDaara) btnDaara.style.display = 'none';
+
+    // 2. AFFICHER EXCLUSIVEMENT LES PACKS DE FORMATIONS PROFESSIONNELLES & BTS
+    institutBtns.forEach(b => { b.style.display = 'inline-flex'; });
+    if (btnFormationPro) {
+      btnFormationPro.style.display = 'inline-flex';
+      btnFormationPro.innerHTML = '🎓 Pack Filières BTS (Génie Logiciel, CGE, Transit)';
+    }
+    if (btnLicencesPro) btnLicencesPro.style.display = 'inline-flex';
+    if (btnCapCqp) btnCapCqp.style.display = 'inline-flex';
+
+    if (titleEl) titleEl.textContent = '⚡ Configuration Rapide : Packs de Filières Professionnelles en 1 Clic';
+    if (subtitleEl) subtitleEl.textContent = 'Initialise instantanément les filières officielles BTS, Licences Pro et Certificats Métiers';
+  } else if (isDaara) {
+    schoolBtns.forEach(b => { b.style.display = 'none'; });
+    institutBtns.forEach(b => { b.style.display = 'none'; });
+    if (btnMaternelle) btnMaternelle.style.display = 'none';
+    if (btnPrimaire) btnPrimaire.style.display = 'none';
+    if (btnCollege) btnCollege.style.display = 'none';
+    if (btnLycee) btnLycee.style.display = 'none';
+    if (btnFormationPro) btnFormationPro.style.display = 'none';
+    if (btnLicencesPro) btnLicencesPro.style.display = 'none';
+    if (btnCapCqp) btnCapCqp.style.display = 'none';
+
+    daaraBtns.forEach(b => { b.style.display = 'inline-flex'; });
+    if (btnDaara) btnDaara.style.display = 'inline-flex';
+
+    if (titleEl) titleEl.textContent = '⚡ Configuration Rapide : Pack Daara Moderne en 1 Clic';
+    if (subtitleEl) subtitleEl.textContent = 'Initialise les cycles coraniques (Ibtida\'i, Hifz, Moutawassit, Thanawi)';
+  } else {
+    daaraBtns.forEach(b => { b.style.display = 'none'; });
+    if (btnDaara) btnDaara.style.display = 'none';
+    if (btnLicencesPro) btnLicencesPro.style.display = 'none';
+    if (btnCapCqp) btnCapCqp.style.display = 'none';
+
+    schoolBtns.forEach(b => { b.style.display = 'inline-flex'; });
+    if (btnMaternelle) btnMaternelle.style.display = 'inline-flex';
+    if (btnPrimaire) btnPrimaire.style.display = 'inline-flex';
+    if (btnCollege) btnCollege.style.display = 'inline-flex';
+    if (btnLycee) btnLycee.style.display = 'inline-flex';
+    if (btnFormationPro) {
+      btnFormationPro.style.display = 'inline-flex';
+      btnFormationPro.innerHTML = '🎓 Pack Formation Pro (BTS, CAP, CQP)';
+    }
+
+    if (titleEl) titleEl.textContent = '⚡ Génération Rapide de Sections (Packs en 1 Clic)';
+    if (subtitleEl) subtitleEl.textContent = 'Injecte instantanément les grilles officielles sans écraser les données existantes';
+  }
+}
+window.updateDashboardClassPresetPacksVisibility = updateDashboardClassPresetPacksVisibility;
 
 function applyClassPresetPack(packName) {
   const etabId = appState.activeEstablishmentId;
@@ -1950,6 +2329,29 @@ function applyClassPresetPack(packName) {
       { id: `cls_d4_${now}`, nom: "Moutawassit (Tajwîd & Grammaire)", cycle: 'Daara', salle: 'Salle de Mémorisation', capacite: 30, profPrincipal: '' },
       { id: `cls_d5_${now}`, nom: "Thanawi (Sciences Islamiques & Fiqh)", cycle: 'Daara', salle: 'Salle Al-Azhar', capacite: 25, profPrincipal: '' }
     ];
+  } else if (packName === 'formation_pro' || packName === 'institut' || packName === 'bts') {
+    presetClasses = [
+      { id: `cls_bts_gl1_${now}`, nom: 'BTS 1 - Informatique & Génie Logiciel (GL)', cycle: 'BTS', salle: 'Labo Info 1', capacite: 35, profPrincipal: '' },
+      { id: `cls_bts_gl2_${now}`, nom: 'BTS 2 - Informatique & Génie Logiciel (GL)', cycle: 'BTS', salle: 'Labo Info 2', capacite: 35, profPrincipal: '' },
+      { id: `cls_bts_cg1_${now}`, nom: 'BTS 1 - Comptabilité & Gestion des Entreprises (CGE)', cycle: 'BTS', salle: 'Amphi A - Économie', capacite: 40, profPrincipal: '' },
+      { id: `cls_bts_cg2_${now}`, nom: 'BTS 2 - Comptabilité & Gestion des Entreprises (CGE)', cycle: 'BTS', salle: 'Amphi A - Économie', capacite: 40, profPrincipal: '' },
+      { id: `cls_bts_ci1_${now}`, nom: 'BTS 1 - Commerce International & Transit (CI)', cycle: 'BTS', salle: 'Salle C05', capacite: 35, profPrincipal: '' },
+      { id: `cls_bts_ci2_${now}`, nom: 'BTS 2 - Commerce International & Transit (CI)', cycle: 'BTS', salle: 'Salle C06', capacite: 35, profPrincipal: '' }
+    ];
+  } else if (packName === 'licences_pro') {
+    presetClasses = [
+      { id: `cls_lic_gl_${now}`, nom: 'Licence 3 Pro - Génie Logiciel & Cloud', cycle: 'Licence', salle: 'Labo Info 1', capacite: 45, profPrincipal: '' },
+      { id: `cls_lic_cge_${now}`, nom: 'Licence 3 Pro - Finance, Comptabilité & Audit SYSCOHADA', cycle: 'Licence', salle: 'Amphi B', capacite: 45, profPrincipal: '' },
+      { id: `cls_m1_man_${now}`, nom: 'Master 1 - Management & Stratégie Digitale', cycle: 'Master', salle: 'Salle M01', capacite: 35, profPrincipal: '' },
+      { id: `cls_m2_audit_${now}`, nom: 'Master 2 - Audit, Contrôle de Gestion & SI', cycle: 'Master', salle: 'Salle M02', capacite: 30, profPrincipal: '' }
+    ];
+  } else if (packName === 'cap_cqp') {
+    presetClasses = [
+      { id: `cls_cap_elec_${now}`, nom: 'CAP Électricité & Électrotechnique', cycle: 'CAP', salle: 'Atelier Élec', capacite: 25, profPrincipal: '' },
+      { id: `cls_cap_meca_${now}`, nom: 'CAP Mécanique & Maintenance Industrielle', cycle: 'CAP', salle: 'Atelier Mécanique', capacite: 25, profPrincipal: '' },
+      { id: `cls_cqp_btp_${now}`, nom: 'CQP Métiers du BTP & Génie Civil', cycle: 'Certification Professionnelle', salle: 'Atelier BTP', capacite: 25, profPrincipal: '' },
+      { id: `cls_cqp_des_${now}`, nom: 'Certificat Pro Design Graphique & Web', cycle: 'Certification Professionnelle', salle: 'Labo Multimédia', capacite: 25, profPrincipal: '' }
+    ];
   }
 
   if (!Array.isArray(appState.db.classes)) appState.db.classes = [];
@@ -1957,7 +2359,7 @@ function applyClassPresetPack(packName) {
 
   presetClasses.forEach(p => {
     const exists = appState.db.classes.some(c => 
-      (c.etablissementId === etabId || !c.etablissementId) &&
+      c.etablissementId === etabId &&
       c.nom.toLowerCase().trim() === p.nom.toLowerCase().trim()
     );
     if (!exists) {
@@ -1985,12 +2387,19 @@ function applyClassPresetPack(packName) {
 
   renderClassesView();
   renderSidebar();
-  showToast(`🎉 Pack ${packName.toUpperCase()} configuré (${added.length} classes ajoutées) !`);
+  const currentEtab = appState.db.etablissements.find(e => e.id === etabId);
+  const isInstitutPreset = currentEtab && currentEtab.type !== 'DAARA' && isInstitutEstablishment(currentEtab);
+  showToast(`🎉 Pack ${packName.toUpperCase()} configuré (${added.length} ${isInstitutPreset ? 'filières ajoutées' : 'classes ajoutées'}) !`);
 }
 
 function openNewClassModal(editId = null) {
   const modal = document.getElementById('modalDashboardClass');
   if (!modal) return;
+
+  const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   const idInput = document.getElementById('editDashboardClassId');
   const titleEl = document.getElementById('modalDashboardClassTitle');
@@ -1999,43 +2408,141 @@ function openNewClassModal(editId = null) {
   const capInput = document.getElementById('dashboardClassCapacityInput');
   const roomInput = document.getElementById('dashboardClassRoomInput');
   const teacherInput = document.getElementById('dashboardClassTeacherInput');
+  const labelNom = document.getElementById('modalDashboardClassLabelNom');
+  const labelCycle = document.getElementById('modalDashboardClassLabelCycle');
+  const labelRoom = document.getElementById('modalDashboardClassLabelRoom');
+  const labelTeacher = document.getElementById('modalDashboardClassLabelTeacher');
+  const submitBtn = document.getElementById('modalDashboardClassSubmitBtn');
+
+  // Configuration dynamique des libellés et des cycles selon le mode
+  if (isInstitut) {
+    if (labelNom) labelNom.textContent = 'Filière / Promotion *';
+    if (labelCycle) labelCycle.textContent = 'Cycle / Type de Formation *';
+    if (labelRoom) labelRoom.textContent = 'Salle / Amphi / Labo';
+    if (labelTeacher) labelTeacher.textContent = 'Responsable Pédagogique / Formateur Référent';
+    if (nomInput) nomInput.placeholder = 'Ex: BTS 1 Génie Logiciel, Licence 3 Finance, CAP Élec...';
+    if (roomInput) roomInput.placeholder = 'Ex: Labo Info 1, Amphi A, Salle 12';
+    if (teacherInput) teacherInput.placeholder = 'Ex: Dr. Diallo, Ing. Ndiaye';
+
+    // UNIQUEMENT LES 10 CYCLES OFFICIELS INSTITUT + OPTION SAISIE LIBRE
+    if (cycleSelect) {
+      cycleSelect.innerHTML = INSTITUT_CYCLES.map(c => `<option value="${c.value}">${c.label}</option>`).join('') + `
+        <option value="__CUSTOM_CYCLE__">✍️ Autre cycle / niveau (saisie libre)...</option>
+      `;
+    }
+  } else if (isDaara) {
+    if (labelNom) labelNom.textContent = 'Section / Cycle Coranique *';
+    if (labelCycle) labelCycle.textContent = 'Cycle Coranique / Hifz *';
+    if (labelRoom) labelRoom.textContent = 'Salle de Récitation / Pavillon';
+    if (labelTeacher) labelTeacher.textContent = 'Oustaz Référent / Titulaire';
+    if (nomInput) nomInput.placeholder = 'Ex: Hifz Niveau 1, Ibtida\'i, Thanawi...';
+    if (roomInput) roomInput.placeholder = 'Ex: Salle Al-Houda, Pavillon Allouwa';
+    if (teacherInput) teacherInput.placeholder = 'Ex: Oustaz Modou Fall, Oustaz Cheikh';
+
+    if (cycleSelect) {
+      cycleSelect.innerHTML = [
+        { value: "Tahfîz", label: "Tahfîz Coranique (Mémorisation)" },
+        { value: "Ibtida'i", label: "Cycle Ibtida'i (Primaire Franco-Arabe)" },
+        { value: "Moutawassit", label: "Cycle Moutawassit (Moyen Coranique)" },
+        { value: "Thanawi", label: "Cycle Thanawi (Secondaire Coranique)" },
+        { value: "Daara", label: "Daara Moderne & Hifz" }
+      ].map(c => `<option value="${c.value}">${c.label}</option>`).join('') + `
+        <option value="__CUSTOM_CYCLE__">✍️ Autre cycle / niveau (saisie libre)...</option>
+      `;
+    }
+  } else {
+    if (labelNom) labelNom.textContent = 'Nom de la Classe *';
+    if (labelCycle) labelCycle.textContent = 'Cycle Pédagogique *';
+    if (labelRoom) labelRoom.textContent = 'Salle de Classe';
+    if (labelTeacher) labelTeacher.textContent = 'Professeur Principal';
+    if (nomInput) nomInput.placeholder = 'Ex: CM2 A, 6ème B, Terminale S2...';
+    if (roomInput) roomInput.placeholder = 'Ex: Salle 12, Pavillon B';
+    if (teacherInput) teacherInput.placeholder = 'Ex: M. Abdoulaye Diallo';
+
+    if (cycleSelect) {
+      cycleSelect.innerHTML = [
+        { value: "Élémentaire", label: "Élémentaire (Primaire)" },
+        { value: "Collège", label: "Enseignement Moyen (Collège)" },
+        { value: "Lycée", label: "Enseignement Secondaire (Lycée)" },
+        { value: "Maternelle", label: "Maternelle / Préscolaire" }
+      ].map(c => `<option value="${c.value}">${c.label}</option>`).join('') + `
+        <option value="__CUSTOM_CYCLE__">✍️ Autre cycle / niveau (saisie libre)...</option>
+      `;
+    }
+  }
+
+  const customCycleInput = document.getElementById('dashboardClassCustomCycleInput');
+  if (customCycleInput) {
+    customCycleInput.style.display = 'none';
+    customCycleInput.value = '';
+  }
 
   if (editId) {
     const c = (appState.db.classes || []).find(item => item.id === editId);
     if (c) {
       if (idInput) idInput.value = c.id;
-      if (titleEl) titleEl.textContent = `Modifier la Classe : ${c.nom}`;
+      if (titleEl) titleEl.textContent = isInstitut ? `Modifier la Filière : ${c.nom}` : (isDaara ? `Modifier la Section : ${c.nom}` : `Modifier la Classe : ${c.nom}`);
       if (nomInput) nomInput.value = c.nom || '';
-      if (cycleSelect) cycleSelect.value = c.cycle || 'Élémentaire';
-      if (capInput) capInput.value = c.capacite || 45;
+      if (cycleSelect) {
+        cycleSelect.value = c.cycle || (isInstitut ? 'BTS' : (isDaara ? 'Tahfîz' : 'Élémentaire'));
+        if (!cycleSelect.value) {
+          cycleSelect.value = '__CUSTOM_CYCLE__';
+          if (customCycleInput) {
+            customCycleInput.style.display = 'block';
+            customCycleInput.value = c.cycle || '';
+          }
+        }
+      }
+      if (capInput) capInput.value = c.capacite || (isInstitut ? 35 : 45);
       if (roomInput) roomInput.value = c.salle || '';
       if (teacherInput) teacherInput.value = c.profPrincipal || '';
+      if (submitBtn) submitBtn.textContent = isInstitut ? '✓ Mettre à jour la Filière' : (isDaara ? '✓ Mettre à jour la Section' : '✓ Mettre à jour la Classe');
     }
   } else {
     if (idInput) idInput.value = '';
-    if (titleEl) titleEl.textContent = '🏫 Ajouter une Nouvelle Classe';
+    if (titleEl) titleEl.textContent = isInstitut ? '🎓 Ajouter une Nouvelle Filière / Promotion' : (isDaara ? '🕌 Ajouter une Section Coranique' : '🏫 Ajouter une Nouvelle Classe');
     if (nomInput) nomInput.value = '';
-    if (cycleSelect) cycleSelect.value = 'Élémentaire';
-    if (capInput) capInput.value = 45;
-    if (roomInput) roomInput.value = 'Salle Principale';
+    if (cycleSelect) cycleSelect.value = isInstitut ? 'BTS' : (isDaara ? 'Tahfîz' : 'Élémentaire');
+    if (capInput) capInput.value = isInstitut ? 35 : 45;
+    if (roomInput) roomInput.value = isInstitut ? 'Labo Info 1' : (isDaara ? 'Salle Al-Houda' : 'Salle Principale');
     if (teacherInput) teacherInput.value = '';
+    if (submitBtn) submitBtn.textContent = isInstitut ? '✓ Enregistrer la Filière' : (isDaara ? '✓ Enregistrer la Section' : '✓ Enregistrer la Classe');
   }
 
   modal.classList.add('active');
 }
 
+function toggleDashboardCustomCycle(val) {
+  const customInput = document.getElementById('dashboardClassCustomCycleInput');
+  if (!customInput) return;
+  if (val === '__CUSTOM_CYCLE__') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+  }
+}
+window.toggleDashboardCustomCycle = toggleDashboardCustomCycle;
+
 function submitNewClassModal(e) {
   if (e) e.preventDefault();
+  const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
   const id = document.getElementById('editDashboardClassId')?.value;
   const nom = document.getElementById('dashboardClassNameInput')?.value?.trim();
-  const cycle = document.getElementById('dashboardClassCycleSelect')?.value || 'Élémentaire';
-  const capacite = parseInt(document.getElementById('dashboardClassCapacityInput')?.value) || 45;
-  const salle = document.getElementById('dashboardClassRoomInput')?.value?.trim() || 'Salle Principale';
+  let cycle = document.getElementById('dashboardClassCycleSelect')?.value || (isInstitut ? 'BTS' : 'Élémentaire');
+  if (cycle === '__CUSTOM_CYCLE__') {
+    cycle = document.getElementById('dashboardClassCustomCycleInput')?.value?.trim() || (isInstitut ? 'BTS' : 'Cycle Général');
+  }
+  const capacite = parseInt(document.getElementById('dashboardClassCapacityInput')?.value) || (isInstitut ? 35 : 45);
+  const salle = document.getElementById('dashboardClassRoomInput')?.value?.trim() || (isInstitut ? 'Amphi A' : 'Salle Principale');
   const profPrincipal = document.getElementById('dashboardClassTeacherInput')?.value?.trim() || '';
-  const etabId = appState.activeEstablishmentId;
 
   if (!nom) {
-    showToast('⚠️ Veuillez renseigner le nom de la classe.', true);
+    showToast(`⚠️ Veuillez renseigner le libellé de la ${isInstitut ? 'filière / promotion' : (isDaara ? 'section' : 'classe')}.`, true);
     return;
   }
 
@@ -2059,7 +2566,7 @@ function submitNewClassModal(e) {
           body: JSON.stringify({ nom, cycle, capacite, salle, profPrincipal, updatedBy: 'Direction Générale' })
         }).catch(() => {});
       }
-      showToast(`✓ Classe ${nom} mise à jour avec succès !`);
+      showToast(`✓ ${isInstitut ? 'Filière' : (isDaara ? 'Section' : 'Classe')} ${nom} mise à jour avec succès !`);
     }
   } else {
     const newClass = {
@@ -2080,7 +2587,7 @@ function submitNewClassModal(e) {
         body: JSON.stringify({ ...newClass, updatedBy: 'Direction Générale' })
       }).catch(() => {});
     }
-    showToast(`✓ Classe ${nom} créée avec succès !`);
+    showToast(`✓ ${isInstitut ? 'Filière' : (isDaara ? 'Section' : 'Classe')} ${nom} créée avec succès !`);
   }
 
   saveDataStore();
@@ -2091,9 +2598,15 @@ function submitNewClassModal(e) {
 }
 
 function deleteClass(classId) {
+  const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
   const c = (appState.db.classes || []).find(item => item.id === classId);
-  const nom = c ? c.nom : 'cette classe';
-  if (!confirm(`Êtes-vous sûr de vouloir supprimer la classe "${nom}" ?`)) return;
+  const nom = c ? c.nom : (isInstitut ? 'cette filière' : 'cette classe');
+  const term = isInstitut ? 'la filière' : (isDaara ? 'la section' : 'la classe');
+  if (!confirm(`Êtes-vous sûr de vouloir supprimer ${term} "${nom}" ?`)) return;
 
   appState.db.classes = (appState.db.classes || []).filter(item => item.id !== classId);
   saveDataStore();
@@ -2105,23 +2618,29 @@ function deleteClass(classId) {
 
   renderClassesView();
   renderSidebar();
-  showToast(`🗑️ Classe "${nom}" supprimée.`);
+  showToast(`🗑️ ${isInstitut ? 'Filière' : (isDaara ? 'Section' : 'Classe')} "${nom}" supprimée.`);
 }
 
 function selectClassForTimetable(className) {
+  const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
   const classes = (appState.db.classes || []).filter(c => appState.activeEstablishmentId ? c.etablissementId === appState.activeEstablishmentId : true);
   const found = classes.find(c => c.nom.toLowerCase().trim() === className.toLowerCase().trim());
   if (found) {
     activeTimetableClassId = found.id;
   }
   switchTab('timetable');
-  showToast(`📅 Emploi du temps affiché pour la classe : ${className}`);
+  showToast(`📅 Planning affiché pour la ${isInstitut ? 'filière' : (isDaara ? 'section' : 'classe')} : ${className}`);
 }
 
 function triggerAutoGenerateTimetable() {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   const classes = (appState.db.classes || []).filter(c => etabId ? c.etablissementId === etabId : true);
   let currentClass = classes.find(c => c.id === activeTimetableClassId);
@@ -2131,18 +2650,67 @@ function triggerAutoGenerateTimetable() {
       activeTimetableClassId = classes[0].id;
       currentClass = classes[0];
     } else {
-      showToast("⚠️ Aucune classe active. Créez d'abord une classe ou appliquez un pack.", true);
+      showToast(`⚠️ Aucune ${isInstitut ? 'filière active. Créez d\'abord une filière' : (isDaara ? 'section active. Créez d\'abord une section' : 'classe active. Créez d\'abord une classe')} ou appliquez un pack.`, true);
       return;
     }
   }
 
   const className = currentClass.nom;
-  const cycle = (currentClass.cycle || (isDaara ? 'Daara' : 'Élémentaire')).toLowerCase();
-  const slotsList = isDaara ? DAARA_TIME_SLOTS : ECOLE_TIME_SLOTS;
+  const cycle = (currentClass.cycle || (isDaara ? 'Daara' : (isInstitut ? 'Formation Professionnelle' : 'Élémentaire'))).toLowerCase();
+  const classLower = (currentClass.nom || '').toLowerCase();
+  const isClassVocational = isInstitut || cycle.includes('pro') || cycle.includes('bts') || cycle.includes('licence') || cycle.includes('cap') || cycle.includes('cqp') || classLower.includes('bts') || classLower.includes('licence') || classLower.includes('cap') || classLower.includes('cqp');
+  const slotsList = isDaara ? DAARA_TIME_SLOTS : (isClassVocational ? INSTITUT_TIME_SLOTS : ECOLE_TIME_SLOTS);
 
   // 1. Matières officielles selon le cycle
   let subjects = [];
-  if (cycle.includes('maternelle')) {
+  if (isClassVocational) {
+    if (classLower.includes('gl') || classLower.includes('info') || classLower.includes('logiciel') || classLower.includes('web') || classLower.includes('dev')) {
+      subjects = [
+        { subject: "Algorithmique & Python Avancé", teacher: "Ing. Abdoulaye Ndiaye", room: "Labo Info 1" },
+        { subject: "Architecture Web & APIs REST", teacher: "Ing. Abdoulaye Ndiaye", room: "Labo Info 1" },
+        { subject: "Bases de Données & SQL (PostgreSQL)", teacher: "Dr. Mamadou Cissé", room: "Labo Info 2" },
+        { subject: "Réseaux Informatiques & Sécurité", teacher: "M. Cheikh Sy", room: "Labo Réseaux" },
+        { subject: "Anglais Professionnel & Soutenance", teacher: "M. Ousmane Niang", room: "Amphi A" },
+        { subject: "Atelier Projets & Dév Fullstack", teacher: "Ing. Abdoulaye Ndiaye", room: "Atelier Numérique" }
+      ];
+    } else if (classLower.includes('cge') || classLower.includes('compt') || classLower.includes('gestion') || classLower.includes('finance') || classLower.includes('audit')) {
+      subjects = [
+        { subject: "Comptabilité Approfondie SYSCOHADA", teacher: "Mme Aïssatou Fall", room: "Salle Marché & Audit" },
+        { subject: "Fiscalité & Déclarations d'Entreprise", teacher: "Me Aminata Diop", room: "Salle Marché & Audit" },
+        { subject: "Droit Commercial Général OHADA", teacher: "Me Aminata Diop", room: "Amphi A" },
+        { subject: "Audit & Contrôle de Gestion", teacher: "Dr. Mamadou Cissé", room: "Salle Conseil" },
+        { subject: "Informatique de Gestion & Sage", teacher: "Ing. Abdoulaye Ndiaye", room: "Labo Info 1" },
+        { subject: "Anglais des Affaires & Négociation", teacher: "M. Ousmane Niang", room: "Amphi A" }
+      ];
+    } else if (classLower.includes('transit') || classLower.includes('commerce') || classLower.includes('douane') || classLower.includes('fret') || classLower.includes('logistique')) {
+      subjects = [
+        { subject: "Douane, Tarifs Extérieurs & GAINDE", teacher: "M. Cheikh Sy", room: "Salle Transit" },
+        { subject: "Logistique Internationale & Fret", teacher: "M. Cheikh Sy", room: "Salle Transit" },
+        { subject: "Procédures d'Import-Export & Incoterms", teacher: "Mme Aïssatou Fall", room: "Salle Transit" },
+        { subject: "Droit Maritime & Assurances Transport", teacher: "Me Aminata Diop", room: "Amphi A" },
+        { subject: "Anglais Commercial & Maritime", teacher: "M. Ousmane Niang", room: "Amphi A" },
+        { subject: "Atelier Déclarations en Ligne", teacher: "M. Cheikh Sy", room: "Labo Info 2" }
+      ];
+    } else if (classLower.includes('elec') || classLower.includes('méc') || classLower.includes('btp') || classLower.includes('atelier') || classLower.includes('cap') || classLower.includes('cqp')) {
+      subjects = [
+        { subject: "Travaux Pratiques en Atelier", teacher: "Ing. Abdoulaye Ndiaye", room: "Atelier Électromécanique" },
+        { subject: "Schémas Électriques & DAO", teacher: "Ing. Abdoulaye Ndiaye", room: "Labo DAO" },
+        { subject: "Normes de Sécurité & Prévention HSE", teacher: "Dr. Mamadou Cissé", room: "Salle Technique" },
+        { subject: "Automatisme & Maintenance Industrielle", teacher: "M. Cheikh Sy", room: "Atelier Électromécanique" },
+        { subject: "Technologie des Équipements", teacher: "M. Cheikh Sy", room: "Atelier Électromécanique" },
+        { subject: "Communication Professionnelle & Chantier", teacher: "M. Ousmane Niang", room: "Salle Technique" }
+      ];
+    } else {
+      subjects = [
+        { subject: "Modules Métiers & Travaux Pratiques", teacher: "Dr. Mamadou Cissé", room: "Amphi A" },
+        { subject: "Droit du Travail & Cadre OHADA", teacher: "Me Aminata Diop", room: "Amphi A" },
+        { subject: "Outils Numériques & Tableurs Pro", teacher: "Ing. Abdoulaye Ndiaye", room: "Labo Info 1" },
+        { subject: "Comptabilité de Gestion & Budget", teacher: "Mme Aïssatou Fall", room: "Salle Conseil" },
+        { subject: "Anglais Technique Professionnel", teacher: "M. Ousmane Niang", room: "Amphi A" },
+        { subject: "Méthodologie Rapport & Soutenance", teacher: "Dr. Mamadou Cissé", room: "Amphi A" }
+      ];
+    }
+  } else if (cycle.includes('maternelle')) {
     subjects = [
       { subject: "Accueil & Langage", teacher: "Maîtresse Aïda", room: "Salle Éveil" },
       { subject: "Comptines & Éveil Sensoriel", teacher: "Maîtresse Aïda", room: "Salle Éveil" },
@@ -2301,7 +2869,7 @@ function triggerAutoGenerateTimetable() {
   }
 
   renderTimetable();
-  showToast(`⚡ Emploi du temps de ${className} généré automatiquement sans aucun conflit d'enseignant !`);
+  showToast(`⚡ ${isInstitut ? 'Planning des cours' : 'Emploi du temps'} de ${className} généré automatiquement sans aucun conflit ${isInstitut ? 'de formateur' : (isDaara ? 'd\'oustaz' : 'd\'enseignant')} !`);
 }
 
 // =========================================================================
@@ -2318,7 +2886,10 @@ function syncEstablishmentTeachers() {
   const isMockTeacher = (t) => {
     if (!t) return true;
     const id = (t.id || '').toLowerCase();
-    return id.includes('ousmane-niang-emf');
+    const code = (t.code || t.mat || t.accessKey || '').toUpperCase();
+    return id.includes('ousmane-niang-emf') ||
+           id === 'form-01' || id === 'form-02' || id === 'form-03' || id === 'form-04' ||
+           code.startsWith('FOR-2026-');
   };
 
   // 1. Purge immédiate des enseignants de maquette
@@ -2338,7 +2909,7 @@ function syncEstablishmentTeachers() {
           portalTeachers.filter(pt => !isMockTeacher(pt)).forEach(pt => {
             const exists = appState.db.enseignants.some(t =>
               (t.id === pt.id || (t.nom && pt.nom && t.nom.toLowerCase().trim() === pt.nom.toLowerCase().trim())) &&
-              (t.etablissementId === etabId || !t.etablissementId)
+              (t.etablissementId === etabId)
             );
             if (!exists) {
               appState.db.enseignants.push({
@@ -2365,7 +2936,7 @@ function syncEstablishmentTeachers() {
   }
 
   // 3. Synchronisation miroir vers sse_teachers_${estKey}
-  const currentEstTeachers = appState.db.enseignants.filter(t => etabId ? t.etablissementId === etabId : true);
+  const currentEstTeachers = appState.db.enseignants.filter(t => etabId ? t.etablissementId === etabId : false);
   try {
     localStorage.setItem(`sse_teachers_${estKey}`, JSON.stringify(currentEstTeachers));
   } catch (e) {}
@@ -2385,6 +2956,62 @@ function renderTeachersView() {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  // Adaptation dynamique des en-têtes et libellés selon le type d'établissement
+  const teachersSectionTitle = document.querySelector('#view-teachers .data-card-title span:last-child');
+  const btnNewTeacher = document.querySelector('#view-teachers .data-card-header button');
+  const kpiCountTitle = countEl?.parentElement?.querySelector('div:first-child');
+  const kpiHoursTitle = hoursEl?.parentElement?.querySelector('div:first-child');
+  const kpiPayrollTitle = payrollEl?.parentElement?.querySelector('div:first-child');
+  const thElements = document.querySelectorAll('#view-teachers .data-table thead th');
+
+  if (isInstitut) {
+    if (teachersSectionTitle) teachersSectionTitle.textContent = "Corps des Formateurs, Enseignants Supérieurs & Intervenants Professionnels";
+    if (btnNewTeacher) btnNewTeacher.textContent = "+ Nouveau Formateur / Vacataire";
+    if (kpiCountTitle) kpiCountTitle.textContent = "Effectif Formateurs & Vacataires";
+    if (kpiHoursTitle) kpiHoursTitle.textContent = "Volume Horaires Dispensé";
+    if (kpiPayrollTitle) kpiPayrollTitle.textContent = "Masse Salariale & Honoraires";
+    if (thElements && thElements.length >= 7) {
+      thElements[0].textContent = "Formateur / Intervenant";
+      thElements[1].textContent = "Modules / Spécialité";
+      thElements[2].textContent = "Filières Affectées";
+      thElements[3].textContent = "Volume Horaire";
+      thElements[4].textContent = "Statut Contrat";
+      thElements[5].textContent = "Rémunération / Taux";
+      thElements[6].textContent = "Actions";
+    }
+  } else if (isDaara) {
+    if (teachersSectionTitle) teachersSectionTitle.textContent = "Corps des Oustazs & Personnel d'Encadrement Daara";
+    if (btnNewTeacher) btnNewTeacher.textContent = "+ Nouveau Contrat Oustaz";
+    if (kpiCountTitle) kpiCountTitle.textContent = "Effectif Oustazs";
+    if (kpiHoursTitle) kpiHoursTitle.textContent = "Volume Horaire Coranique";
+    if (kpiPayrollTitle) kpiPayrollTitle.textContent = "Indemnités Mensuelles Oustazs";
+    if (thElements && thElements.length >= 7) {
+      thElements[0].textContent = "Oustaz / Enseignant";
+      thElements[1].textContent = "Matière / Hifz";
+      thElements[2].textContent = "Niveaux Affectés";
+      thElements[3].textContent = "Volume Hebdo";
+      thElements[4].textContent = "Contrat Daara";
+      thElements[5].textContent = "Indemnité";
+      thElements[6].textContent = "Actions";
+    }
+  } else {
+    if (teachersSectionTitle) teachersSectionTitle.textContent = "Corps Professoral, Enseignants & RH";
+    if (btnNewTeacher) btnNewTeacher.textContent = "+ Nouveau Contrat Enseignant";
+    if (kpiCountTitle) kpiCountTitle.textContent = "Effectif Enseignants";
+    if (kpiHoursTitle) kpiHoursTitle.textContent = "Volume Horaire Total";
+    if (kpiPayrollTitle) kpiPayrollTitle.textContent = "Masse Salariale Mensuelle";
+    if (thElements && thElements.length >= 7) {
+      thElements[0].textContent = "Enseignant / Oustaz";
+      thElements[1].textContent = "Matière Principale";
+      thElements[2].textContent = "Classes Affectées";
+      thElements[3].textContent = "Volume Hebdo";
+      thElements[4].textContent = "Contrat";
+      thElements[5].textContent = "Rémunération";
+      thElements[6].textContent = "Actions";
+    }
+  }
 
   const teachers = (appState.db.enseignants || []).filter(t => (etabId ? t.etablissementId === etabId : true) && t.statut !== 'ARCHIVE');
 
@@ -2399,11 +3026,11 @@ function renderTeachersView() {
     totalPayroll += (Number(t.salaire) || 0);
   });
 
-  const countLabel = `${teachers.length} ${isDaara ? 'Oustaz' : 'Enseignant'}${teachers.length > 1 ? 's' : ''}`;
+  const countLabel = `${teachers.length} ${isInstitut ? 'Formateur' : (isDaara ? 'Oustaz' : 'Enseignant')}${teachers.length > 1 ? 's' : ''}`;
   if (countEl) countEl.textContent = countLabel;
   if (hoursEl) hoursEl.textContent = `${totalHours} h / sem`;
   if (payrollEl) payrollEl.textContent = `${new Intl.NumberFormat('fr-FR').format(totalPayroll)} FCFA`;
-  if (sidebarBadge) sidebarBadge.textContent = `${teachers.length} Profs`;
+  if (sidebarBadge) sidebarBadge.textContent = isInstitut ? `${teachers.length} Formateurs` : `${teachers.length} Profs`;
   if (sidebarBadgeDaara) sidebarBadgeDaara.textContent = `${teachers.length} Oustazs`;
 
   if (!tbody) return;
@@ -2413,15 +3040,15 @@ function renderTeachersView() {
     tbody.innerHTML = `
       <tr>
         <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍🏫</div>
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">${isInstitut ? '🎓' : (isDaara ? '🕌' : '👨‍🏫')}</div>
           <div style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;">
-            Aucun contrat ${isDaara ? 'oustaz' : 'enseignant'} enregistré pour le moment
+            ${isInstitut ? 'Aucun formateur ou intervenant professionnel enregistré pour le moment' : (isDaara ? 'Aucun contrat oustaz enregistré pour le moment' : 'Aucun contrat enseignant enregistré pour le moment')}
           </div>
           <p style="font-size: 0.85rem; max-width: 500px; margin: 0 auto 1.25rem;">
-            Enregistrez les membres du corps professoral, leurs contrats, volumes horaires et affectations de classes pour alimenter automatiquement les emplois du temps et la paie.
+            ${isInstitut ? "Enregistrez les formateurs métiers, intervenants d'entreprises partenaires et coordinateurs avec leurs modules pour alimenter le planning et les vacations." : "Enregistrez les membres du corps professoral, leurs contrats, volumes horaires et affectations de classes pour alimenter automatiquement les emplois du temps et la paie."}
           </p>
           <button type="button" class="btn btn-primary btn-sm" onclick="openNewTeacherModal()" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); font-weight: 700;">
-            + Nouveau Contrat ${isDaara ? 'Oustaz' : 'Enseignant'}
+            + Nouveau ${isInstitut ? 'Formateur / Intervenant' : (isDaara ? 'Contrat Oustaz' : 'Contrat Enseignant')}
           </button>
         </td>
       </tr>
@@ -2430,7 +3057,7 @@ function renderTeachersView() {
   }
 
   tbody.innerHTML = teachers.map(t => {
-    const initials = (t.nom || 'Enseignant').split(' ').filter(p => p.length > 0).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+    const initials = (t.nom || 'Formateur').split(' ').filter(p => p.length > 0).slice(0, 2).map(p => p[0]).join('').toUpperCase();
     const cleanTel = (t.tel || '').replace(/\s+/g, '');
     const classesList = Array.isArray(t.classes) ? t.classes : (t.classes ? [t.classes] : []);
     
@@ -2438,28 +3065,29 @@ function renderTeachersView() {
       ? classesList.map(c => `<span class="badge-tag badge-blue" style="font-size: 0.72rem; padding: 0.15rem 0.45rem; margin: 0.1rem;">${c}</span>`).join('')
       : `<span style="color: var(--text-secondary); font-size: 0.78rem; font-style: italic;">Non affecté</span>`;
 
-    const isTitulaire = (t.contrat || '').toLowerCase().includes('titulaire');
-    const contractBadgeClass = isTitulaire ? 'badge-green' : ((t.contrat || '').toLowerCase().includes('vacataire') ? 'badge-yellow' : 'badge-purple');
+    const isTitulaire = (t.contrat || '').toLowerCase().includes('titulaire') || (t.contrat || '').toLowerCase().includes('permanent') || (t.contrat || '').toLowerCase().includes('cdi');
+    const isVacataire = (t.contrat || '').toLowerCase().includes('vacataire') || (t.contrat || '').toLowerCase().includes('taux') || (t.contrat || '').toLowerCase().includes('intervenant');
+    const contractBadgeClass = isTitulaire ? 'badge-green' : (isVacataire ? 'badge-yellow' : 'badge-purple');
     const salaryFormatted = Number(t.salaire) > 0 ? `${new Intl.NumberFormat('fr-FR').format(t.salaire)} FCFA` : 'Non renseigné';
 
     return `
       <tr>
         <td>
           <div class="avatar-cell">
-            <div class="avatar-round" style="background: ${isDaara ? 'rgba(245,158,11,0.18)' : 'rgba(56,189,248,0.18)'}; color: ${isDaara ? 'var(--gold)' : '#38BDF8'}; font-weight: 800;">
-              ${initials || 'ENS'}
+            <div class="avatar-round" style="background: ${isInstitut ? 'rgba(16, 185, 129, 0.18)' : (isDaara ? 'rgba(245,158,11,0.18)' : 'rgba(56,189,248,0.18)')}; color: ${isInstitut ? '#34D399' : (isDaara ? 'var(--gold)' : '#38BDF8')}; font-weight: 800;">
+              ${initials || (isInstitut ? 'FRM' : (isDaara ? 'OUS' : 'ENS'))}
             </div>
             <div>
               <div class="cell-main-text" style="font-weight: 700; color: #fff;">${t.nom}</div>
               <div class="cell-sub-text" style="display: flex; gap: 0.4rem; align-items: center; margin-top: 0.15rem;">
-                <span class="badge-tag badge-purple" style="font-size: 0.68rem; padding: 0.1rem 0.35rem;">${t.mat || 'ENS-2026'}</span>
+                <span class="badge-tag badge-purple" style="font-size: 0.68rem; padding: 0.1rem 0.35rem;">${t.mat || (isInstitut ? 'FRM-2026' : (isDaara ? 'OUS-2026' : 'ENS-2026'))}</span>
                 ${cleanTel ? `<a href="https://wa.me/${cleanTel.replace('+', '')}" target="_blank" style="color: #22C55E; text-decoration: none; font-size: 0.75rem;">💬 ${t.tel}</a>` : ''}
               </div>
             </div>
           </div>
         </td>
         <td>
-          <span style="font-weight: 600; color: #E2E8F0;">${t.matiere || 'Enseignement Général'}</span>
+          <span style="font-weight: 600; color: #E2E8F0;">${t.matiere || (isInstitut ? 'Module Spécialisé' : 'Enseignement Général')}</span>
         </td>
         <td>
           <div style="display: flex; flex-wrap: wrap; max-width: 240px;">
@@ -2470,23 +3098,23 @@ function renderTeachersView() {
           <span class="badge-tag badge-blue" style="font-weight: 600;">${t.volume || '20h / sem'}</span>
         </td>
         <td>
-          <span class="badge-tag ${contractBadgeClass}" style="font-weight: 600;">${t.contrat || 'CDI Titulaire'}</span>
+          <span class="badge-tag ${contractBadgeClass}" style="font-weight: 600;">${t.contrat || (isInstitut ? 'Vacataire Professionnel' : (isDaara ? 'Titulaire Daara' : 'CDI Titulaire'))}</span>
         </td>
         <td>
           <div style="font-weight: 700; color: #FBBF24;">${salaryFormatted}</div>
           <a href="javascript:void(0)" onclick="openTeacherPayslip('${t.id}')" style="font-size: 0.72rem; color: var(--primary); text-decoration: underline; margin-top: 0.15rem; display: inline-block;">
-            📄 Fiche de Paie
+            📄 ${isInstitut ? 'Bordereau / Paie' : 'Fiche de Paie'}
           </a>
         </td>
         <td>
           <div style="display: flex; gap: 0.35rem; align-items: center;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="openTeacherPayslip('${t.id}')" title="Générer l'attestation / bulletin de paie" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openTeacherPayslip('${t.id}')" title="Générer l'attestation / fiche d'honoraires" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
               📄
             </button>
             <button type="button" class="btn btn-outline btn-sm" onclick="openNewTeacherModal('${t.id}')" title="Modifier le contrat" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
               ✏️
             </button>
-            <button type="button" class="btn btn-outline btn-sm" onclick="deleteTeacher('${t.id}')" title="Supprimer l'enseignant" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.4);">
+            <button type="button" class="btn btn-outline btn-sm" onclick="deleteTeacher('${t.id}')" title="Supprimer" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.4);">
               🗑️
             </button>
           </div>
@@ -2504,33 +3132,87 @@ function openNewTeacherModal(editId = null) {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   if (!modal) return;
+
+  // Ajustement dynamique des options du contrat selon le type d'établissement
+  const contratSelect = document.getElementById('dashboardTeacherContrat');
+  if (contratSelect) {
+    if (isInstitut) {
+      contratSelect.innerHTML = `
+        <option value="Vacataire Professionnel">Vacataire Professionnel (Taux horaire)</option>
+        <option value="CDI Formateur Permanent">CDI Formateur Permanent</option>
+        <option value="Intervenant Entreprise Partenaire">Intervenant Entreprise Partenaire</option>
+        <option value="Formateur Atelier / TP">Formateur Atelier / TP</option>
+        <option value="Coordinateur de Filière">Coordinateur de Filière</option>
+      `;
+    } else if (isDaara) {
+      contratSelect.innerHTML = `
+        <option value="Titulaire Daara">Titulaire Daara Moderne</option>
+        <option value="Oustaz Adjoint / Répétiteur">Oustaz Adjoint / Répétiteur</option>
+        <option value="Bénévolat / Soutien">Bénévolat / Soutien</option>
+      `;
+    } else {
+      contratSelect.innerHTML = `
+        <option value="CDI Titulaire">CDI Titulaire</option>
+        <option value="Vacataire">Vacataire (Rémunération horaire)</option>
+        <option value="Stage Pédagogique">Stage Pédagogique</option>
+        <option value="Bénévolat / Soutien">Bénévolat / Soutien</option>
+      `;
+    }
+  }
+
+  // Libellés & Placeholders
+  const nomInput = document.getElementById('dashboardTeacherNom');
+  const matiereInput = document.getElementById('dashboardTeacherMatiere');
+  const matiereLabel = matiereInput?.parentElement?.querySelector('label');
+  const classesLabel = document.querySelector('#modalDashboardTeacher label[style*="justify-content"] span:first-child');
+  const directClassesLabel = document.getElementById('modalDashboardTeacherClassesLabel');
+  const teacherSubmitBtn = document.getElementById('modalDashboardTeacherSubmitBtn');
+  const volumeInput = document.getElementById('dashboardTeacherVolume');
+  const salaireInput = document.getElementById('dashboardTeacherSalaire');
+  const salaireLabel = salaireInput?.parentElement?.querySelector('label');
+
+  if (nomInput) nomInput.placeholder = isInstitut ? "Ex: M. Ibrahima Sarr (Expert Fiscaliste / Développeur)" : (isDaara ? "Ex: Oustaz Modou Fall" : "Ex: M. Abdoulaye Diallo");
+  if (matiereInput) matiereInput.placeholder = isInstitut ? "Ex: Génie Logiciel, Comptabilité SYSCOHADA, Douane" : (isDaara ? "Ex: Coran, Tajwîd & Hifz" : "Ex: Mathématiques, Français, PC");
+  if (matiereLabel) matiereLabel.textContent = isInstitut ? "Modules / Spécialité Enseignée *" : (isDaara ? "Matière / Enseignement Coranique *" : "Matière Principale Enseignée *");
+  if (classesLabel) classesLabel.textContent = isInstitut ? "Filières / Promotions Affectées :" : (isDaara ? "Sections Affectées :" : "Classes Affectées :");
+  if (directClassesLabel) directClassesLabel.textContent = isInstitut ? "Filières Affectées" : (isDaara ? "Sections Affectées" : "Classes Affectées");
+  if (salaireLabel) salaireLabel.textContent = isInstitut ? "Honoraires Mensuels / Forfait (FCFA)" : "Salaire Mensuel Net (FCFA)";
+
+  if (teacherSubmitBtn) {
+    teacherSubmitBtn.textContent = isInstitut 
+      ? (editId ? "✓ Mettre à jour le Contrat Formateur" : "✓ Valider le Contrat Formateur") 
+      : (isDaara 
+        ? (editId ? "✓ Mettre à jour le Contrat Oustaz" : "✓ Valider le Contrat Oustaz") 
+        : (editId ? "✓ Mettre à jour le Contrat Enseignant" : "✓ Valider le Contrat Enseignant"));
+  }
 
   if (editId) {
     const teacher = (appState.db.enseignants || []).find(t => t.id === editId);
     if (!teacher) return;
 
-    if (titleEl) titleEl.innerHTML = `✏️ Modifier le Contrat ${isDaara ? 'Oustaz' : 'Enseignant'}`;
+    if (titleEl) titleEl.innerHTML = isInstitut ? `✏️ Modifier le Contrat Formateur` : (isDaara ? `✏️ Modifier le Contrat Oustaz` : `✏️ Modifier le Contrat Enseignant`);
     if (editIdInput) editIdInput.value = editId;
 
-    document.getElementById('dashboardTeacherNom').value = teacher.nom || '';
+    if (nomInput) nomInput.value = teacher.nom || '';
     document.getElementById('dashboardTeacherTel').value = teacher.tel || '';
-    document.getElementById('dashboardTeacherMatiere').value = teacher.matiere || '';
-    document.getElementById('dashboardTeacherContrat').value = teacher.contrat || (isDaara ? 'Titulaire Daara' : 'CDI Titulaire');
-    document.getElementById('dashboardTeacherVolume').value = teacher.volume || '20h / semaine';
-    document.getElementById('dashboardTeacherSalaire').value = teacher.salaire || 220000;
+    if (matiereInput) matiereInput.value = teacher.matiere || '';
+    if (contratSelect) contratSelect.value = teacher.contrat || (isInstitut ? 'Vacataire Professionnel' : (isDaara ? 'Titulaire Daara' : 'CDI Titulaire'));
+    if (volumeInput) volumeInput.value = teacher.volume || (isInstitut ? '12h / semaine' : '20h / semaine');
+    if (salaireInput) salaireInput.value = teacher.salaire || (isInstitut ? 350000 : 220000);
 
     selectedTeacherModalClasses = Array.isArray(teacher.classes) ? [...teacher.classes] : (teacher.classes ? [teacher.classes] : []);
   } else {
-    if (titleEl) titleEl.innerHTML = `👨‍🏫 Nouveau Contrat ${isDaara ? 'Oustaz' : 'Enseignant'}`;
+    if (titleEl) titleEl.innerHTML = isInstitut ? `🎓 Nouveau Contrat Formateur / Intervenant` : (isDaara ? `👳 Nouveau Contrat Oustaz` : `👨‍🏫 Nouveau Contrat Enseignant`);
     if (editIdInput) editIdInput.value = '';
     if (form) form.reset();
 
-    document.getElementById('dashboardTeacherVolume').value = '20h / semaine';
-    document.getElementById('dashboardTeacherSalaire').value = isDaara ? '180000' : '220000';
-    document.getElementById('dashboardTeacherContrat').value = isDaara ? 'Titulaire Daara' : 'CDI Titulaire';
-    document.getElementById('dashboardTeacherMatiere').value = isDaara ? 'Coran, Tajwîd & Hifz' : 'Mathématiques';
+    if (volumeInput) volumeInput.value = isInstitut ? '12h / semaine' : '20h / semaine';
+    if (salaireInput) salaireInput.value = isInstitut ? '350000' : (isDaara ? '180000' : '220000');
+    if (contratSelect) contratSelect.value = isInstitut ? 'Vacataire Professionnel' : (isDaara ? 'Titulaire Daara' : 'CDI Titulaire');
+    if (matiereInput) matiereInput.value = isInstitut ? 'Génie Logiciel & Systèmes' : (isDaara ? 'Coran, Tajwîd & Hifz' : 'Mathématiques');
 
     selectedTeacherModalClasses = [];
   }
@@ -2544,12 +3226,16 @@ function renderTeacherClassesPills() {
   if (!container) return;
 
   const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
   const classes = (appState.db.classes || []).filter(c => etabId ? c.etablissementId === etabId : true);
 
   if (classes.length === 0) {
     container.innerHTML = `
       <div style="font-size: 0.8rem; color: var(--text-secondary); width: 100%; text-align: center; padding: 0.5rem;">
-        Aucune classe enregistrée dans l'établissement. Ajoutez des classes dans l'onglet Classes pour les assigner ici.
+        ${isInstitut ? "Aucune filière enregistrée dans l'établissement. Ajoutez des filières pour les assigner ici." : "Aucune classe enregistrée dans l'établissement. Ajoutez des classes dans l'onglet Classes pour les assigner ici."}
       </div>
     `;
     return;
@@ -2598,6 +3284,14 @@ function submitNewTeacherModal(e) {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(item => item.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = etab && !isDaara && (
+    (etab.type || '').toUpperCase() === 'FORMATION_PRO' ||
+    (etab.type || '').toUpperCase() === 'INSTITUT' ||
+    (etab.plan || '').toLowerCase().includes('institut') ||
+    (etab.plan || '').toLowerCase().includes('bts') ||
+    (etab.plan || '').toLowerCase().includes('formation') ||
+    (etab.name || '').toLowerCase().includes('institut')
+  );
 
   if (!nom || !tel || !matiere) {
     showToast('⚠️ Veuillez renseigner le nom, le numéro de téléphone et la matière enseignée.', true);
@@ -2641,7 +3335,7 @@ function submitNewTeacherModal(e) {
     }
   } else {
     const totalCount = appState.db.enseignants.filter(t => etabId ? t.etablissementId === etabId : true).length;
-    const prefix = isDaara ? 'OUS-2026' : 'ENS-2026';
+    const prefix = isInstitut ? 'FRM-2026' : (isDaara ? 'OUS-2026' : 'ENS-2026');
     const mat = `${prefix}-${String(totalCount + 1).padStart(2, '0')}`;
 
     const newTeacher = {
@@ -2672,7 +3366,7 @@ function submitNewTeacherModal(e) {
       }).catch(() => {});
     }
 
-    showToast(`✓ Contrat de ${nom} enregistré avec succès (${mat}) !`);
+    showToast(`✓ Nouveau ${isInstitut ? 'formateur' : (isDaara ? 'oustaz' : 'enseignant')} ${nom} enregistré (${mat}) !`);
   }
 
   saveDataStore();
@@ -2711,6 +3405,14 @@ function openTeacherPayslip(teacherId) {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(item => item.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = etab && !isDaara && (
+    (etab.type || '').toUpperCase() === 'FORMATION_PRO' ||
+    (etab.type || '').toUpperCase() === 'INSTITUT' ||
+    (etab.plan || '').toLowerCase().includes('institut') ||
+    (etab.plan || '').toLowerCase().includes('bts') ||
+    (etab.plan || '').toLowerCase().includes('formation') ||
+    (etab.name || '').toLowerCase().includes('institut')
+  );
 
   const salaireNet = Number(teacher.salaire) || 200000;
   const baseBrut = Math.round(salaireNet * 0.78);
@@ -2725,7 +3427,7 @@ function openTeacherPayslip(teacherId) {
   const dateEmission = dateNow.toLocaleDateString('fr-FR');
   const classesAffectees = Array.isArray(teacher.classes) && teacher.classes.length > 0 
     ? teacher.classes.join(', ') 
-    : 'Tronc commun / Établissement';
+    : (isInstitut ? 'Toutes filières confondues' : 'Tronc commun / Établissement');
 
   contentEl.innerHTML = `
     <div style="background: #ffffff; color: #1e293b; padding: 1.5rem; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
@@ -2734,12 +3436,12 @@ function openTeacherPayslip(teacherId) {
         <div>
           <div style="font-size: 1.25rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">${etab ? etab.name : 'SunuSchool Express'}</div>
           <div style="font-size: 0.8rem; color: #475569; margin-top: 0.2rem;">
-            ${isDaara ? 'Institut Islamique & Daara Moderne' : "Établissement Privé d'Enseignement Général"} • ${etab ? etab.city : 'Sénégal'}
+            ${isInstitut ? 'Institut Supérieur & Centre de Formation Professionnelle' : (isDaara ? 'Institut Islamique & Daara Moderne' : "Établissement Privé d'Enseignement Général")} • ${etab ? etab.city : 'Sénégal'}
           </div>
-          <div style="font-size: 0.75rem; color: #64748b;">Agrément MEN / Ministère de la Formation • Téléphone Direction : ${etab?.phone || '+221 77 000 00 00'}</div>
+          <div style="font-size: 0.75rem; color: #64748b;">${isInstitut ? 'Agrément MESRI / MFPAI • Direction des Études : ' + (etab?.phone || '+221 77 000 00 00') : 'Agrément MEN / Ministère de la Formation • Téléphone Direction : ' + (etab?.phone || '+221 77 000 00 00')}</div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 0.75rem; font-weight: 700; color: #00D2B4; text-transform: uppercase; letter-spacing: 0.5px;">BULLETIN DE PAIE OFFICIEL</div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: #00D2B4; text-transform: uppercase; letter-spacing: 0.5px;">${isInstitut ? 'BORDEREAU D’HONORAIRES & PAIE' : 'BULLETIN DE PAIE OFFICIEL'}</div>
           <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-top: 0.15rem;">${periodeTexte.toUpperCase()}</div>
           <div style="font-size: 0.72rem; color: #64748b;">Date d'édition : ${dateEmission}</div>
         </div>
@@ -2748,16 +3450,16 @@ function openTeacherPayslip(teacherId) {
       <!-- Informations Enseignant -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.82rem;">
         <div>
-          <div style="color: #64748b; font-size: 0.72rem; text-transform: uppercase;">Nom & Prénom du Salarié</div>
+          <div style="color: #64748b; font-size: 0.72rem; text-transform: uppercase;">${isInstitut ? 'Formateur / Intervenant' : (isDaara ? 'Oustaz Salarié' : 'Nom & Prénom du Salarié')}</div>
           <div style="font-weight: 700; font-size: 0.95rem; color: #0f172a;">${teacher.nom}</div>
           <div style="margin-top: 0.35rem; color: #64748b; font-size: 0.72rem; text-transform: uppercase;">Matricule / Contrat</div>
-          <div style="font-weight: 600; color: #334155;">${teacher.mat} • ${teacher.contrat || 'CDI Titulaire'}</div>
+          <div style="font-weight: 600; color: #334155;">${teacher.mat} • ${teacher.contrat || (isInstitut ? 'Vacataire Professionnel' : 'CDI Titulaire')}</div>
         </div>
         <div>
-          <div style="color: #64748b; font-size: 0.72rem; text-transform: uppercase;">Matière & Affectations</div>
+          <div style="color: #64748b; font-size: 0.72rem; text-transform: uppercase;">${isInstitut ? 'Modules & Spécialités' : 'Matière & Affectations'}</div>
           <div style="font-weight: 700; color: #0f172a;">${teacher.matiere}</div>
-          <div style="color: #475569; font-size: 0.78rem; margin-top: 0.15rem;">Classes : ${classesAffectees}</div>
-          <div style="margin-top: 0.35rem; color: #64748b; font-size: 0.72rem; text-transform: uppercase;">Volume Hebdomadaire</div>
+          <div style="color: #475569; font-size: 0.78rem; margin-top: 0.15rem;">${isInstitut ? 'Filières / Promos : ' : 'Classes : '} ${classesAffectees}</div>
+          <div style="margin-top: 0.35rem; color: #64748b; font-size: 0.72rem; text-transform: uppercase;">Volume Pédagogique</div>
           <div style="font-weight: 600; color: #334155;">${teacher.volume || '20h / semaine'}</div>
         </div>
       </div>
@@ -2839,21 +3541,38 @@ function renderGradesTable() {
   if (!tbody) return;
 
   const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
   const eleves = appState.db.eleves.filter(e => etabId ? e.etablissementId === etabId : true);
+
+  const thStudent = document.getElementById('thGradesStudent');
+  if (thStudent) thStudent.textContent = isInstitut ? "Étudiant (Nom & Matricule)" : (isDaara ? "Talibé (Nom & Matricule)" : "Apprenant (Nom & Matricule)");
+  const thClass = document.getElementById('thGradesClass');
+  if (thClass) thClass.textContent = isInstitut ? "Filière / Promotion" : (isDaara ? "Cycle Coranique" : "Niveau / Classe");
+  const thScore = document.getElementById('thGradesScore');
+  if (thScore) thScore.textContent = isInstitut ? "Moyenne Semestrielle / Crédits" : (isDaara ? "Progression Coran (Hizb)" : "Moyenne Générale (/20)");
+  const thRank = document.getElementById('thGradesRank');
+  if (thRank) thRank.textContent = isInstitut ? "Rang Promotion" : "Rang";
+  const thMention = document.getElementById('thGradesMention');
+  if (thMention) thMention.textContent = isInstitut ? "Mention & Décision Jury" : "Mention & Appréciation";
+  const thAction = document.getElementById('thGradesAction');
+  if (thAction) thAction.textContent = isInstitut ? "Action Relevé" : (isDaara ? "Action Bilan Coran" : "Action Bulletin");
 
   tbody.innerHTML = '';
   if (eleves.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">Aucun élève enregistré pour cet établissement.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">${isInstitut ? "Aucun étudiant enregistré pour cet établissement." : (isDaara ? "Aucun talibé enregistré pour cet établissement." : "Aucun apprenant enregistré pour cet établissement.")}</td></tr>`;
     return;
   }
 
   eleves.forEach((e, idx) => {
     const isTalibe = e.type === 'TALIBE';
+    const isEtu = e.type === 'ETUDIANT' || isInstitut;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
         <div class="avatar-cell">
-          <div class="avatar-round" style="background: ${isTalibe ? 'rgba(245,158,11,0.2)' : 'rgba(0,210,180,0.2)'}; color: ${isTalibe ? 'var(--gold)' : 'var(--primary)'};">
+          <div class="avatar-round" style="background: ${isTalibe ? 'rgba(245,158,11,0.2)' : (isEtu ? 'rgba(56,189,248,0.2)' : 'rgba(0,210,180,0.2)')}; color: ${isTalibe ? 'var(--gold)' : (isEtu ? '#38BDF8' : 'var(--primary)')};">
             ${e.prenom[0]}${e.nom[0]}
           </div>
           <div>
@@ -2862,11 +3581,13 @@ function renderGradesTable() {
           </div>
         </div>
       </td>
-      <td><span class="badge-tag ${isTalibe ? 'badge-gold' : 'badge-blue'}">${e.classeNom}</span></td>
+      <td><span class="badge-tag ${isTalibe ? 'badge-gold' : (isEtu ? 'badge-purple' : 'badge-blue')}">${e.classeNom}</span></td>
       <td>
         ${isTalibe 
           ? `<strong>Hizb ${e.hizbActuel} / 60</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(Tajwîd: ${e.tajwidNote}/20)</span>`
-          : `<strong>${e.moyenneGenerale || 15.5} / 20</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(Semestre 1)</span>`
+          : (isEtu 
+            ? `<strong>${e.moyenneGenerale || 15.5} / 20</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(Crédits: 30 ECTS)</span>`
+            : `<strong>${e.moyenneGenerale || 15.5} / 20</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(Semestre 1)</span>`)
         }
       </td>
       <td>
@@ -2874,7 +3595,11 @@ function renderGradesTable() {
       </td>
       <td>
         <span style="font-size: 0.8rem; font-weight: 700; color: #34D399;">
-          ${isTalibe ? (e.hizbActuel >= 40 ? '🌟 Hifz Avancé • Félicitations' : '✓ Très Bonne Progression') : (e.moyenneGenerale >= 16 ? '🌟 Félicitations du Conseil' : '✓ Tableau d\'Honneur')}
+          ${isTalibe 
+            ? (e.hizbActuel >= 40 ? '🌟 Hifz Avancé • Félicitations' : '✓ Très Bonne Progression') 
+            : (isEtu 
+              ? (e.moyenneGenerale >= 14 ? '🌟 Admis avec Mention Bien • Jury LMD' : '✓ Admis Semestre Supérieur')
+              : (e.moyenneGenerale >= 16 ? '🌟 Félicitations du Conseil' : '✓ Tableau d\'Honneur'))}
         </span>
       </td>
       <td>
@@ -2891,7 +3616,7 @@ function renderGradesTable() {
               ✏️ Saisir Notes
             </button>
             <button class="btn btn-outline btn-sm" onclick="generateOfficialBulletin('${e.id}')">
-              📑 Bulletin Scolaire
+              ${isEtu ? '📑 Relevé Semestriel' : '📑 Bulletin Scolaire'}
             </button>
           `}
         </div>
@@ -3541,15 +4266,27 @@ const DEFAULT_SCOLAIRE_SUBJECTS = [
   { matiere: "Éducation Physique & Sportive (EPS)", coef: 1, devoir1: 16.0, devoir2: 17.0, compo: 16.5, appreciation: "Esprit d'équipe et dynamisme remarquable." }
 ];
 
+const DEFAULT_INSTITUT_SUBJECTS = [
+  { matiere: "Comptabilité & Gestion SYSCOHADA", coef: 4, devoir1: 16.5, devoir2: 17.0, compo: 17.5, appreciation: "Excellente maîtrise des écritures comptables et arrêtés." },
+  { matiere: "Management & Stratégie d'Entreprise", coef: 3, devoir1: 15.0, devoir2: 16.0, compo: 16.5, appreciation: "Bonne vision opérationnelle et capacités d'analyse." },
+  { matiere: "Informatique & Outils Numériques", coef: 3, devoir1: 17.0, devoir2: 18.0, compo: 17.5, appreciation: "Très autonome sur les logiciels et applications métier." },
+  { matiere: "Droit des Affaires & Droit du Travail", coef: 2, devoir1: 15.5, devoir2: 16.0, compo: 16.0, appreciation: "Bonne assimilation du cadre légal sénégalais." },
+  { matiere: "Anglais Professionnel des Affaires", coef: 2, devoir1: 16.0, devoir2: 17.0, compo: 16.5, appreciation: "Aisance en négociation et rédaction commerciale." },
+  { matiere: "Projet Professionnel & Stage en Entreprise", coef: 4, devoir1: 18.0, devoir2: 18.5, compo: 19.0, appreciation: "Rapport de stage et soutenance de grande qualité." }
+];
+
 function openGradesEntryModal(eleveId) {
   const modal = document.getElementById('modalGradesEntry');
   if (!modal) return;
 
   const etabId = appState.activeEstablishmentId;
-  const scolaires = appState.db.eleves.filter(e => e.type === 'SCOLAIRE' && (etabId ? e.etablissementId === etabId : true));
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+  const scolaires = appState.db.eleves.filter(e => (isInstitut ? (e.type === 'ETUDIANT' || e.type === 'SCOLAIRE') : (e.type === 'SCOLAIRE' || e.type === 'ETUDIANT')) && (etabId ? e.etablissementId === etabId : true));
 
   if (scolaires.length === 0) {
-    showToast("Aucun élève de cycle scolaire enregistré pour cet établissement.", true);
+    showToast(isInstitut ? "Aucun étudiant enregistré pour cet établissement." : "Aucun apprenant enregistré pour cet établissement.", true);
     return;
   }
 
@@ -3558,7 +4295,12 @@ function openGradesEntryModal(eleveId) {
 
   appState.activeEleveIdForGrades = eleve.id;
 
-  // Remplir le sélecteur d'élèves
+  const labelStudent = document.getElementById('labelGradesEntryStudent');
+  if (labelStudent) {
+    labelStudent.textContent = isInstitut ? "🎓 Étudiant à évaluer :" : "👤 Apprenant à évaluer :";
+  }
+
+  // Remplir le sélecteur d'apprenants
   const selectEl = document.getElementById('gradesEntryStudentSelect');
   if (selectEl) {
     selectEl.innerHTML = '';
@@ -3577,7 +4319,8 @@ function openGradesEntryModal(eleveId) {
 
   // Initialiser les matières si non existantes
   if (!eleve.bulletinNotes || eleve.bulletinNotes.length === 0) {
-    eleve.bulletinNotes = JSON.parse(JSON.stringify(DEFAULT_SCOLAIRE_SUBJECTS));
+    const isEtu = eleve.type === 'ETUDIANT' || isInstitut;
+    eleve.bulletinNotes = JSON.parse(JSON.stringify(isEtu ? DEFAULT_INSTITUT_SUBJECTS : DEFAULT_SCOLAIRE_SUBJECTS));
     if (eleve.moyenneGenerale) {
       const ratio = eleve.moyenneGenerale / 17.25;
       eleve.bulletinNotes.forEach(sub => {
@@ -3806,33 +4549,38 @@ function submitHizbEval() {
   renderCurrentView();
 }
 
-// B. Badge PVC Talibé
+// B. Badge PVC Talibé / Élève / Étudiant
 function previewPvcBadge(talibeId) {
   const talibe = appState.db.eleves.find(e => e.id === talibeId);
   if (!talibe) return;
+
+  const etab = appState.db.etablissements.find(e => e.id === talibe.etablissementId) ||
+               appState.db.etablissements.find(e => e.id === appState.activeEstablishmentId);
+  const isTalibe = talibe.type === 'TALIBE';
+  const isInstitut = talibe.type === 'ETUDIANT' || (!isTalibe && isInstitutEstablishment(etab));
 
   const preview = document.getElementById('pvcBadgeRenderArea');
   if (preview) {
     preview.innerHTML = `
       <div class="pvc-card-preview" style="margin: 0 auto;">
         <div class="pvc-header">
-          <span class="pvc-title">🇸🇳 CARTE OFFICIELLE SCOLAIRE • CARTE OFFICIELLE</span>
-          <span style="font-size: 0.65rem; background: #00D2B4; color: #000; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 800;">PVC CR-80</span>
+          <span class="pvc-title">${isInstitut ? '🇸🇳 CARTE ÉTUDIANT • FORMATION PRO & BTS' : (isTalibe ? '🇸🇳 CARTE TALIBÉ • DAARA MODERNE' : '🇸🇳 CARTE SCOLAIRE • ÉDUCATION NATIONALE')}</span>
+          <span style="font-size: 0.65rem; background: ${isInstitut ? '#38BDF8' : '#00D2B4'}; color: #000; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 800;">PVC CR-80</span>
         </div>
         <div class="pvc-body">
-          <div class="pvc-photo">🧕</div>
+          <div class="pvc-photo">${isInstitut ? '🎓' : (isTalibe ? '🧕' : '🎒')}</div>
           <div>
             <div class="pvc-name">${talibe.prenom} ${talibe.nom}</div>
             <div class="pvc-meta">Matricule : <strong>${talibe.matricule}</strong></div>
-            <div class="pvc-meta">Niveau : <strong>Hizb ${talibe.hizbActuel} / 60</strong></div>
-            <div class="pvc-meta">Lit : <strong>N°${talibe.internat.litNumero} (${talibe.internat.pavillon})</strong></div>
+            <div class="pvc-meta">${isInstitut ? 'Filière' : (isTalibe ? 'Niveau' : 'Classe')} : <strong>${isTalibe ? `Hizb ${talibe.hizbActuel} / 60` : talibe.classeNom}</strong></div>
+            <div class="pvc-meta">${isTalibe ? `Lit : <strong>N°${talibe.internat ? talibe.internat.litNumero : '1'} (${talibe.internat ? talibe.internat.pavillon : 'Pavillon A'})</strong>` : `Statut : <strong>${isInstitut ? 'Étudiant Actif' : 'Élève Inscrit'}</strong>`}</div>
           </div>
           <div class="pvc-qr">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://sunuschool.sn/verify/${talibe.matricule}" style="width: 100%; height: 100%; border-radius: 2px;" alt="QR Code">
           </div>
         </div>
         <div style="font-size: 0.65rem; color: #94A3B8; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.3rem; display: flex; justify-content: space-between;">
-          <span>Clé Famille : ${talibe.cleAcces}</span>
+          <span>${isInstitut ? 'Clé Apprenant' : 'Clé Famille'} : ${talibe.cleAcces}</span>
           <span>Validité : 2026-2027</span>
         </div>
       </div>
@@ -3841,7 +4589,7 @@ function previewPvcBadge(talibeId) {
   document.getElementById('modalPvcBadge').classList.add('active');
 }
 
-// C. Bulletin Officiel (Double Moteur : Daara / Tahfiz Coranique ou École Nationale)
+// C. Bulletin Officiel (Triple Moteur : Daara / Tahfiz Coranique, Institut LMD/BTS, École Privée)
 let activeBulletinStudentId = null;
 function generateOfficialBulletin(eleveId) {
   activeBulletinStudentId = eleveId;
@@ -3857,6 +4605,7 @@ function generateOfficialBulletin(eleveId) {
                };
 
   const isDaara = eleve.type === 'TALIBE' || etab.type === 'DAARA';
+  const isInstitut = eleve.type === 'ETUDIANT' || (!isDaara && isInstitutEstablishment(etab));
   const area = document.getElementById('bulletinRenderArea');
   if (!area) return;
 
@@ -3965,6 +4714,90 @@ function generateOfficialBulletin(eleveId) {
         </div>
       </div>
     `;
+  } else if (isInstitut) {
+    // Template Institut / BTS / Formation Professionnelle
+    const moy = eleve.moyenneGenerale || 16.5;
+    const rang = eleve.rang || 1;
+    const totalEleves = eleve.totalEleves || 28;
+
+    area.innerHTML = `
+      <div class="official-bulletin-container">
+        <div class="bulletin-header-flag">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 800; color: #0284c7;">RÉPUBLIQUE DU SÉNÉGAL • MINISTÈRE DE L'ENSEIGNEMENT SUPÉRIEUR &amp; FORMATION PROFESSIONNELLE</div>
+            <div style="font-size: 1.15rem; font-weight: 800;">${etab.name}</div>
+            <div style="font-size: 0.75rem; color: #64748b;">Code Institut : <strong>${etab.code}</strong> • Année Académique 2026-2027 • ${etab.city}</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 1.1rem; font-weight: 800; color: #0284c7;">RELEVÉ DE NOTES SEMESTRIEL (LMD / BTS)</div>
+            <div style="font-size: 0.8rem; font-weight: 700;">Filière : ${eleve.classeNom}</div>
+            <div style="font-size: 0.72rem; color: #64748b;">Promotion : ${totalEleves} étudiants</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem; background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.25); padding: 1rem; border-radius: 6px;">
+          <div>
+            <div>Nom &amp; Prénom de l'Étudiant : <strong>${eleve.nom.toUpperCase()} ${eleve.prenom}</strong></div>
+            <div>Matricule Académique : <strong>${eleve.matricule}</strong> • Clé Sécurisée : <code>${eleve.cleAcces}</code></div>
+            <div>Responsable Pédagogique : <strong>Dr. Mamadou Cissé</strong></div>
+            <div>Contact de l'étudiant / Référent : <strong>${eleve.parentNom || 'Étudiant'}</strong> (${eleve.parentTelephone})</div>
+          </div>
+          <div style="text-align: center; border-left: 2px solid rgba(56,189,248,0.3); padding-left: 0.5rem;">
+            <div style="font-size: 0.75rem; color: #0284c7; font-weight: 700;">MOYENNE &amp; CRÉDITS VALIDÉS</div>
+            <div class="bulletin-score-big" style="color: #0284c7;">${moy} / 20</div>
+            <div style="font-size: 0.75rem; font-weight: 800; color: #10b981;">30 CRÉDITS ECTS • Rang ${rang}${rang === 1 ? 'er' : 'e'}</div>
+          </div>
+        </div>
+
+        <table class="bulletin-table">
+          <thead>
+            <tr>
+              <th>Unités d'Enseignement &amp; Modules</th>
+              <th>Contrôle Continu</th>
+              <th>Examen Semestriel</th>
+              <th>Moyenne /20</th>
+              <th>Crédits (ECTS)</th>
+              <th>Statut UE</th>
+              <th>Appréciation Formateur</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(eleve.bulletinNotes && eleve.bulletinNotes.length > 0 ? eleve.bulletinNotes : DEFAULT_INSTITUT_SUBJECTS).map(sub => {
+              const d1 = Number(sub.devoir1) || 0;
+              const d2 = Number(sub.devoir2) || 0;
+              const compo = Number(sub.compo) || 0;
+              const coef = Number(sub.coef) || 1;
+              const moyMat = +(((d1 + d2) / 2 + compo * 2) / 3).toFixed(2);
+              const estValide = moyMat >= 10;
+              return `
+                <tr>
+                  <td><strong>${sub.matiere}</strong></td>
+                  <td>${d1.toFixed(1)} / ${d2.toFixed(1)}</td>
+                  <td>${compo.toFixed(1)}</td>
+                  <td style="font-weight: 800; color: ${estValide ? '#0284c7' : '#ef4444'};">${moyMat.toFixed(2)}</td>
+                  <td>${coef * 2} ECTS</td>
+                  <td><span class="badge-tag ${estValide ? 'badge-green' : 'badge-red'}">${estValide ? '✓ Validé' : 'Rattrapage'}</span></td>
+                  <td><em>${sub.appreciation || 'Travail assidu et rigoureux.'}</em></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1; padding-top: 1rem; margin-top: 1rem;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700;">Décision du Jury de Délibération : <span style="color: #0284c7;">${eleve.appreciationConseil || (moy >= 14 ? 'ADMIS EN ANNÉE SUPÉRIEURE AVEC MENTION BIEN' : 'ADMIS EN ANNÉE SUPÉRIEURE (CRÉDITS VALIDÉS)')}</span></div>
+            <div style="font-size: 0.7rem; color: #64748b;">Visa du Directeur des Études &amp; Sceau Numérique Officiel SunuSchoolExpress</div>
+          </div>
+          <div style="text-align: right; display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline btn-sm" onclick="shareBulletinWhatsApp('${eleve.id}')" style="border-color: #25D366; color: #128C7E; font-weight: 700;">
+              📲 WhatsApp Étudiant / Contact
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimer Format A4 Officiel</button>
+          </div>
+        </div>
+      </div>
+    `;
   } else {
     // Template École Privée (Ministère de l'Éducation Nationale)
     const moy = eleve.moyenneGenerale || 16.85;
@@ -4058,12 +4891,21 @@ function shareBulletinWhatsApp(eleveId) {
   const eleve = appState.db.eleves.find(e => e.id === eleveId);
   if (!eleve) return;
   const isDaara = eleve.type === 'TALIBE';
+  const etab = appState.db.etablissements.find(e => e.id === eleve.etablissementId) || appState.db.etablissements.find(e => e.id === appState.activeEstablishmentId);
+  const isInstitut = eleve.type === 'ETUDIANT' || (!isDaara && isInstitutEstablishment(etab));
   const phone = (eleve.parentTelephone || '+221 77 645 88 12').replace(/[^0-9]/g, '');
-  const msg = isDaara
-    ? `SunuSchoolExpress - Bulletin de Progression Hifz &amp; Tajwîd%0A%0ABonjour ${eleve.parentNom || 'Cher Parent'},%0AVoici le bilan de progression coranique de ${eleve.prenom} ${eleve.nom} :%0A📖 Hizb atteint : ${eleve.hizbActuel} / 60 (${eleve.sourate})%0A⭐ Note Tajwîd : ${eleve.tajwidNote}/20%0AClé d'accès famille : ${eleve.cleAcces}%0AFélicitations de la direction du Daara !`
-    : `SunuSchoolExpress - Bulletin Scolaire Officiel%0A%0ABonjour ${eleve.parentNom || 'Cher Parent'},%0AVoici les résultats officiels de ${eleve.prenom} ${eleve.nom} (${eleve.classeNom}) :%0A📊 Moyenne Générale : ${eleve.moyenneGenerale || 16.5}/20%0A🏆 Rang : ${eleve.rang || 1}er de la classe%0AClé d'accès famille : ${eleve.cleAcces}%0AFélicitations du Conseil des Maîtres !`;
+
+  let msg = '';
+  if (isDaara) {
+    msg = `SunuSchoolExpress - Bulletin de Progression Hifz &amp; Tajwîd%0A%0ABonjour ${eleve.parentNom || 'Cher Parent'},%0AVoici le bilan de progression coranique de ${eleve.prenom} ${eleve.nom} :%0A📖 Hizb atteint : ${eleve.hizbActuel} / 60 (${eleve.sourate})%0A⭐ Note Tajwîd : ${eleve.tajwidNote}/20%0AClé d'accès famille : ${eleve.cleAcces}%0AFélicitations de la direction du Daara !`;
+  } else if (isInstitut) {
+    msg = `SunuSchoolExpress - Relevé de Notes Semestriel LMD / BTS%0A%0ABonjour ${eleve.parentNom || 'Cher Étudiant / Contact'},%0AVoici les résultats officiels de ${eleve.prenom} ${eleve.nom} (${eleve.classeNom}) :%0A📊 Moyenne Semestrielle : ${eleve.moyenneGenerale || 16.5}/20%0A🏆 Rang : ${eleve.rang || 1}er de la promotion (Crédits : 30 ECTS)%0AClé d'accès apprenant : ${eleve.cleAcces}%0AFélicitations de la Direction des Études !`;
+  } else {
+    msg = `SunuSchoolExpress - Bulletin Scolaire Officiel%0A%0ABonjour ${eleve.parentNom || 'Cher Parent'},%0AVoici les résultats officiels de ${eleve.prenom} ${eleve.nom} (${eleve.classeNom}) :%0A📊 Moyenne Générale : ${eleve.moyenneGenerale || 16.5}/20%0A🏆 Rang : ${eleve.rang || 1}er de la classe%0AClé d'accès famille : ${eleve.cleAcces}%0AFélicitations du Conseil des Maîtres !`;
+  }
+
   window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
-  showToast(`📲 Bulletin partagé par WhatsApp avec ${eleve.parentNom} !`);
+  showToast(`📲 Relevé/Bulletin partagé par WhatsApp avec ${eleve.parentNom} !`);
 }
 
 function printAllBulletins() {
@@ -4082,27 +4924,68 @@ function printAllBulletins() {
   }, 400);
 }
 
-// D. Modal Nouveau Talibé / Élève
+// D. Modal Nouveau Talibé / Élève / Étudiant
+function handleNewEleveTypeChange(targetType) {
+  const modalTitle = document.querySelector('#modalNewEleve .modal-title');
+  const dormGroup = document.getElementById('newDaaraDormGroup');
+  const institutGroup = document.getElementById('newInstitutGroup');
+  const classRow = document.getElementById('newStudentClassRow');
+  const prenomLabel = document.getElementById('modalNewElevePrenomLabel');
+  const parentLabel = document.getElementById('modalNewEleveParentNomLabel');
+  const parentTelLabel = document.getElementById('modalNewEleveParentTelLabel');
+  const classLabel = document.getElementById('modalNewEleveClassLabel');
+  const submitBtn = document.getElementById('modalNewEleveSubmitBtn');
+  const classInput = document.getElementById('newStudentClasseInput');
+
+  if (targetType === 'TALIBE') {
+    if (modalTitle) modalTitle.innerHTML = `<span>🕌</span> <span>Inscription d'un Nouveau Talibé (Daara Moderne)</span>`;
+    if (dormGroup) dormGroup.style.display = 'grid';
+    if (institutGroup) institutGroup.style.display = 'none';
+    if (classRow) classRow.style.display = 'none';
+    if (prenomLabel) prenomLabel.textContent = "Prénom du talibé (apprenant)";
+    if (parentLabel) parentLabel.textContent = "Nom complet du Parent / Tuteur";
+    if (parentTelLabel) parentTelLabel.textContent = "Téléphone Parent (WhatsApp)";
+    if (submitBtn) submitBtn.textContent = "✓ Confirmer l'Inscription & Affecter au Dortoir";
+  } else if (targetType === 'ETUDIANT') {
+    if (modalTitle) modalTitle.innerHTML = `<span>🎓</span> <span>Inscription d'un Nouvel Étudiant (Institut / BTS)</span>`;
+    if (dormGroup) dormGroup.style.display = 'none';
+    if (institutGroup) institutGroup.style.display = 'block';
+    if (classRow) classRow.style.display = 'block';
+    if (prenomLabel) prenomLabel.textContent = "Prénom de l'étudiant (apprenant)";
+    if (classLabel) classLabel.textContent = "Filière / Promotion *";
+    if (classInput) classInput.placeholder = "Ex: BTS 1 - Informatique & Génie Logiciel";
+    if (parentLabel) parentLabel.textContent = "Contact de l'étudiant / Responsable légal";
+    if (parentTelLabel) parentTelLabel.textContent = "Téléphone Contact (WhatsApp)";
+    if (submitBtn) submitBtn.textContent = "✓ Confirmer l'Inscription de l'Étudiant";
+  } else {
+    // Mode École Privée
+    if (modalTitle) modalTitle.innerHTML = `<span>🏫</span> <span>Inscription d'un Nouvel Élève (École Privée)</span>`;
+    if (dormGroup) dormGroup.style.display = 'none';
+    if (institutGroup) institutGroup.style.display = 'none';
+    if (classRow) classRow.style.display = 'block';
+    if (prenomLabel) prenomLabel.textContent = "Prénom de l'élève (apprenant)";
+    if (classLabel) classLabel.textContent = "Classe de l'élève";
+    if (classInput) classInput.placeholder = "Ex: CM2 A (ou Seconde S)";
+    if (parentLabel) parentLabel.textContent = "Parent / Tuteur légal";
+    if (parentTelLabel) parentTelLabel.textContent = "Téléphone Parent (WhatsApp)";
+    if (submitBtn) submitBtn.textContent = "✓ Confirmer l'Inscription de l'Élève";
+  }
+}
+
 function openNewEleveModal(forcedType = null) {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId);
   const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
-  const modalTitle = document.querySelector('#modalNewEleve .modal-title');
   const typeSelect = document.getElementById('newType');
-
-  const targetType = forcedType || (isDaara ? 'TALIBE' : 'SCOLAIRE');
+  const targetType = forcedType || (isDaara ? 'TALIBE' : (isInstitut ? 'ETUDIANT' : 'SCOLAIRE'));
 
   if (typeSelect) {
     typeSelect.value = targetType;
   }
 
-  if (modalTitle) {
-    modalTitle.innerHTML = targetType === 'TALIBE' 
-      ? `<span>🕌</span> <span>Inscrire un Nouveau Talibé (Daara Moderne)</span>` 
-      : `<span>🏫</span> <span>Inscrire un Nouvel Élève (École Privée)</span>`;
-  }
-
+  handleNewEleveTypeChange(targetType);
   document.getElementById('modalNewEleve').classList.add('active');
 }
 
@@ -4114,6 +4997,10 @@ function submitNewEleve() {
   const parentTel = document.getElementById('newParentTel').value;
   const chambre = document.getElementById('newChambre') ? document.getElementById('newChambre').value.trim() : '';
   const lit = document.getElementById('newLit') ? document.getElementById('newLit').value.trim() : '';
+  const customClass = document.getElementById('newStudentClasseInput') ? document.getElementById('newStudentClasseInput').value.trim() : '';
+  const diplomeInput = document.getElementById('newStudentDiplome');
+  const statutStageInput = document.getElementById('newStudentStatutStage');
+  const entrepriseInput = document.getElementById('newStudentEntreprise');
 
   if (!nom || !prenom) {
     showToast('Veuillez renseigner le nom et le prénom.', true);
@@ -4122,48 +5009,65 @@ function submitNewEleve() {
 
   const litNum = lit ? parseInt(lit) : Math.floor(1 + Math.random() * 20);
   const chambreNom = chambre || "Chambre 03 (Pavillon Al-Madina)";
+  const prefix = type === 'TALIBE' ? 'TAL' : (type === 'ETUDIANT' ? 'ETU' : 'ELE');
 
   const newEleve = {
     id: `eleve-${Date.now()}`,
     etablissementId: appState.activeEstablishmentId,
-    matricule: `SSE-${Date.now().toString().slice(-4)}`,
+    matricule: `SSE-${prefix}-${Date.now().toString().slice(-4)}`,
     nom,
     prenom,
     sexe: 'M',
     type,
-    classeId: type === 'TALIBE' ? 'cls-hifz1' : 'cls-3eme',
-    classeNom: type === 'TALIBE' ? 'Classe Débutante (Hizb 1-15)' : 'Troisième B (3ème B)',
-    hizbActuel: 1,
-    sourate: 'Al-Fatiha',
-    tajwidNote: 16.0,
-    progressionPct: 2,
-    internat: { 
+    classeId: type === 'TALIBE' ? 'cls-hifz1' : (type === 'ETUDIANT' ? 'cls-bts1' : 'cls-3eme'),
+    classeNom: type === 'TALIBE' ? 'Classe Débutante (Hizb 1-15)' : (customClass || (type === 'ETUDIANT' ? 'BTS 1 - Informatique & Génie Logiciel' : 'Troisième B (3ème B)')),
+    parentNom: parentNom || (type === 'ETUDIANT' ? `${prenom} ${nom}` : 'Parent Référent'),
+    parentTelephone: parentTel || '+221 77 000 00 00',
+    cleAcces: `PAR-${Math.floor(10000 + Math.random() * 90000)}`,
+    statutPension: 'A_JOUR',
+    mensualite: type === 'TALIBE' ? 25000 : (type === 'ETUDIANT' ? 65000 : 45000),
+    moyenneGenerale: 15.5,
+    rang: 1,
+    totalEleves: 25,
+    dateInscription: new Date().toISOString().split('T')[0]
+  };
+
+  if (type === 'TALIBE') {
+    newEleve.hizbActuel = 1;
+    newEleve.sourate = 'Al-Fatiha';
+    newEleve.tajwidNote = 16.0;
+    newEleve.progressionPct = 2;
+    newEleve.internat = { 
       pavillon: chambreNom.includes('(') ? chambreNom.split('(')[1].replace(')', '') : "Pavillon Khadimou Rassoul", 
       dortoir: chambreNom, 
       chambre: chambreNom,
       litNumero: litNum, 
       statutLit: "OCCUPE" 
-    },
-    parentNom: parentNom || 'Parent Référent',
-    parentTelephone: parentTel || '+221 77 000 00 00',
-    cleAcces: `PAR-${Math.floor(10000 + Math.random() * 90000)}`,
-    statutPension: 'A_JOUR',
-    mensualite: type === 'TALIBE' ? 25000 : 45000
-  };
+    };
+  } else if (type === 'ETUDIANT') {
+    newEleve.filiere = customClass || 'BTS 1 - Informatique & Génie Logiciel';
+    newEleve.diplome = diplomeInput ? diplomeInput.value : 'BTS (Brevet de Technicien Supérieur)';
+    newEleve.statutStage = statutStageInput ? statutStageInput.value : 'En recherche active';
+    newEleve.entrepriseStage = (entrepriseInput && entrepriseInput.value) ? entrepriseInput.value.trim() : 'En attente de convention';
+    newEleve.creditsECTS = 60;
+    newEleve.sessionExamen = 'Session Juin 2026';
+    newEleve.stageMaitre = 'Ing. Abdoulaye Fall (Tuteur Entreprise)';
+  }
 
   appState.db.eleves.unshift(newEleve);
   appState.db.auditLogs.unshift({
     id: `log-${Date.now()}`,
     date: new Date().toISOString(),
-    user: "Directeur / Admin",
+    user: "Direction des Études",
     role: "ADMIN",
-    action: "INSCRIPTION_ELEVE",
-    details: `Nouvelle inscription : ${newEleve.prenom} ${newEleve.nom} (${newEleve.matricule})`
+    action: "INSCRIPTION_APPRENANT",
+    details: `Nouvelle inscription : ${newEleve.prenom} ${newEleve.nom} (${newEleve.matricule}) - Profil: ${type}`
   });
 
   saveDataStore();
   closeModals();
-  showToast(`🎉 Inscription confirmée pour ${newEleve.prenom} ${newEleve.nom} !`);
+  const labelType = type === 'TALIBE' ? 'Talibé' : (type === 'ETUDIANT' ? 'Étudiant' : 'Apprenant');
+  showToast(`🎉 Inscription confirmée pour le profil ${labelType} : ${newEleve.prenom} ${newEleve.nom} !`);
   renderCurrentView();
 }
 
@@ -4232,8 +5136,22 @@ function openEncaissementWaveModal() {
 }
 
 function openEncaissementMultiModal(presetOp = 'WAVE') {
-  // Remplir le sélecteur d'élèves selon l'établissement actif
+  // Remplir le sélecteur d'apprenants selon l'établissement actif
   const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const labelEleve = document.getElementById('labelPayEleveConcerned');
+  if (labelEleve) {
+    labelEleve.textContent = isInstitut ? "Étudiant concerné" : (isDaara ? "Talibé concerné" : "Élève / Apprenant concerné");
+  }
+
+  const labelPayeur = document.getElementById('labelPayPayeurNom');
+  if (labelPayeur) {
+    labelPayeur.textContent = isInstitut ? "Contact de l'étudiant / Responsable" : (isDaara ? "Parent / Tuteur légal" : "Parent / Tuteur légal");
+  }
+
   const eleves = appState.db.eleves.filter(e => etabId ? e.etablissementId === etabId : true);
   const select = document.getElementById('payEleveSelect');
   
@@ -4243,9 +5161,9 @@ function openEncaissementMultiModal(presetOp = 'WAVE') {
       const opt = document.createElement('option');
       opt.value = e.id;
       opt.setAttribute('data-nom', `${e.prenom} ${e.nom}`);
-      opt.setAttribute('data-parent', e.parentNom || 'Parent');
+      opt.setAttribute('data-parent', e.parentNom || (e.type === 'ETUDIANT' ? `${e.prenom} ${e.nom}` : 'Parent'));
       opt.setAttribute('data-tel', e.parentTelephone || '+221 77 000 00 00');
-      opt.setAttribute('data-mensualite', e.mensualite || (e.type === 'TALIBE' ? 25000 : 45000));
+      opt.setAttribute('data-mensualite', e.mensualite || (e.type === 'TALIBE' ? 25000 : (e.type === 'ETUDIANT' ? 65000 : 45000)));
       opt.setAttribute('data-type', e.type);
       opt.textContent = `${e.prenom} ${e.nom} (${e.matricule} - ${e.classeNom})`;
       select.appendChild(opt);
@@ -4488,7 +5406,7 @@ function printReceipt(ref, eleve, montant, operateur, motif = "Scolarité / Pens
 
       <div style="background: #f1f5f9; padding: 0.9rem 1.1rem; border-radius: 6px; margin-bottom: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; font-size: 0.82rem;">
         <div>
-          <div style="color: #64748b; font-size: 0.72rem;">BÉNÉFICIAIRE / ÉLÈVE :</div>
+          <div style="color: #64748b; font-size: 0.72rem;">BÉNÉFICIAIRE / APPRENANT :</div>
           <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">${eleve}</div>
           <div style="color: #475569; margin-top: 0.2rem;">Motif : <strong>${motif}</strong></div>
         </div>
@@ -5126,22 +6044,31 @@ function sendBroadcastComms() {
   }
 }
 
-// K. COMMUNICATION : RÉPERTOIRE ET RENVOI DES CLÉS PARENTS
+// K. COMMUNICATION : RÉPERTOIRE ET RENVOI DES CLÉS PARENTS / ÉTUDIANTS
 function openParentKeysModal() {
   const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const thParent = document.getElementById('thParentKeysParent');
+  if (thParent) thParent.textContent = isInstitut ? "Contact de l'étudiant / Responsable" : (isDaara ? "Parent / Tuteur" : "Parent / Tuteur légal");
+  const thStudent = document.getElementById('thParentKeysStudent');
+  if (thStudent) thStudent.textContent = isInstitut ? "Étudiant (Filière & Mat.)" : (isDaara ? "Talibé (Matricule)" : "Apprenant (Classe & Mat.)");
+
   const eleves = appState.db.eleves.filter(e => etabId ? e.etablissementId === etabId : true);
   const tbody = document.getElementById('parentKeysTable');
 
   if (tbody) {
     tbody.innerHTML = '';
     if (eleves.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:var(--text-muted);">Aucune famille enregistrée pour cet établissement.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:var(--text-muted);">${isInstitut ? 'Aucun étudiant enregistré pour cet établissement.' : 'Aucun apprenant enregistré pour cet établissement.'}</td></tr>`;
     } else {
       eleves.forEach(e => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>
-            <strong style="color:#fff;">${e.parentNom || 'Parent Référent'}</strong>
+            <strong style="color:#fff;">${e.parentNom || (isInstitut ? 'Contact Référent' : 'Parent Référent')}</strong>
             <div style="font-size:0.75rem; color:var(--text-muted);">${e.parentTelephone}</div>
           </td>
           <td>
@@ -5170,8 +6097,14 @@ function openParentKeysModal() {
 function sendSingleParentKeyWhatsApp(eleveId) {
   const e = appState.db.eleves.find(el => el.id === eleveId);
   if (!e) return;
+  const isDaara = e.type === 'TALIBE';
+  const isInstitut = e.type === 'ETUDIANT' || (!isDaara && isInstitutEstablishment(etab));
   const clean = (e.parentTelephone || '+221 77 645 88 12').replace(/[^0-9]/g, '');
-  const msg = `SunuSchoolExpress - Clé Famille Sécurisée%0A%0ABonjour ${e.parentNom || 'Cher Parent'},%0AVoici votre clé d'accès unique pour suivre la scolarité de ${e.prenom} ${e.nom} :%0A🔑 Clé : *${e.cleAcces}*%0A%0AAccédez directement à vos reçus certifiés, notes et progression coranique sans mot de passe sur SunuSchoolExpress.`;
+  
+  const msg = isInstitut
+    ? `SunuSchoolExpress - Clé d'Accès Sécurisée Étudiant%0A%0ABonjour ${e.parentNom || 'Cher Étudiant / Contact'},%0AVoici votre clé d'accès unique pour suivre votre scolarité (${e.classeNom}) :%0A🔑 Clé : *${e.cleAcces}*%0A%0AAccédez directement à vos relevés semestriels, crédits validés et reçus sans mot de passe sur SunuSchoolExpress.`
+    : `SunuSchoolExpress - Clé Famille Sécurisée%0A%0ABonjour ${e.parentNom || 'Cher Parent'},%0AVoici votre clé d'accès unique pour suivre la scolarité de ${e.prenom} ${e.nom} :%0A🔑 Clé : *${e.cleAcces}*%0A%0AAccédez directement à vos reçus certifiés, notes et progression coranique sans mot de passe sur SunuSchoolExpress.`;
+
   window.open(`https://wa.me/${clean}?text=${msg}`, '_blank');
   showToast(`📲 Clé d'accès WhatsApp envoyée à ${e.parentNom} !`);
 }
@@ -5199,6 +6132,17 @@ let dailyAttendance = {};
 
 function openAttendanceModal() {
   const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const thStudent = document.getElementById('thAttendanceStudent');
+  if (thStudent) thStudent.textContent = isInstitut ? "Étudiant (Nom & Matricule)" : (isDaara ? "Talibé (Matricule)" : "Apprenant / Élève");
+  const thClass = document.getElementById('thAttendanceClass');
+  if (thClass) thClass.textContent = isInstitut ? "Filière / Promotion" : (isDaara ? "Cycle Coranique" : "Niveau / Classe");
+  const thAlert = document.getElementById('thAttendanceAlert');
+  if (thAlert) thAlert.textContent = isInstitut ? "Alerte Contact / Étudiant" : "Alerte Immédiate Parent";
+
   const eleves = appState.db.eleves.filter(e => etabId ? e.etablissementId === etabId : true);
   const dateLabel = document.getElementById('attendanceDateLabel');
 
@@ -5269,16 +6213,22 @@ function markAllPresent() {
     dailyAttendance[e.id] = 'PRESENT';
   });
   renderAttendanceTable();
-  showToast("Tous les élèves sont pointés Présents.");
+  showToast("Tous les apprenants sont pointés Présents.");
 }
 
 function notifyAbsenceWhatsApp(eleveId) {
   const e = appState.db.eleves.find(el => el.id === eleveId);
   if (!e) return;
+  const isDaara = e.type === 'TALIBE';
+  const isInstitut = e.type === 'ETUDIANT' || (!isDaara && isInstitutEstablishment(etab));
   const clean = (e.parentTelephone || '+221 77 645 88 12').replace(/[^0-9]/g, '');
-  const msg = `SunuSchoolExpress - Avis Important d'Absence%0A%0ABonjour ${e.parentNom || 'Cher Parent'},%0ANous vous informons que votre enfant *${e.prenom} ${e.nom}* (${e.classeNom}) n'a pas été pointé à l'appel matinal ce jour.%0AMerci de contacter la vie scolaire ou l'Oustaz pour régulariser.`;
+
+  const msg = isInstitut
+    ? `SunuSchoolExpress - Avis d'Absence en Cours / Atelier%0A%0ABonjour ${e.parentNom || 'Cher Étudiant / Contact'},%0AL'étudiant(e) *${e.prenom} ${e.nom}* (${e.classeNom}) n'a pas émargé lors de la session de formation de ce jour.%0AMerci de contacter la Direction des Études pour justifier cette absence.`
+    : `SunuSchoolExpress - Avis Important d'Absence%0A%0ABonjour ${e.parentNom || 'Cher Parent'},%0ANous vous informons que votre enfant *${e.prenom} ${e.nom}* (${e.classeNom}) n'a pas été pointé à l'appel matinal ce jour.%0AMerci de contacter la vie scolaire ou l'Oustaz pour régulariser.`;
+
   window.open(`https://wa.me/${clean}?text=${msg}`, '_blank');
-  showToast(`🚨 Alerte WhatsApp transmise au parent de ${e.prenom} ${e.nom} !`);
+  showToast(`🚨 Alerte WhatsApp transmise à ${e.parentNom} !`);
 }
 
 function saveAttendance() {
@@ -5332,6 +6282,24 @@ const DAARA_TIME_SLOTS = [
   { key: '19h30-21h', label: '19h30 - 21h00', sub: 'Tajwîd & Fiqh Soir' }
 ];
 
+const INSTITUT_TIME_SLOTS = [
+  { key: '08h30-11h30', label: '08h30 - 11h30', sub: 'Matinée (Cours Magistral / Labo)' },
+  { key: '12h00-14h00', label: '12h00 - 14h00', sub: 'Midi (TD / Ateliers Pratiques)' },
+  { key: '14h30-17h30', label: '14h30 - 17h30', sub: 'Après-midi (TP / Projets Pro)' },
+  { key: '18h00-21h00', label: '18h00 - 21h00', sub: 'Cours du Soir & Formation Continue' }
+];
+
+function getDashboardTimetableCardClass(subject, isDaara, isVoc) {
+  if (isDaara) return 'daara-hifz';
+  if (!isVoc) return '';
+  const s = (subject || '').toLowerCase();
+  if (s.includes('info') || s.includes('algo') || s.includes('web') || s.includes('base') || s.includes('sql') || s.includes('réseau') || s.includes('logiciel') || s.includes('dev') || s.includes('python')) return 'institut-it';
+  if (s.includes('compt') || s.includes('finance') || s.includes('fiscal') || s.includes('audit') || s.includes('ohada') || s.includes('gestion')) return 'institut-finance';
+  if (s.includes('transit') || s.includes('douane') || s.includes('commerce') || s.includes('fret') || s.includes('logistique')) return 'institut-transit';
+  if (s.includes('atelier') || s.includes('élec') || s.includes('méc') || s.includes('btp') || s.includes('techno') || s.includes('schéma')) return 'institut-atelier';
+  return 'institut-soft';
+}
+
 const DEFAULT_TIMETABLES = {};
 
 function initTimetables() {
@@ -5372,15 +6340,20 @@ function renderTimetable() {
 
   const currentClass = classes.find(c => c.id === activeTimetableClassId);
 
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+  const curCycle = (currentClass && currentClass.cycle ? currentClass.cycle : '').toLowerCase();
+  const curName = (currentClass && currentClass.nom ? currentClass.nom : '').toLowerCase();
+  const isVoc = isInstitut || curCycle.includes('pro') || curCycle.includes('bts') || curCycle.includes('licence') || curCycle.includes('cap') || curCycle.includes('cqp') || curName.includes('bts') || curName.includes('licence') || curName.includes('cap') || curName.includes('cqp');
+
   const titleEl = document.getElementById('timetableActiveClassName');
   const cycleEl = document.getElementById('timetableActiveCycle');
   const badgeInfo = document.getElementById('timetableActiveBadgeInfo');
   const cycleBadge = document.getElementById('timetableCycleBadge');
 
-  if (titleEl) titleEl.textContent = currentClass ? currentClass.nom : (isDaara ? "Classe Coranique" : "Classe");
-  if (cycleEl) cycleEl.textContent = currentClass ? `Cycle : ${currentClass.cycle} • Effectif : ${currentClass.effectif} apprenants` : (isDaara ? "Hifz & Tajwîd" : "Général");
-  if (badgeInfo) badgeInfo.textContent = currentClass ? `${currentClass.nom} • ${currentClass.effectif || 30} Élèves` : "Aucune classe";
-  if (cycleBadge) cycleBadge.textContent = currentClass ? `Cycle ${currentClass.cycle}` : (isDaara ? "Daara Moderne" : "Enseignement Général");
+  if (titleEl) titleEl.textContent = currentClass ? currentClass.nom : (isDaara ? "Classe Coranique" : (isVoc ? "Filière / Promotion" : "Classe"));
+  if (cycleEl) cycleEl.textContent = currentClass ? `Cycle : ${currentClass.cycle} • Effectif : ${currentClass.effectif} ${isVoc ? 'étudiants' : 'apprenants'}` : (isDaara ? "Hifz & Tajwîd" : (isVoc ? "Formation Professionnelle" : "Général"));
+  if (badgeInfo) badgeInfo.textContent = currentClass ? `${currentClass.nom} • ${currentClass.effectif || 30} ${isVoc ? 'Étudiants' : 'Élèves'}` : "Aucune filière";
+  if (cycleBadge) cycleBadge.textContent = currentClass ? `${currentClass.cycle}` : (isDaara ? "Daara Moderne" : (isVoc ? "Formation Professionnelle" : "Enseignement Général"));
 
   renderTimetableClassPills(classes);
   renderTimetableGrid();
@@ -5391,9 +6364,57 @@ function switchTimetableClass(clsId) {
   renderTimetable();
 }
 
+function promptCustomDashboardClass() {
+  const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+  const term = isInstitut ? 'filière / promotion' : (isDaara ? 'section coranique' : 'classe');
+  const example = isInstitut ? 'Ex: Licence 2 Transport Logistique, BTS Télécoms, Master Audit' : 'Ex: Terminale L2, 4ème C, Hifz Niveau 3';
+
+  const val = prompt(`Saisir l'intitulé officiel de votre ${term} (non présente dans les choix) :\n${example}`, '');
+  if (!val || !val.trim()) return;
+  const trimmed = val.trim();
+
+  if (!Array.isArray(appState.db.classes)) appState.db.classes = [];
+  const existing = appState.db.classes.find(c => c.etablissementId === etabId && c.nom.toLowerCase().trim() === trimmed.toLowerCase());
+  let targetId = '';
+  if (existing) {
+    targetId = existing.id;
+  } else {
+    targetId = `cls-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const newClass = {
+      id: targetId,
+      etablissementId: etabId,
+      nom: trimmed,
+      cycle: isInstitut ? 'BTS' : (isDaara ? 'Tahfîz' : 'Élémentaire'),
+      capacite: isInstitut ? 35 : 45,
+      salle: isInstitut ? 'Amphithéâtre / Labo' : (isDaara ? 'Salle Al-Houda' : 'Salle Principale'),
+      profPrincipal: '',
+      effectif: 0
+    };
+    appState.db.classes.push(newClass);
+    saveDataStore();
+    syncEstablishmentClasses();
+    renderClassesView();
+    renderSidebar();
+  }
+
+  activeTimetableClassId = targetId;
+  switchTab('timetable');
+  renderTimetable();
+  showToast(`✅ ${isInstitut ? 'Filière' : (isDaara ? 'Section' : 'Classe')} « ${trimmed} » sélectionnée.`);
+}
+window.promptCustomDashboardClass = promptCustomDashboardClass;
+
 function renderTimetableClassPills(classes) {
   const container = document.getElementById('timetableClassPills');
   if (!container) return;
+
+  const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
 
   let pillsHtml = (classes || []).map(c => `
     <button type="button" class="timetable-class-btn ${c.id === activeTimetableClassId ? 'active' : ''}" onclick="switchTimetableClass('${c.id}')">
@@ -5402,8 +6423,11 @@ function renderTimetableClassPills(classes) {
   `).join('');
 
   pillsHtml += `
-    <button type="button" class="timetable-class-btn add-class-btn" onclick="openCreateTimetableModal()" title="Créer ou configurer un emploi du temps pour une autre classe" style="border: 1px dashed var(--primary); color: var(--primary); background: rgba(0, 210, 180, 0.08); font-weight: 700;">
-      + Ajouter une Classe
+    <button type="button" class="timetable-class-btn add-class-btn" onclick="openCreateTimetableModal()" title="Créer ou configurer un planning pour une autre filière ou classe" style="border: 1px dashed var(--primary); color: var(--primary); background: rgba(0, 210, 180, 0.08); font-weight: 700;">
+      + ${isInstitut ? 'Ajouter une Filière' : (isDaara ? 'Ajouter une Section' : 'Ajouter une Classe')}
+    </button>
+    <button type="button" class="timetable-class-btn add-class-btn" onclick="promptCustomDashboardClass()" title="Saisir librement une autre filière ou classe non listée dans les choix" style="border: 1px dashed #F59E0B; color: #F59E0B; background: rgba(245, 158, 11, 0.08); font-weight: 700;">
+      ✍️ + Saisie Libre
     </button>
   `;
 
@@ -5417,7 +6441,15 @@ function renderTimetableGrid() {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
-  const slotsList = isDaara ? DAARA_TIME_SLOTS : ECOLE_TIME_SLOTS;
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const classes = (appState.db.classes || []).filter(c => etabId ? c.etablissementId === etabId : true);
+  const currentClass = classes.find(c => c.id === activeTimetableClassId);
+  const curCycle = (currentClass && currentClass.cycle ? currentClass.cycle : '').toLowerCase();
+  const curName = (currentClass && currentClass.nom ? currentClass.nom : '').toLowerCase();
+  const isVoc = isInstitut || curCycle.includes('pro') || curCycle.includes('bts') || curCycle.includes('licence') || curCycle.includes('cap') || curCycle.includes('cqp') || curName.includes('bts') || curName.includes('licence') || curName.includes('cap') || curName.includes('cqp');
+
+  const slotsList = isDaara ? DAARA_TIME_SLOTS : (isVoc ? INSTITUT_TIME_SLOTS : ECOLE_TIME_SLOTS);
 
   if (!timetablesStore) initTimetables();
 
@@ -5447,11 +6479,12 @@ function renderTimetableGrid() {
       const slotData = classData.slots ? classData.slots[slotKey] : null;
 
       if (slotData && slotData.subject) {
+        const cardClass = getDashboardTimetableCardClass(slotData.subject, isDaara, isVoc);
         html += `
           <td>
-            <div class="timetable-slot-card" onclick="openEditTimetableSlotModal('${day.key}', '${slot.key}')" title="Cliquer pour modifier ce cours">
+            <div class="timetable-slot-card ${cardClass}" onclick="openEditTimetableSlotModal('${day.key}', '${slot.key}')" title="Cliquer pour modifier ce module">
               <div class="slot-subject">${slotData.subject}</div>
-              <div class="slot-teacher">👨‍🏫 ${slotData.teacher || 'Professeur'}</div>
+              <div class="slot-teacher">${isVoc ? '👨‍🏫 Formateur: ' : (isDaara ? '👳 Oustaz: ' : '👨‍🏫 ')}${slotData.teacher || (isVoc ? 'Formateur' : 'Professeur')}</div>
               <div class="slot-room-pill">📍 ${slotData.room || 'Salle'}</div>
               <div class="slot-edit-hint">✏️ Modifier</div>
             </div>
@@ -5473,13 +6506,95 @@ function renderTimetableGrid() {
 
   html += `</tbody>`;
   table.innerHTML = html;
+
+  // Rendu de la légende dynamique
+  const legendBox = document.getElementById('timetableLegendContainer');
+  if (legendBox) {
+    if (isVoc) {
+      legendBox.innerHTML = `
+        <div style="font-size: 0.75rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+          Légende Thématique des Modules Professionnels :
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.75rem; font-weight: 700;">
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #38BDF8;">
+            <span style="display:inline-block; width:12px; height:12px; background:#38BDF8; border-radius:3px;"></span>
+            Modules IT &amp; Génie Logiciel
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #10B981;">
+            <span style="display:inline-block; width:12px; height:12px; background:#10B981; border-radius:3px;"></span>
+            Comptabilité, Fiscalité &amp; Droit OHADA
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #00D2B4;">
+            <span style="display:inline-block; width:12px; height:12px; background:#00D2B4; border-radius:3px;"></span>
+            Commerce International, Douane &amp; Transit
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #A855F7;">
+            <span style="display:inline-block; width:12px; height:12px; background:#A855F7; border-radius:3px;"></span>
+            Ateliers Techniques &amp; Électromécanique
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #F59E0B;">
+            <span style="display:inline-block; width:12px; height:12px; background:#F59E0B; border-radius:3px;"></span>
+            Anglais Professionnel, Communication &amp; Soutenances
+          </span>
+        </div>
+      `;
+    } else if (isDaara) {
+      legendBox.innerHTML = `
+        <div style="font-size: 0.75rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+          Légende Pédagogique Daara Moderne :
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.75rem; font-weight: 700;">
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #F59E0B;">
+            <span style="display:inline-block; width:12px; height:12px; background:#F59E0B; border-radius:3px;"></span>
+            Tahfîz Matinal (Hizb 1-60)
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #00D2B4;">
+            <span style="display:inline-block; width:12px; height:12px; background:#00D2B4; border-radius:3px;"></span>
+            Planche Allouwa, Tajwîd &amp; Murâja'ah
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #38BDF8;">
+            <span style="display:inline-block; width:12px; height:12px; background:#38BDF8; border-radius:3px;"></span>
+            Hadith, Fiqh &amp; Langue Arabe
+          </span>
+        </div>
+      `;
+    } else {
+      legendBox.innerHTML = `
+        <div style="font-size: 0.75rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+          Légende des Matières Scolaires :
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.75rem; font-weight: 700;">
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #38BDF8;">
+            <span style="display:inline-block; width:12px; height:12px; background:#38BDF8; border-radius:3px;"></span>
+            Mathématiques &amp; Sciences
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #10B981;">
+            <span style="display:inline-block; width:12px; height:12px; background:#10B981; border-radius:3px;"></span>
+            Français &amp; Lettres
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #F59E0B;">
+            <span style="display:inline-block; width:12px; height:12px; background:#F59E0B; border-radius:3px;"></span>
+            Histoire-Géo &amp; Langues
+          </span>
+        </div>
+      `;
+    }
+  }
 }
 
 function openEditTimetableSlotModal(day, timeKey) {
   const etabId = appState.activeEstablishmentId;
   const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
   const isDaara = etab && etab.type === 'DAARA';
-  const slotsList = isDaara ? DAARA_TIME_SLOTS : ECOLE_TIME_SLOTS;
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const classes = (appState.db.classes || []).filter(c => etabId ? c.etablissementId === etabId : true);
+  const currentClass = classes.find(c => c.id === activeTimetableClassId);
+  const curCycle = (currentClass && currentClass.cycle ? currentClass.cycle : '').toLowerCase();
+  const curName = (currentClass && currentClass.nom ? currentClass.nom : '').toLowerCase();
+  const isVoc = isInstitut || curCycle.includes('pro') || curCycle.includes('bts') || curCycle.includes('licence') || curCycle.includes('cap') || curCycle.includes('cqp') || curName.includes('bts') || curName.includes('licence') || curName.includes('cap') || curName.includes('cqp');
+
+  const slotsList = isDaara ? DAARA_TIME_SLOTS : (isVoc ? INSTITUT_TIME_SLOTS : ECOLE_TIME_SLOTS);
 
   const timeSelect = document.getElementById('editSlotTimeSelect');
   if (timeSelect) {
@@ -5504,8 +6619,87 @@ function openEditTimetableSlotModal(day, timeKey) {
   if (teachInput) teachInput.value = currentSlotData ? currentSlotData.teacher : '';
   if (roomInput) roomInput.value = currentSlotData ? currentSlotData.room : '';
 
+  // Adaptation dynamique des labels et placeholders
+  const subLabel = document.getElementById('editSlotSubjectLabel');
+  const teachLabel = document.getElementById('editSlotTeacherLabel');
+  const roomLabel = document.getElementById('editSlotRoomLabel');
+
+  if (subLabel) subLabel.textContent = isVoc ? "Module / Formation" : (isDaara ? "Matière Coranique / Tahfîz" : "Matière / Discipline");
+  if (teachLabel) teachLabel.textContent = isVoc ? "Formateur / Expert Métier" : (isDaara ? "Oustaz / Maître Coranique" : "Enseignant de la Classe");
+  if (roomLabel) roomLabel.textContent = isVoc ? "Laboratoire / Atelier / Amphi" : (isDaara ? "Salle Coranique / Pavillon" : "Salle de Classe");
+  if (roomInput) roomInput.placeholder = isVoc ? "Ex: Labo Info 1, Amphi A, Atelier Élec, Salle Marché" : (isDaara ? "Ex: Pavillon Allouwa, Salle Badr" : "Ex: Salle B12, Labo Sciences");
+
+  // Rendu des suggestions de modules rapides avec option de saisie libre
+  const chipsContainer = document.getElementById('editSlotPresetsChips');
+  if (chipsContainer) {
+    if (isVoc) {
+      const presets = [
+        { label: "✍️ Saisie libre", teach: "", room: "" },
+        { label: "Algorithmique & Python", teach: "Ing. Abdoulaye Ndiaye", room: "Labo Info 1" },
+        { label: "Architecture Web & APIs", teach: "Ing. Abdoulaye Ndiaye", room: "Labo Info 1" },
+        { label: "Bases de Données & SQL", teach: "Dr. Mamadou Cissé", room: "Labo Info 2" },
+        { label: "Comptabilité SYSCOHADA", teach: "Mme Aïssatou Fall", room: "Salle Marché" },
+        { label: "Fiscalité d'Entreprise", teach: "Me Aminata Diop", room: "Salle Marché" },
+        { label: "Douane & GAINDE", teach: "M. Cheikh Sy", room: "Salle Transit" },
+        { label: "Atelier Électricité", teach: "Ing. Abdoulaye Ndiaye", room: "Atelier Élec" },
+        { label: "Anglais Professionnel", teach: "M. Ousmane Niang", room: "Amphi A" }
+      ];
+      chipsContainer.innerHTML = presets.map(p => `
+        <span onclick="applyPresetSlot('${p.label.replace(/'/g, "\\'")}', '${p.teach.replace(/'/g, "\\'")}', '${p.room.replace(/'/g, "\\'")}')" style="background: rgba(56, 189, 248, 0.12); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; font-weight: 700; user-select: none;" onmouseover="this.style.background='rgba(56, 189, 248, 0.25)'" onmouseout="this.style.background='rgba(56, 189, 248, 0.12)'">
+          ${p.label.startsWith('✍️') ? p.label : '+ ' + p.label}
+        </span>
+      `).join('');
+    } else if (isDaara) {
+      const presets = [
+        { label: "✍️ Saisie libre", teach: "", room: "" },
+        { label: "Tahfîz Matinal (Hizb 1-60)", teach: "Oustaz Serigne Modou Ndiaye", room: "Salle de Mémorisation" },
+        { label: "Planche Allouwa", teach: "Oustaz Cheikh Tidiane", room: "Pavillon Allouwa" },
+        { label: "Règles de Tajwîd", teach: "Oustaz Thierno Sow", room: "Salle Badr" },
+        { label: "Hadith & Fiqh", teach: "Oustaz Serigne Modou Ndiaye", room: "Salle Al-Azhar" },
+        { label: "Langue Arabe", teach: "Oustaz Cheikh Tidiane", room: "Salle Al-Houda" }
+      ];
+      chipsContainer.innerHTML = presets.map(p => `
+        <span onclick="applyPresetSlot('${p.label.replace(/'/g, "\\'")}', '${p.teach.replace(/'/g, "\\'")}', '${p.room.replace(/'/g, "\\'")}')" style="background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; font-weight: 700; user-select: none;" onmouseover="this.style.background='rgba(245, 158, 11, 0.25)'" onmouseout="this.style.background='rgba(245, 158, 11, 0.12)'">
+          ${p.label.startsWith('✍️') ? p.label : '+ ' + p.label}
+        </span>
+      `).join('');
+    } else {
+      const presets = [
+        { label: "✍️ Saisie libre", teach: "", room: "" },
+        { label: "Mathématiques", teach: "M. Abdoulaye Diallo", room: "Salle B12" },
+        { label: "Français & Expression", teach: "Mme Mariama Ba", room: "Salle B12" },
+        { label: "Sciences Physiques", teach: "M. Cheikh Tidiane Diop", room: "Labo Sciences" },
+        { label: "SVT", teach: "Mme Aminata Sarr", room: "Labo 2" },
+        { label: "Histoire - Géo", teach: "M. Ibrahima Faye", room: "Salle B12" },
+        { label: "Anglais LV1", teach: "M. Babacar Fall", room: "Salle B12" }
+      ];
+      chipsContainer.innerHTML = presets.map(p => `
+        <span onclick="applyPresetSlot('${p.label.replace(/'/g, "\\'")}', '${p.teach.replace(/'/g, "\\'")}', '${p.room.replace(/'/g, "\\'")}')" style="background: rgba(0, 210, 180, 0.12); color: #00D2B4; border: 1px solid rgba(0, 210, 180, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; font-weight: 700; user-select: none;" onmouseover="this.style.background='rgba(0, 210, 180, 0.25)'" onmouseout="this.style.background='rgba(0, 210, 180, 0.12)'">
+          ${p.label.startsWith('✍️') ? p.label : '+ ' + p.label}
+        </span>
+      `).join('');
+    }
+  }
+
   const modal = document.getElementById('modalEditTimetableSlot');
   if (modal) modal.classList.add('active');
+}
+
+function applyPresetSlot(subject, teacher, room) {
+  const subInput = document.getElementById('editSlotSubject');
+  const teachInput = document.getElementById('editSlotTeacher');
+  const roomInput = document.getElementById('editSlotRoom');
+  if (subject === '✍️ Saisie libre' || subject === '__CUSTOM__') {
+    if (subInput) {
+      subInput.value = '';
+      subInput.placeholder = "✍️ Saisir l'intitulé du module personnalisé...";
+      subInput.focus();
+    }
+    return;
+  }
+  if (subInput) subInput.value = subject;
+  if (teachInput && !teachInput.value) teachInput.value = teacher;
+  if (roomInput && !roomInput.value) roomInput.value = room;
 }
 
 function onEditSlotDayChange() {
@@ -5912,6 +7106,7 @@ function sendBulletinWhatsApp(eleveId) {
                appState.db.etablissements.find(e => e.id === appState.activeEstablishmentId) || { name: "SunuSchool" };
   
   const isDaara = eleve.type === 'TALIBE' || etab.type === 'DAARA';
+  const isInstitut = eleve.type === 'ETUDIANT' || (!isDaara && isInstitutEstablishment(etab));
   const cleanPhone = (eleve.parentTelephone || '+221 77 123 45 67').replace(/[^0-9]/g, '');
 
   let msg = '';
@@ -5925,6 +7120,15 @@ function sendBulletinWhatsApp(eleveId) {
       `⭐ Note de Tajwîd : *${eleve.tajwidNote || 19}/20*%0A` +
       `🔑 Clé Portail Famille : *${eleve.cleAcces}*%0A%0A` +
       `_Direction Pédagogique - Oustaz Serigne Modou Ndiaye_`;
+  } else if (isInstitut) {
+    msg = `*${etab.name.toUpperCase()}* - RELEVÉ OFFICIEL DE NOTES & CRÉDITS SEMESTRIELS%0A%0A` +
+      `Cher(e) Étudiant(e) / Tuteur *${eleve.prenom} ${eleve.nom}*,%0A` +
+      `Voici les résultats académiques de la session en cours (${eleve.classeNom}) :%0A%0A` +
+      `🎯 Moyenne Semestrielle : *${eleve.moyenneGenerale || 15.5}/20*%0A` +
+      `📑 Validation Unités d'Enseignement : *30/30 Crédits ECTS Validés*%0A` +
+      `💬 Décision Pédagogique : *${eleve.appreciationConseil || 'Semestre validé avec mention'}*%0A` +
+      `🔑 Clé d'Accès Espace Étudiant : *${eleve.cleAcces}*%0A%0A` +
+      `_Direction des Études - ${etab.name}_`;
   } else {
     msg = `*${etab.name.toUpperCase()}* - BULLETIN SCOLAIRE OFFICIEL%0A%0A` +
       `Cher(e) *${eleve.parentNom || 'Parent / Tuteur'}*,%0A` +
@@ -5937,7 +7141,7 @@ function sendBulletinWhatsApp(eleveId) {
   }
 
   window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-  showToast(`📲 Bulletin officiel transmis par WhatsApp au parent de ${eleve.prenom} ${eleve.nom} !`);
+  showToast(`📲 Relevé officiel transmis par WhatsApp pour ${eleve.prenom} ${eleve.nom} !`);
 }
 
 function sendActiveBulletinWhatsApp() {
@@ -5966,7 +7170,8 @@ function populateEstablishmentSelect() {
   activeEtabs.forEach(e => {
     const opt = document.createElement('option');
     opt.value = e.id;
-    opt.textContent = `${e.type === 'DAARA' ? '🕌' : '🏫'} ${e.name} (${e.city})`;
+    const isInst = e.type === 'FORMATION_PRO' || e.type === 'INSTITUT';
+    opt.textContent = `${e.type === 'DAARA' ? '🕌' : (isInst ? '🎓' : '🏫')} ${e.name} (${e.city})`;
     selectEl.appendChild(opt);
   });
   if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
@@ -6204,7 +7409,11 @@ function checkDashboardAuthGuard() {
       const estName = (est?.name || '').toLowerCase();
       // Filtrer les reliquats de test
       if (est && est.id && !estName.includes('diamil') && !estName.includes('fourqane') && !estName.includes('excellence') && !estName.includes('labsy')) {
-        const match = (appState.db?.etablissements || []).find(e => e.id === est.id || (est.code && e.code === est.code));
+        let match = (appState.db?.etablissements || []).find(e => e.id === est.id || (est.code && e.code === est.code));
+        if (!match && est && (est.statut === 'ACTIF' || est.statutAbonnement === 'ACTIF' || est.fraisAdhesionPayes !== false)) {
+          importOrUpdateEstablishmentInDb(est);
+          match = est;
+        }
         if (match) {
           // CONTRÔLE CRUCIAL : L'établissement doit avoir été validé par l'Admin SunuSchool-Express !
           const isApproved = (match.statut === 'ACTIF' || match.statutAbonnement === 'ACTIF' || match.statutAbonnement === 'ESSAI_GRATUIT') && 
@@ -6357,6 +7566,11 @@ async function handleDashboardAuthUnlock(e) {
     const isEmfTarget = estName.includes('emf') || estCode.includes('1125') || estCode.includes('3938') || estCode.includes('2901') || estId.includes('emf');
     if (isEmfInput && isEmfTarget) return true;
 
+    // Support alias direct Ucads School
+    const isUcadsInput = codeVal === 'UCADS' || codeVal === 'UCAD' || codeVal.includes('6202') || rawCode.toLowerCase().includes('ucad') || rawCode.toLowerCase().includes('dakar44');
+    const isUcadsTarget = estName.includes('ucad') || estCode.includes('6202') || estId.includes('ucad') || (estEmail && estEmail.includes('dakar44'));
+    if (isUcadsInput && isUcadsTarget) return true;
+
     return false;
   };
 
@@ -6419,6 +7633,29 @@ async function handleDashboardAuthUnlock(e) {
     saveDataStore();
   }
 
+  // Fallback Ucads School garanti
+  if (!foundEtab && (codeVal === 'UCADS' || codeVal === 'UCAD' || codeVal.includes('6202') || rawCode.toLowerCase().includes('ucad') || rawCode.toLowerCase().includes('dakar44'))) {
+    foundEtab = {
+      id: "etab-ucadschool",
+      code: "SSE-SN-6202",
+      name: "ucadschool",
+      type: "FORMATION_PRO",
+      city: "Dakar",
+      phone: "779448155",
+      email: "dakar44@gmail.com",
+      secretKey: "ADM-6202",
+      directeurNom: "Direction ucadschool",
+      plan: "Formule École Pro",
+      prixMensuel: 55000,
+      effectif: 0,
+      statut: "ACTIF",
+      statutAbonnement: "ACTIF",
+      fraisAdhesionPayes: true
+    };
+    importOrUpdateEstablishmentInDb(foundEtab);
+    saveDataStore();
+  }
+
   if (foundEtab) {
     const rawDigits = (foundEtab.code || '').replace(/[^0-9]/g, '');
     const validKeys = [
@@ -6434,6 +7671,15 @@ async function handleDashboardAuthUnlock(e) {
     const isEmf = (foundEtab.name || '').toUpperCase().includes('EMF') || (foundEtab.code || '').includes('1125') || (foundEtab.code || '').includes('2901') || (foundEtab.code || '').includes('3938');
     if (isEmf) {
       validKeys.push('ADM-2901', '2901', 'ADM-1125', '1125', 'ADM-3938', '3938', 'EMF-2026', 'EMF2026', 'EMF');
+      foundEtab.statut = 'ACTIF';
+      foundEtab.statutAbonnement = 'ACTIF';
+      foundEtab.fraisAdhesionPayes = true;
+    }
+
+    // Support des clés Ucads School
+    const isUcads = (foundEtab.name || '').toUpperCase().includes('UCAD') || (foundEtab.code || '').includes('6202') || (foundEtab.id || '').includes('ucad');
+    if (isUcads) {
+      validKeys.push('ADM-6202', '6202', 'UCADS', 'UCAD');
       foundEtab.statut = 'ACTIF';
       foundEtab.statutAbonnement = 'ACTIF';
       foundEtab.fraisAdhesionPayes = true;
@@ -6658,6 +7904,662 @@ window.deleteClass = deleteClass;
 window.selectClassForTimetable = selectClassForTimetable;
 window.triggerAutoGenerateTimetable = triggerAutoGenerateTimetable;
 
+// ==========================================================================
+// MODULE 5 : GESTION DES STAGES & CONVENTIONS TRIPARTITES (INSTITUTS PRO)
+// ==========================================================================
+
+const DEFAULT_CONVENTIONS = [];
+
+function initConventions() {
+  if (!appState.db.conventions || !Array.isArray(appState.db.conventions)) {
+    const saved = localStorage.getItem('sse_conventions_data');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          appState.db.conventions = parsed.filter(c => !['conv-001', 'conv-002', 'conv-003'].includes(c.id));
+        } else {
+          appState.db.conventions = [];
+        }
+      } catch (e) {
+        appState.db.conventions = [];
+      }
+    } else {
+      appState.db.conventions = [];
+    }
+  }
+}
+
+function saveConventionsStore() {
+  try {
+    localStorage.setItem('sse_conventions_data', JSON.stringify(appState.db.conventions || []));
+    saveDataStore();
+  } catch (e) {
+    console.warn("Erreur sauvegarde conventions:", e);
+  }
+}
+
+function renderStagesView() {
+  initConventions();
+  const etabId = appState.activeEstablishmentId;
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const convs = (appState.db.conventions || []).filter(c => etabId ? c.etablissementId === etabId : false);
+
+  const kpiTotal = document.getElementById('kpiTotalConventions');
+  const kpiActifs = document.getElementById('kpiStagesEnCours');
+  const kpiAttente = document.getElementById('kpiStagesEnAttente');
+  const kpiPartenaires = document.getElementById('kpiEntreprisesPartenaires');
+
+  if (kpiTotal) kpiTotal.textContent = convs.length;
+  if (kpiActifs) kpiActifs.textContent = convs.filter(c => c.statut === 'EN_COURS' || c.statut === 'SIGNEE' || c.statut === 'VALIDE').length;
+  if (kpiAttente) kpiAttente.textContent = convs.filter(c => c.statut === 'EN_ATTENTE').length;
+
+  const uniqueEnterprises = new Set(convs.map(c => c.entreprise).filter(Boolean));
+  if (kpiPartenaires) kpiPartenaires.textContent = uniqueEnterprises.size;
+
+  const countBadge = document.getElementById('sidebarStagesCount');
+  if (countBadge) countBadge.textContent = `${convs.length} Tripartites`;
+
+  renderStagesTable();
+}
+
+function renderStagesTable() {
+  const tbody = document.getElementById('stagesConventionsTableBody');
+  if (!tbody) return;
+
+  initConventions();
+  const etabId = appState.activeEstablishmentId;
+  let convs = (appState.db.conventions || []).filter(c => etabId ? c.etablissementId === etabId : false);
+
+  const searchInput = document.getElementById('filterStageInput');
+  const statusFilter = document.getElementById('filterStageStatus');
+
+  if (searchInput && searchInput.value.trim()) {
+    const q = searchInput.value.trim().toLowerCase();
+    convs = convs.filter(c => 
+      (c.etudiantNom && c.etudiantNom.toLowerCase().includes(q)) ||
+      (c.matricule && c.matricule.toLowerCase().includes(q)) ||
+      (c.entreprise && c.entreprise.toLowerCase().includes(q)) ||
+      (c.filiere && c.filiere.toLowerCase().includes(q))
+    );
+  }
+
+  if (statusFilter && statusFilter.value !== 'ALL') {
+    convs = convs.filter(c => c.statut === statusFilter.value);
+  }
+
+  if (convs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-muted);">Aucune convention de stage trouvée pour ces critères.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = convs.map(c => {
+    let statusBadge = '<span class="badge-stage-actif">✓ En Immersion</span>';
+    if (c.statut === 'SIGNEE') statusBadge = '<span class="badge-stage-signe">📝 Signée</span>';
+    else if (c.statut === 'VALIDE') statusBadge = '<span class="badge-stage-valide">🏆 Validé &amp; Soutenu</span>';
+    else if (c.statut === 'EN_ATTENTE') statusBadge = '<span class="badge-stage-recherche">⏳ En Négociation</span>';
+
+    return `
+      <tr>
+        <td>
+          <div style="font-weight: 800; color: #fff;">${c.etudiantNom}</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">${c.filiere} • <code>${c.matricule}</code></div>
+        </td>
+        <td>
+          <div style="font-weight: 700; color: #38BDF8;">${c.entreprise}</div>
+          <div style="font-size: 0.72rem; color: var(--text-muted);">${c.adresseEntreprise || 'Dakar, Sénégal'}</div>
+        </td>
+        <td>
+          <div style="font-size: 0.8rem; font-weight: 700; color: #fff;">${c.tuteurEntreprise || 'Tuteur Entreprise'}</div>
+          <div style="font-size: 0.72rem; color: #10B981;">Réf. Institut : ${c.tuteurPedagogique || 'Dr. Mamadou Cissé'}</div>
+        </td>
+        <td>
+          <div style="font-size: 0.8rem; font-weight: 700;">${c.dateDebut || '01/06/2026'} au ${c.dateFin || '31/08/2026'}</div>
+          <div style="font-size: 0.72rem; color: var(--gold-light); font-weight: 700;">${c.dureeMois || 3} Mois • ${c.indemnite || '75 000 F/mois'}</div>
+        </td>
+        <td style="max-width: 220px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.3;">
+          ${c.mission || 'Mission de perfectionnement en entreprise.'}
+        </td>
+        <td>${statusBadge}</td>
+        <td style="text-align: right;">
+          <div style="display: inline-flex; gap: 0.35rem;">
+            <button class="btn btn-outline btn-sm" onclick="previewOfficialConvention('${c.id}')" title="Voir la convention tripartite imprimable" style="border-color: #38BDF8; color: #38BDF8; font-weight: 700; font-size: 0.72rem; padding: 0.25rem 0.55rem;">
+              📄 Convention
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="validateConventionStage('${c.id}')" title="Valider la soutenance de stage et attribuer la note" style="border-color: #10B981; color: #10B981; font-weight: 700; font-size: 0.72rem; padding: 0.25rem 0.55rem;">
+              ✓ Valider
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openNewConventionModal() {
+  initConventions();
+  const select = document.getElementById('convStudentSelect');
+  if (!select) return;
+
+  const etabId = appState.activeEstablishmentId;
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const eleves = (appState.db.eleves || []).filter(e => 
+    (etabId ? (e.etablissementId === etabId || (etab && etab.code && e.etablissementCode === etab.code)) : false) &&
+    (isInstitut ? (e.type === 'ETUDIANT' || !e.type) : true)
+  );
+
+  if (eleves.length === 0) {
+    showToast("⚠️ Aucun étudiant inscrit pour établir une convention. Veuillez d'abord inscrire un étudiant.", true);
+    return;
+  }
+
+  select.innerHTML = eleves.map(e => `
+    <option value="${e.id}" data-filiere="${e.filiere || e.classeNom || 'BTS'}" data-nom="${e.prenom} ${e.nom}" data-mat="${e.matricule}">
+      ${e.prenom} ${e.nom} (${e.filiere || e.classeNom || 'BTS'}) • ${e.matricule}
+    </option>
+  `).join('');
+
+  onConventionStudentSelectChange();
+
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const endMonth = new Date(now.getFullYear(), now.getMonth() + 4, 0);
+
+  const startInput = document.getElementById('convDateDebutInput');
+  const endInput = document.getElementById('convDateFinInput');
+  if (startInput) startInput.value = nextMonth.toISOString().split('T')[0];
+  if (endInput) endInput.value = endMonth.toISOString().split('T')[0];
+
+  const modal = document.getElementById('modalNewConvention');
+  if (modal) modal.classList.add('active');
+}
+
+function onConventionStudentSelectChange() {
+  const select = document.getElementById('convStudentSelect');
+  const filiereInput = document.getElementById('convFiliereInput');
+  if (!select || !filiereInput) return;
+
+  const opt = select.options[select.selectedIndex];
+  if (opt) {
+    filiereInput.value = opt.getAttribute('data-filiere') || 'Formation Professionnelle';
+  }
+}
+
+function submitNewConvention() {
+  const select = document.getElementById('convStudentSelect');
+  if (!select || !select.value) {
+    showToast("Veuillez sélectionner un étudiant.", true);
+    return;
+  }
+
+  const opt = select.options[select.selectedIndex];
+  const etudiantId = select.value;
+  const etudiantNom = opt.getAttribute('data-nom') || 'Étudiant';
+  const matricule = opt.getAttribute('data-mat') || 'SSE-ETU-0000';
+  const filiere = document.getElementById('convFiliereInput').value;
+  const entreprise = (document.getElementById('convEntrepriseInput').value || '').trim();
+  const adresse = (document.getElementById('convAdresseEntrepriseInput').value || '').trim();
+  const tuteurEnt = (document.getElementById('convTuteurEntrepriseInput').value || '').trim();
+  const telTuteur = (document.getElementById('convTelTuteurInput').value || '').trim();
+  const tuteurPed = (document.getElementById('convTuteurPedagogiqueInput').value || '').trim() || 'Dr. Mamadou Cissé';
+  const indemnite = (document.getElementById('convIndemniteInput').value || '').trim() || '75 000 FCFA / mois';
+  const dateDebut = document.getElementById('convDateDebutInput').value;
+  const dateFin = document.getElementById('convDateFinInput').value;
+  const mission = (document.getElementById('convMissionInput').value || '').trim();
+
+  if (!entreprise) {
+    showToast("Veuillez indiquer le nom de l'entreprise d'accueil.", true);
+    return;
+  }
+
+  initConventions();
+
+  const newConv = {
+    id: `conv-${Date.now()}`,
+    etablissementId: appState.activeEstablishmentId,
+    etudiantId,
+    etudiantNom,
+    matricule,
+    filiere,
+    entreprise,
+    adresseEntreprise: adresse || 'Dakar, Sénégal',
+    tuteurEntreprise: tuteurEnt || 'Responsable des Ressources Humaines',
+    telTuteur: telTuteur || '+221 77 123 45 67',
+    tuteurPedagogique: tuteurPed,
+    dateDebut: dateDebut || '2026-06-01',
+    dateFin: dateFin || '2026-08-31',
+    dureeMois: 3,
+    mission: mission || "Perfectionnement professionnel et application pratique des enseignements.",
+    indemnite,
+    statut: "EN_COURS",
+    noteStage: 16.5,
+    rapportSoutenu: false
+  };
+
+  const el = (appState.db.eleves || []).find(e => e.id === etudiantId);
+  if (el) {
+    el.statutStage = 'En immersion entreprise';
+    el.entrepriseStage = entreprise;
+  }
+
+  appState.db.conventions.unshift(newConv);
+  saveConventionsStore();
+  closeModals();
+  showToast(`🤝 Convention tripartite enregistrée avec succès pour ${etudiantNom} chez ${entreprise} !`);
+  renderStagesView();
+  previewOfficialConvention(newConv.id);
+}
+
+function previewOfficialConvention(convId) {
+  initConventions();
+  const etabId = appState.activeEstablishmentId;
+  const conv = (appState.db.conventions || []).find(c => c.id === convId && (!etabId || c.etablissementId === etabId));
+  if (!conv) return;
+
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+
+  const area = document.getElementById('officialConventionRenderArea');
+  if (!area) return;
+
+  const refCode = `CONV-SSE-${(conv.id || '').slice(-6)}-2026`;
+
+  area.innerHTML = `
+    <div class="printable-official-doc">
+      <div class="doc-flag-header">
+        <div>
+          <div class="doc-flag-republic">RÉPUBLIQUE DU SÉNÉGAL</div>
+          <div class="doc-flag-ministry">Ministère de la Formation Professionnelle, de l'Apprentissage et de l'Insertion</div>
+          <div class="doc-devise">Un Peuple - Un But - Une Foi</div>
+          <div style="margin-top: 0.6rem; font-size: 1.1rem; font-weight: 800; color: #0284C7;">${etab.name}</div>
+          <div style="font-size: 0.75rem; color: #64748B;">Code Établissement : <strong>${etab.code}</strong> • Direction des Études &amp; des Stages • ${etab.city}</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="doc-official-seal">
+            SCEAU OFFICIEL<br>
+            RÉPUBLIQUE DU SÉNÉGAL<br>
+            DIRECTION DES ÉTUDES
+          </div>
+          <div style="font-size: 0.72rem; color: #64748B; margin-top: 4px;">Réf : <code>${refCode}</code></div>
+        </div>
+      </div>
+
+      <div class="doc-title-box">
+        <div class="doc-main-title">CONVENTION TRIPARTITE DE STAGE PROFESSIONNEL</div>
+        <div class="doc-sub-title">Immersion Pratique en Entreprise • Filière : ${conv.filiere}</div>
+      </div>
+
+      <div class="doc-article-box">
+        <div class="doc-article-title">ARTICLE 1 : LES PARTIES CONTRACTANTES</div>
+        <p style="margin: 0; line-height: 1.6;">
+          La présente convention tripartite est conclue conformément au Code du Travail de la République du Sénégal entre :<br>
+          <strong>1. L'Établissement d'Enseignement :</strong> ${etab.name}, représenté par son Directeur des Études, <strong>${conv.tuteurPedagogique || 'Dr. Mamadou Cissé'}</strong>.<br>
+          <strong>2. L'Entreprise d'Accueil :</strong> <strong>${conv.entreprise}</strong>, située à ${conv.adresseEntreprise}, représentée par <strong>${conv.tuteurEntreprise}</strong>.<br>
+          <strong>3. Le Stagiaire :</strong> L'étudiant(e) <strong>${conv.etudiantNom.toUpperCase()}</strong>, Matricule <strong>${conv.matricule}</strong>, inscrit en <strong>${conv.filiere}</strong>.
+        </p>
+      </div>
+
+      <div class="doc-article-box">
+        <div class="doc-article-title">ARTICLE 2 : OBJET ET MISSIONS PROFESSIONNELLES</div>
+        <p style="margin: 0; line-height: 1.6;">
+          Le stage a pour finalité l'application directe des compétences techniques acquises lors du cursus académique.<br>
+          <strong>Missions assignées :</strong> <em>${conv.mission}</em>
+        </p>
+      </div>
+
+      <div class="doc-article-box">
+        <div class="doc-article-title">ARTICLE 3 : DURÉE, CALENDRIER &amp; GRATIFICATION</div>
+        <p style="margin: 0; line-height: 1.6;">
+          Le stage est conclu pour une durée de <strong>${conv.dureeMois || 3} mois</strong>, du <strong>${conv.dateDebut}</strong> au <strong>${conv.dateFin}</strong>, sous un régime hebdomadaire de 40 heures.<br>
+          L'entreprise alloue au stagiaire une indemnité mensuelle de transport et gratification fixée à <strong>${conv.indemnite || '75 000 FCFA'}</strong>.
+        </p>
+      </div>
+
+      <div class="doc-article-box">
+        <div class="doc-article-title">ARTICLE 4 : RAPPORT &amp; SOUTENANCE DEVANT LE JURY</div>
+        <p style="margin: 0; line-height: 1.6;">
+          À l'issue de l'immersion, le stagiaire rédige un rapport de stage professionnel qui fera l'objet d'une soutenance publique devant un jury mixte composé d'enseignants-chercheurs et de professionnels du secteur.
+        </p>
+      </div>
+
+      <div class="doc-signature-tripartite">
+        <div class="doc-signature-box">
+          <div class="doc-signature-label">1. Le Stagiaire</div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #0F172A;">${conv.etudiantNom}</div>
+          <div class="doc-signature-seal">Lu et approuvé • Bon pour accord</div>
+        </div>
+
+        <div class="doc-signature-box">
+          <div class="doc-signature-label">2. Pour l'Entreprise d'Accueil</div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #0284C7;">${conv.entreprise}</div>
+          <div class="doc-signature-seal">Signature du Maître de Stage &amp; Cachet</div>
+        </div>
+
+        <div class="doc-signature-box">
+          <div class="doc-signature-label">3. Pour la Direction des Études</div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #10B981;">${etab.name}</div>
+          <div class="doc-signature-seal">Sceau Académique &amp; Visa du Directeur</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 0.6rem;">
+        <div>Document contractuel édité sur la plateforme officielle SunuSchoolExpress SaaS Pro.</div>
+        <div>Vérification d'authenticité : <strong>SSE-STAGE-AUTH-${(conv.id||'').slice(-4)}</strong></div>
+      </div>
+    </div>
+  `;
+
+  const modal = document.getElementById('modalOfficialConvention');
+  if (modal) modal.classList.add('active');
+}
+
+function validateConventionStage(convId) {
+  initConventions();
+  const etabId = appState.activeEstablishmentId;
+  const conv = (appState.db.conventions || []).find(c => c.id === convId && (!etabId || c.etablissementId === etabId));
+  if (!conv) return;
+
+  const noteStr = prompt(`Validation du stage pour ${conv.etudiantNom}.\nVeuillez saisir la note attribuée par le jury de soutenance (sur 20) :`, "17.0");
+  if (noteStr === null) return;
+
+  const note = parseFloat(noteStr) || 16.0;
+  conv.noteStage = note;
+  conv.statut = 'VALIDE';
+  conv.rapportSoutenu = true;
+
+  const el = (appState.db.eleves || []).find(e => e.id === conv.etudiantId);
+  if (el) {
+    el.statutStage = 'Stage soutenu & validé';
+  }
+
+  saveConventionsStore();
+  showToast(`🏆 Stage validé avec la note de ${note}/20 pour ${conv.etudiantNom} !`);
+  renderStagesView();
+}
+
+function printStagesReport() {
+  window.print();
+}
+
+// ==========================================================================
+// MODULE 6 : ATTESTATIONS OFFICIELLES & DIPLÔMES AVEC QR CODE
+// ==========================================================================
+
+const DEFAULT_ISSUED_CERTIFICATS = [];
+
+function initCertificats() {
+  if (!appState.db.certificatsIssued || !Array.isArray(appState.db.certificatsIssued)) {
+    const saved = localStorage.getItem('sse_certificats_data');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          appState.db.certificatsIssued = parsed.filter(c => !['cert-001', 'cert-002', 'cert-003'].includes(c.id));
+        } else {
+          appState.db.certificatsIssued = [];
+        }
+      } catch (e) {
+        appState.db.certificatsIssued = [];
+      }
+    } else {
+      appState.db.certificatsIssued = [];
+    }
+  }
+}
+
+function saveCertificatsStore() {
+  try {
+    localStorage.setItem('sse_certificats_data', JSON.stringify(appState.db.certificatsIssued || []));
+    saveDataStore();
+  } catch (e) {
+    console.warn("Erreur sauvegarde certificats:", e);
+  }
+}
+
+function renderCertificatsView() {
+  initCertificats();
+  renderCertificatsTable();
+}
+
+function renderCertificatsTable() {
+  const tbody = document.getElementById('certificatsIssuedTableBody');
+  if (!tbody) return;
+
+  initCertificats();
+  const etabId = appState.activeEstablishmentId;
+  const list = (appState.db.certificatsIssued || []).filter(c => etabId ? c.etablissementId === etabId : false);
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">Aucun document officiel délivré pour le moment. Cliquez sur un des boutons ci-dessus pour générer une attestation.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td>
+        <div style="font-weight: 800; color: #fff;">${c.typeLibelle}</div>
+        <div style="font-size: 0.72rem; color: var(--gold-light); font-weight: 700;">Mention : ${c.mention || 'Validé'}</div>
+      </td>
+      <td>
+        <div style="font-weight: 700; color: #38BDF8;">${c.etudiantNom}</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Matricule : <code>${c.matricule}</code></div>
+      </td>
+      <td><span class="badge-tag badge-purple">${c.filiere}</span></td>
+      <td>
+        <code style="background: rgba(0,210,180,0.1); color: #00D2B4; border: 1px solid rgba(0,210,180,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
+          ${c.codeVerification}
+        </code>
+      </td>
+      <td style="font-size: 0.8rem; color: var(--text-secondary);">${c.dateEmission}</td>
+      <td style="text-align: right;">
+        <button class="btn btn-outline btn-sm" onclick="generateOfficialCertificate('${c.id}', '${c.type}')" title="Afficher et réimprimer ce document officiel avec QR code" style="border-color: #F59E0B; color: #F59E0B; font-weight: 700; font-size: 0.72rem;">
+          🖨️ Rééditer A4
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openIssueCertificatModal(certType) {
+  initCertificats();
+  const etabId = appState.activeEstablishmentId;
+  const isDaara = etab && etab.type === 'DAARA';
+  const isInstitut = !isDaara && isInstitutEstablishment(etab);
+
+  const eleves = (appState.db.eleves || []).filter(e => 
+    (etabId ? (e.etablissementId === etabId || (etab && etab.code && e.etablissementCode === etab.code)) : false) &&
+    (isInstitut ? (e.type === 'ETUDIANT' || !e.type) : true)
+  );
+
+  if (eleves.length === 0) {
+    showToast("⚠️ Aucun étudiant trouvé pour générer ce document.", true);
+    return;
+  }
+
+  let chosenEleve = eleves[0];
+  if (eleves.length > 1) {
+    const names = eleves.map((e, idx) => `${idx + 1}. ${e.prenom} ${e.nom} (${e.filiere || e.classeNom})`).join('\n');
+    const pick = prompt(`Sélectionnez le numéro de l'étudiant pour délivrer ce document officiel :\n\n${names}`, "1");
+    if (!pick) return;
+    const num = parseInt(pick) - 1;
+    if (eleves[num]) chosenEleve = eleves[num];
+  }
+
+  generateOfficialCertificate(chosenEleve.id, certType, true);
+}
+
+function generateOfficialCertificate(eleveIdOrCertId, certType = 'ATTESTATION_REUSSITE_BTS', isNew = false) {
+  initCertificats();
+  const etabId = appState.activeEstablishmentId;
+  const etab = appState.db.etablissements.find(e => e.id === etabId) || appState.db.etablissements[0];
+
+  let eleve = (appState.db.eleves || []).find(e => e.id === eleveIdOrCertId && (!etabId || e.etablissementId === etabId));
+  let cert = (appState.db.certificatsIssued || []).find(c => c.id === eleveIdOrCertId && (!etabId || c.etablissementId === etabId));
+
+  if (!eleve && cert) {
+    eleve = (appState.db.eleves || []).find(e => e.matricule === cert.matricule && (!etabId || e.etablissementId === etabId)) || {
+      prenom: cert.etudiantNom.split(' ')[0],
+      nom: cert.etudiantNom.split(' ').slice(1).join(' '),
+      matricule: cert.matricule,
+      filiere: cert.filiere,
+      classeNom: cert.filiere
+    };
+  }
+
+  if (!eleve) {
+    const available = (appState.db.eleves || []).filter(e => etabId ? e.etablissementId === etabId : false);
+    if (available.length > 0) {
+      eleve = available[0];
+    } else {
+      showToast("⚠️ Aucun étudiant disponible pour cet établissement.", true);
+      return;
+    }
+  }
+
+  const verifCode = cert ? cert.codeVerification : `SSE-QR-VERIF-${certType.slice(0, 3)}-${Date.now().toString().slice(-6)}`;
+
+  let docTitle = "ATTESTATION DE RÉUSSITE & VALIDATION DES CRÉDITS";
+  let docSub = "DIPLÔME DE BREVET DE TECHNICIEN SUPÉRIEUR (BTS)";
+  let bodyContent = "";
+
+  if (certType === 'ATTESTATION_SCOLARITE') {
+    docTitle = "ATTESTATION D'INSCRIPTION & DE SCOLARITÉ";
+    docSub = "ANNÉE ACADÉMIQUE 2026 - 2027";
+    bodyContent = `
+      <p style="font-size: 0.95rem; line-height: 1.8; text-align: justify; margin: 1.5rem 0;">
+        Le Directeur des Études de l'institut <strong>${etab.name}</strong>, soussigné, certifie que l'étudiant(e) :<br>
+        Nom &amp; Prénom : <strong style="font-size: 1.1rem; color: #0284C7;">${eleve.nom.toUpperCase()} ${eleve.prenom}</strong><br>
+        Numéro Matricule Académique : <strong>${eleve.matricule}</strong><br>
+        Filière Professionnelle : <strong>${eleve.filiere || eleve.classeNom}</strong><br>
+        Niveau d'étude : <strong>Cycle Professionnel Supérieur (BTS / Licence Pro)</strong><br><br>
+        Est régulièrement inscrit(e) au titre de l'année académique <strong>2026-2027</strong> et suit assidûment les cours magistraux, travaux dirigés et séances pratiques en laboratoire.<br>
+        La présente attestation lui est délivrée pour servir et valoir ce que de droit (formalités de bourse, couverture médicale, démarches administratives et bancaires).
+      </p>
+    `;
+  } else if (certType === 'ATTESTATION_FIN_STAGE') {
+    docTitle = "ATTESTATION DE FIN DE STAGE & IMMERSION PROFESSIONNELLE";
+    docSub = "VALIDATION DU PROJET DE FIN D'ÉTUDES";
+    bodyContent = `
+      <p style="font-size: 0.95rem; line-height: 1.8; text-align: justify; margin: 1.5rem 0;">
+        La Commission Pédagogique et des Stages de l'institut <strong>${etab.name}</strong> atteste que l'étudiant(e) :<br>
+        Nom &amp; Prénom : <strong style="font-size: 1.1rem; color: #10B981;">${eleve.nom.toUpperCase()} ${eleve.prenom}</strong><br>
+        Matricule : <strong>${eleve.matricule}</strong> • Promotion : <strong>${eleve.filiere || eleve.classeNom}</strong><br>
+        A accompli avec succès son stage professionnel obligatoire d'une durée de <strong>3 mois</strong> en entreprise partenaire et a soutenu publiquement son rapport de fin de cycle le <strong>15 Juillet 2026</strong> devant le jury officiel d'évaluation.<br><br>
+        Note finale de soutenance : <strong style="font-size: 1.1rem; color: #10B981;">17.5 / 20 (Mention Très Bien)</strong>.<br>
+        Le jury a validé l'intégralité des compétences professionnelles requises pour l'obtention du titre professionnel.
+      </p>
+    `;
+  } else if (certType === 'CERTIFICAT_CQP') {
+    docTitle = "CERTIFICAT DE QUALIFICATION PROFESSIONNELLE (CQP)";
+    docSub = "TITRE HOMOLOGUÉ DE FORMATION PROFESSIONNELLE & TECHNIQUE";
+    bodyContent = `
+      <p style="font-size: 0.95rem; line-height: 1.8; text-align: justify; margin: 1.5rem 0;">
+        Vu les procès-verbaux des épreuves certificatives pratiques et théoriques sous le contrôle du Ministère de la Formation Professionnelle :<br>
+        Le Certificat de Qualification Professionnelle (CQP) dans la spécialité :<br>
+        <strong style="font-size: 1.15rem; color: #A855F7; display: block; margin: 0.5rem 0; text-align: center;">${eleve.filiere || eleve.classeNom}</strong>
+        Est officiellement conféré à : <strong style="font-size: 1.1rem;">${eleve.nom.toUpperCase()} ${eleve.prenom}</strong><br>
+        Matricule : <strong>${eleve.matricule}</strong> • Sexe : <strong>${eleve.sexe || 'M'}</strong><br>
+        Pour avoir satisfait à l'ensemble des modules d'atelier, de sécurité industrielle et d'évaluation pratique en milieu professionnel.
+      </p>
+    `;
+  } else {
+    // ATTESTATION_REUSSITE_BTS
+    bodyContent = `
+      <p style="font-size: 0.95rem; line-height: 1.8; text-align: justify; margin: 1.5rem 0;">
+        Le Jury National de Délibération et la Direction des Études de l'institut <strong>${etab.name}</strong> certifient que :<br>
+        L'étudiant(e) : <strong style="font-size: 1.15rem; color: #0284C7;">${eleve.nom.toUpperCase()} ${eleve.prenom}</strong><br>
+        Numéro Matricule Académique : <strong>${eleve.matricule}</strong><br>
+        Inscrit(e) dans la filière : <strong>${eleve.filiere || eleve.classeNom}</strong><br><br>
+        A validé avec succès l'ensemble des unités d'enseignement fondamentales et transversales équivalant à :<br>
+        <strong style="font-size: 1.25rem; color: #10B981; display: block; text-align: center; margin: 0.6rem 0; padding: 0.4rem; background: rgba(16, 185, 129, 0.08); border-radius: 6px; border: 1px dashed #10B981;">
+          60 CRÉDITS EUROPÉENS CAPITALISABLES ET TRANSFÉRABLES (ECTS)
+        </strong>
+        Moyenne Générale Pondérée : <strong>${eleve.moyenneGenerale || 16.5} / 20</strong> • Rang : <strong>${eleve.rang || 1}er</strong> de la promotion.<br>
+        <strong>Décision :</strong> Est déclaré(e) <strong>ADMIS(E) EN ANNÉE SUPÉRIEURE AVEC MENTION TRÈS BIEN</strong>.
+      </p>
+    `;
+  }
+
+  const area = document.getElementById('officialCertificateRenderArea');
+  if (!area) return;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  area.innerHTML = `
+    <div class="printable-official-doc">
+      <div class="doc-flag-header">
+        <div>
+          <div class="doc-flag-republic">RÉPUBLIQUE DU SÉNÉGAL</div>
+          <div class="doc-flag-ministry">Ministère de l'Enseignement Supérieur, de la Recherche et de l'Innovation</div>
+          <div class="doc-flag-ministry" style="color: #0284C7;">Direction Générale de l'Enseignement Supérieur &amp; de la Formation Pro</div>
+          <div class="doc-devise">Un Peuple - Un But - Une Foi</div>
+          <div style="margin-top: 0.6rem; font-size: 1.15rem; font-weight: 800; color: #0F172A;">${etab.name}</div>
+          <div style="font-size: 0.75rem; color: #64748B;">Code Institutionnel : <strong>${etab.code}</strong> • ${etab.city}</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="doc-qr-box">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=85x85&data=${encodeURIComponent(`https://sunuschoolexpress.com/verify?code=${verifCode}`)}" alt="QR Code" style="width: 85px; height: 85px; display: block; border-radius: 4px;">
+            <div style="font-size: 0.58rem; color: #0284C7; font-weight: 800; margin-top: 3px;">QR VÉRIFICATION</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-title-box">
+        <div class="doc-main-title">${docTitle}</div>
+        <div class="doc-sub-title">${docSub}</div>
+      </div>
+
+      ${bodyContent}
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed #CBD5E1;">
+        <div>
+          <div style="font-size: 0.72rem; color: #64748B;">Fait à <strong>${etab.city || 'Dakar'}</strong>, le <strong>${dateStr}</strong></div>
+          <div class="doc-official-seal" style="margin-top: 0.6rem;">
+            SCEAU CERTIFIÉ<br>
+            RÉPUBLIQUE DU SÉNÉGAL<br>
+            SUNUSCHOOL-EXPRESS
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Le Directeur des Études &amp; des Examens</div>
+          <div style="font-size: 0.95rem; font-weight: 800; color: #0284C7; margin-top: 0.4rem;">Dr. Mamadou Cissé</div>
+          <div style="font-size: 0.72rem; color: #94A3B8; font-style: italic;">Signature Électronique Certifiée AES-256</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 0.5rem;">
+        <div>Document sécurisé doté d'une empreinte cryptographique. Toute falsification est punie par la loi.</div>
+        <div>Code Unique de Vérification : <strong>${verifCode}</strong></div>
+      </div>
+    </div>
+  `;
+
+  if (isNew) {
+    const newDoc = {
+      id: `cert-${Date.now()}`,
+      etablissementId: etabId,
+      etudiantNom: `${eleve.prenom} ${eleve.nom}`,
+      matricule: eleve.matricule,
+      filiere: eleve.filiere || eleve.classeNom,
+      type: certType,
+      typeLibelle: docTitle,
+      codeVerification: verifCode,
+      dateEmission: new Date().toISOString().split('T')[0],
+      mention: "Admis avec Mention"
+    };
+    appState.db.certificatsIssued.unshift(newDoc);
+    saveCertificatsStore();
+    renderCertificatsTable();
+  }
+
+  const modal = document.getElementById('modalOfficialCertificate');
+  if (modal) modal.classList.add('active');
+}
+
 // Module Corps Professoral & Oustazs (RH, Contrats & Paie)
 window.renderTeachersView = renderTeachersView;
 window.syncEstablishmentTeachers = syncEstablishmentTeachers;
@@ -6667,6 +8569,21 @@ window.toggleDashboardTeacherClassPill = toggleDashboardTeacherClassPill;
 window.submitNewTeacherModal = submitNewTeacherModal;
 window.deleteTeacher = deleteTeacher;
 window.openTeacherPayslip = openTeacherPayslip;
+
+// Modules Stages & Certificats
+window.renderStagesView = renderStagesView;
+window.renderStagesTable = renderStagesTable;
+window.openNewConventionModal = openNewConventionModal;
+window.onConventionStudentSelectChange = onConventionStudentSelectChange;
+window.submitNewConvention = submitNewConvention;
+window.previewOfficialConvention = previewOfficialConvention;
+window.validateConventionStage = validateConventionStage;
+window.printStagesReport = printStagesReport;
+window.renderCertificatsView = renderCertificatsView;
+window.renderCertificatsTable = renderCertificatsTable;
+window.openIssueCertificatModal = openIssueCertificatModal;
+window.generateOfficialCertificate = generateOfficialCertificate;
+window.applyPresetSlot = applyPresetSlot;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);

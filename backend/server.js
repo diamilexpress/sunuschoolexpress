@@ -8,6 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const webPush = require('web-push');
 
 // Chargement automatique des variables d'environnement depuis .env
 const envFile = path.join(__dirname, '.env');
@@ -32,6 +33,77 @@ if (fs.existsSync(envFile)) {
 }
 
 const supabaseService = require('./supabaseService.js');
+
+// ==============================================================================
+// CONFIGURATION WEB PUSH NOTIFICATIONS (VAPID)
+// Notifications Push en temps réel sur téléphone/PC de l'administrateur
+// ==============================================================================
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BFd57hS0DXRKspsOK4hVxl2EHk2Q4t63I4hD0PMVCy_4MYw0ZNaYZJ8rjgtsNgY0wGhRtqRE-W7oE_-RpW_5cZM';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '4QDFtlSGBQcijxCTyTHxVSNOfFcTiUeH-Mj_ZQltQ9g';
+const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:sunuschoolexpress@gmail.com';
+
+webPush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+
+// Stockage en mémoire + fichier des abonnements Push de l'administrateur
+const PUSH_SUBSCRIPTIONS_FILE = path.join(__dirname, 'data', 'push_subscriptions.json');
+let pushSubscriptions = [];
+
+try {
+  if (fs.existsSync(PUSH_SUBSCRIPTIONS_FILE)) {
+    pushSubscriptions = JSON.parse(fs.readFileSync(PUSH_SUBSCRIPTIONS_FILE, 'utf8'));
+    console.log(`[PUSH] ${pushSubscriptions.length} abonnement(s) push chargé(s).`);
+  }
+} catch (e) {
+  pushSubscriptions = [];
+}
+
+function savePushSubscriptions() {
+  try {
+    const dir = path.dirname(PUSH_SUBSCRIPTIONS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(PUSH_SUBSCRIPTIONS_FILE, JSON.stringify(pushSubscriptions, null, 2));
+  } catch (e) {
+    console.warn('[PUSH] Erreur sauvegarde abonnements:', e.message);
+  }
+}
+
+/**
+ * Envoie une notification push à tous les abonnés admin enregistrés
+ * @param {string} title - Titre de la notification
+ * @param {string} body - Corps du message
+ * @param {object} data - Données supplémentaires (url, type...)
+ */
+async function sendPushToAdmins(title, body, data = {}) {
+  if (pushSubscriptions.length === 0) return;
+  const payload = JSON.stringify({
+    title,
+    body,
+    icon: '/assets/icons/icon-192.png',
+    badge: '/assets/icons/icon-192.png',
+    data: { url: '/admin.html', ...data },
+    timestamp: Date.now()
+  });
+  const expired = [];
+  await Promise.allSettled(
+    pushSubscriptions.map(async (sub, idx) => {
+      try {
+        await webPush.sendNotification(sub, payload);
+        console.log(`[PUSH] ✓ Notification envoyée à l'abonné #${idx + 1}`);
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          expired.push(idx);
+        } else {
+          console.warn(`[PUSH] Erreur envoi abonné #${idx + 1}:`, err.message);
+        }
+      }
+    })
+  );
+  if (expired.length > 0) {
+    expired.reverse().forEach(i => pushSubscriptions.splice(i, 1));
+    savePushSubscriptions();
+    console.log(`[PUSH] ${expired.length} abonnement(s) expiré(s) supprimé(s).`);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -141,8 +213,6 @@ const initialSeedData = {
 function findMatchingBackendEtabIndex(list, target) {
   if (!Array.isArray(list) || !target) return -1;
   const tName = (target.name || target.schoolName || '').toLowerCase().trim();
-  const tPhone = (target.phone || '').replace(/[^0-9]/g, '').slice(-9);
-  const tEmail = (target.email || '').toLowerCase().trim();
   const tCode = (target.code || '').toUpperCase().trim();
   const tId = target.id || '';
 
@@ -150,11 +220,19 @@ function findMatchingBackendEtabIndex(list, target) {
     if (!e) return false;
     if (tId && e.id && e.id === tId) return true;
     if (tCode && e.code && e.code.toUpperCase() === tCode) return true;
-    if (tName && e.name && e.name.toLowerCase().trim() === tName) return true;
-    const ePhone = (e.phone || '').replace(/[^0-9]/g, '').slice(-9);
-    if (tPhone && ePhone && tPhone.length >= 7 && tPhone === ePhone) return true;
-    const eEmail = (e.email || '').toLowerCase().trim();
-    if (tEmail && eEmail && !tEmail.includes('direction@ecole.sn') && !tEmail.includes('sunuschoolexpress@gmail.com') && tEmail === eEmail) return true;
+    const eName = (e.name || '').toLowerCase().trim();
+    if (tName && eName && eName === tName) return true;
+
+    // Ne comparer téléphone/email que si l'un des deux noms est générique ou vide
+    const isGeneric = !tName || !eName || tName.includes('nouvel') || eName.includes('nouvel') || tName.includes('mon ') || eName.includes('mon ');
+    if (isGeneric) {
+      const tPhone = (target.phone || '').replace(/[^0-9]/g, '').slice(-9);
+      const ePhone = (e.phone || '').replace(/[^0-9]/g, '').slice(-9);
+      if (tPhone && ePhone && tPhone.length >= 7 && tPhone === ePhone) return true;
+      const tEmail = (target.email || '').toLowerCase().trim();
+      const eEmail = (e.email || '').toLowerCase().trim();
+      if (tEmail && eEmail && !tEmail.includes('direction@ecole.sn') && !tEmail.includes('sunuschoolexpress@gmail.com') && tEmail === eEmail) return true;
+    }
     return false;
   });
 }
@@ -858,12 +936,12 @@ app.get('/api/audit-logs', (req, res) => {
   res.json({ success: true, count: db.auditLogs.length, data: db.auditLogs });
 });
 
-// Endpoint des demandes de devis enterprise & surclassements
+// Endpoint des demandes de devis établissement & surclassements
 app.get('/api/quotes', (req, res) => {
   res.json({ success: true, count: (db.quotes || []).length, data: db.quotes || [] });
 });
 
-app.post('/api/quotes', (req, res) => {
+app.post('/api/quotes', async (req, res) => {
   const quoteData = req.body || {};
   if (!db.quotes) db.quotes = [];
   quoteData.id = quoteData.id || `quote-${Date.now()}`;
@@ -871,13 +949,72 @@ app.post('/api/quotes', (req, res) => {
   db.quotes.unshift(quoteData);
 
   logAudit({
-    user: quoteData.contactName || 'Demande de Devis Enterprise',
-    action: "DEMANDE_DEVIS_ENTERPRISE",
+    user: quoteData.contactName || 'Demande de Devis Établissement',
+    action: "DEMANDE_DEVIS_ETABLISSEMENT",
     details: `Demande de devis (${quoteData.ref || quoteData.id}) pour ${quoteData.orgName || 'Organisation'}`
   });
 
   saveDatabase(db);
+
+  // 🔔 NOTIFICATION PUSH IMMÉDIATE vers le téléphone de l'admin
+  const nbCampus = quoteData.campuses || 'Multi-campus';
+  const ville = quoteData.cities || 'Sénégal';
+  sendPushToAdmins(
+    `📋 Nouveau Devis Établissement — ${quoteData.orgName || 'Nouveau client'}`,
+    `👤 ${quoteData.contactName || ''} (${quoteData.phone || ''}) — ${nbCampus} · ${ville}\n🔖 Réf: ${quoteData.ref || quoteData.id}`,
+    { url: '/admin.html#quotes', type: 'DEVIS', ref: quoteData.ref }
+  ).catch(() => {});
+
   res.json({ success: true, message: 'Demande de devis enregistrée avec succès', data: quoteData });
+});
+
+// ==============================================================================
+// ENDPOINTS WEB PUSH NOTIFICATIONS
+// ==============================================================================
+
+// Retourner la clé publique VAPID au frontend (nécessaire pour l'abonnement)
+app.get('/api/push/vapid-key', (req, res) => {
+  res.json({ success: true, publicKey: VAPID_PUBLIC_KEY });
+});
+
+// Enregistrer l'abonnement push du téléphone/PC de l'admin
+app.post('/api/push/subscribe', (req, res) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, message: 'Abonnement invalide' });
+  }
+  // Éviter les doublons
+  const alreadyExists = pushSubscriptions.some(s => s.endpoint === subscription.endpoint);
+  if (!alreadyExists) {
+    pushSubscriptions.push(subscription);
+    savePushSubscriptions();
+    console.log(`[PUSH] Nouvel abonnement admin enregistré. Total: ${pushSubscriptions.length}`);
+  }
+  res.json({ success: true, message: 'Abonnement push enregistré avec succès' });
+});
+
+// Supprimer un abonnement (désabonnement)
+app.post('/api/push/unsubscribe', (req, res) => {
+  const { endpoint } = req.body || {};
+  if (endpoint) {
+    pushSubscriptions = pushSubscriptions.filter(s => s.endpoint !== endpoint);
+    savePushSubscriptions();
+  }
+  res.json({ success: true, message: 'Désabonnement effectué' });
+});
+
+// Tester manuellement l'envoi d'une notification push (usage admin)
+app.post('/api/push/test', async (req, res) => {
+  try {
+    await sendPushToAdmins(
+      '🔔 Test SunuSchool — Notifications Actives !',
+      'Félicitations ! Vous recevrez désormais toutes les demandes d\'inscriptions et devis en temps réel.',
+      { url: '/admin.html', type: 'TEST' }
+    );
+    res.json({ success: true, message: `Notification test envoyée à ${pushSubscriptions.length} appareil(s)` });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
 // Endpoint consolidé de toutes les demandes et établissements (Adhésions, Surclassements, Devis, Parc)
@@ -1406,7 +1543,11 @@ app.post('/api/subscriptions/confirm', (req, res) => {
       id: id || `etab-${Date.now()}`,
       code: code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: defaultName,
-      type: type || (defaultName.toLowerCase().includes('daara') ? 'DAARA' : 'ECOLE'),
+      type: type || (
+        (defaultName + ' ' + (planName || '')).toLowerCase().includes('daara') 
+          ? 'DAARA' 
+          : ((defaultName + ' ' + (planName || '')).toLowerCase().includes('institut') || (defaultName + ' ' + (planName || '')).toLowerCase().includes('formation') || (defaultName + ' ' + (planName || '')).toLowerCase().includes('campus') ? 'FORMATION_PRO' : 'ECOLE')
+      ),
       city: city || 'Dakar',
       phone: phone || '+221 77 123 45 67',
       email: cleanEmail || `direction@${defaultName.toLowerCase().replace(/[^a-z0-9]/g, '')}.sn`,
@@ -1470,6 +1611,13 @@ app.post('/api/subscriptions/confirm', (req, res) => {
 
   saveDatabase(db);
 
+  // 🔔 NOTIFICATION PUSH IMMÉDIATE vers le téléphone et l'ordinateur de l'admin
+  sendPushToAdmins(
+    `💰 Virement Adhésion Reçu — ${cleanSchool}`,
+    `Montant: 10 000 FCFA via ${op} (${newTx.reference})\n📞 ${etab.phone || 'Non renseigné'} • Code: ${etab.code}\nFormule: ${etab.plan}`,
+    { url: '/admin.html#pending', type: 'PAIEMENT_ADHESION', etabId: etab.id }
+  ).catch(err => console.warn('[PUSH Confirm]', err.message));
+
   // 4. Génération du Reçu Officiel d'Activation
   const recuOfficiel = {
     numeroRecu: `REC-SSE-${Date.now().toString().slice(-6)}`,
@@ -1515,16 +1663,37 @@ app.post('/api/saas/demandes', (req, res) => {
   let etab = existingIdx >= 0 ? db.etablissements[existingIdx] : null;
 
   if (!etab) {
+    const pLow = (body.plan || '').toLowerCase();
+    const sLow = (cleanSchool + ' ' + (body.type || '') + ' ' + pLow).toLowerCase();
+    let autoType = 'ECOLE';
+    if (sLow.includes('daara') || sLow.includes('coran')) autoType = 'DAARA';
+    else if (sLow.includes('institut') || sLow.includes('formation') || sLow.includes('bts') || sLow.includes('cfpt') || sLow.includes('cqp') || sLow.includes('campus')) autoType = 'FORMATION_PRO';
+    if (body.type && ['DAARA', 'FORMATION_PRO', 'ECOLE'].includes(body.type.toUpperCase())) autoType = body.type.toUpperCase();
+
+    let autoPrice = Number(body.prixMensuel) || 0;
+    if (!autoPrice) {
+      if (pLow.includes('150') || pLow.includes('multi-campus') || pLow.includes('grande école') || pLow.includes('grande ecole') || sLow.includes('multi-campus') || sLow.includes('grande école')) autoPrice = 150000;
+      else if (pLow.includes('85') || pLow.includes('premium')) autoPrice = 85000;
+      else if (pLow.includes('starter')) autoPrice = (pLow.includes('institut') || sLow.includes('institut')) ? 45000 : 20000;
+      else if (pLow.includes('pro')) autoPrice = (pLow.includes('institut') || sLow.includes('institut')) ? 75000 : 55000;
+      else if (sLow.includes('45')) autoPrice = 45000;
+      else if (sLow.includes('75')) autoPrice = 75000;
+      else if (sLow.includes('35') || sLow.includes('daara')) autoPrice = 35000;
+      else if (sLow.includes('20')) autoPrice = 20000;
+      else if (autoType === 'FORMATION_PRO') autoPrice = 75000;
+      else autoPrice = 55000;
+    }
+
     etab = {
       id: body.id || `etab-${Date.now()}`,
       code: body.code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: cleanSchool,
-      type: body.type || (cleanSchool.toLowerCase().includes('daara') ? 'DAARA' : 'ECOLE'),
+      type: autoType,
       city: body.city || 'Dakar',
       phone: body.phone || '+221 77 123 45 67',
       email: body.email || `direction@${cleanSchool.toLowerCase().replace(/[^a-z0-9]/g, '')}.sn`,
-      plan: body.plan || 'Formule Pro',
-      prixMensuel: body.prixMensuel || 55000,
+      plan: body.plan || (autoType === 'FORMATION_PRO' ? 'Institut Pro' : 'Formule Pro'),
+      prixMensuel: autoPrice,
       statut: body.statut || 'EN_ATTENTE_VALIDATION',
       statutAbonnement: body.statutAbonnement || 'EN_ATTENTE_VALIDATION',
       echeanceAbonnement: '2026-11-30',
@@ -1544,6 +1713,16 @@ app.post('/api/saas/demandes', (req, res) => {
   }
 
   saveDatabase(db);
+
+  // 🔔 NOTIFICATION PUSH IMMÉDIATE vers le téléphone et l'ordinateur de l'admin
+  const typeLabel = etab.type === 'DAARA' ? 'Daara Moderne' : (etab.type === 'FORMATION_PRO' ? 'Institut / Formation Pro' : 'École Privée');
+  const iconEmoji = etab.type === 'DAARA' ? '🕌' : (etab.type === 'FORMATION_PRO' ? '🎓' : '🏫');
+  sendPushToAdmins(
+    `${iconEmoji} Nouvelle Demande : ${cleanSchool}`,
+    `📍 ${etab.city || 'Sénégal'} • 📞 ${etab.phone || 'Non renseigné'}\n🏷️ ${typeLabel} • Formule: ${etab.plan || 'Standard'}\nCode: ${etab.code}`,
+    { url: '/admin.html#etablissements', type: 'DEMANDE_ETABLISSEMENT', etabId: etab.id }
+  ).catch(err => console.warn('[PUSH Demande]', err.message));
+
   res.json({ success: true, message: `Demande enregistrée pour ${cleanSchool}`, data: etab });
 });
 

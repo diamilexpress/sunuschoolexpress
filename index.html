@@ -12,6 +12,14 @@
   <meta property="og:type" content="website">
   <link rel="stylesheet" href="styles.css?v=3.7.5">
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00D2B4">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SunuSchool">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
 </head>
 <body>
 
@@ -68,8 +76,8 @@
         </div>
 
         <!-- Bouton Télécharger l'App (Symbole seul sans nom) -->
-        <button type="button" id="btnHeaderInstallApp" class="btn-app-download-symbol" onclick="triggerMobileAppInstall(event)" title="Télécharger et installer l'application" aria-label="Télécharger l'application">
-          <img src="assets/icons/app-download.png" alt="Télécharger l'application" class="app-download-symbol-img">
+        <button type="button" id="btnHeaderInstallApp" class="btn-app-download-symbol" onclick="triggerMobileAppInstall(event)" title="Installer l'application SunuSchool" aria-label="Installer l'application">
+          <img src="assets/icons/icon-192.png" alt="Installer l'application SunuSchool" class="app-download-symbol-img">
         </button>
 
         <!-- Accès Direct Espace / Connexion -->
@@ -92,6 +100,7 @@
         <li><a href="#hero" onclick="closeMobileMenu()" class="mobile-nav-link">🏠 Présentation</a></li>
         <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect();" class="mobile-nav-link" style="color: #FBBF24; font-weight: 700;">🔑 Se Connecter</a></li>
         <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect('DAARA');" class="mobile-nav-link" style="color: #00D2B4; font-weight: 700;">🕌 Espace Daara (Talibés &amp; Dortoirs)</a></li>
+        <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect('FORMATION_PRO');" class="mobile-nav-link" style="color: #38BDF8; font-weight: 700;">🎓 Espace Institut Pro (BTS &amp; Métiers)</a></li>
         <li><a href="#portal" onclick="closeMobileMenu()" class="mobile-nav-link">💻 Fonctionnalités &amp; Démo</a></li>
         <li><a href="#tarifs" onclick="closeMobileMenu()" class="mobile-nav-link">🏷️ Tarifs &amp; Offres</a></li>
         <li><a href="#contact" onclick="closeMobileMenu()" class="mobile-nav-link">📞 Contact &amp; Assistance</a></li>
@@ -194,15 +203,18 @@
         </div>
       </div>
 
-      <!-- Hero Interactive Teaser Card avec Bascule Bimodale École Privée / Daara Moderne -->
+      <!-- Hero Interactive Teaser Card avec Bascule Trimodale École Privée / Daara Moderne / Institut Pro -->
       <div class="hero-preview-card" id="heroPreviewCard">
         <!-- Switcher Type d'Établissement -->
-        <div style="display: flex; gap: 0.4rem; background: rgba(0,0,0,0.25); padding: 0.3rem; border-radius: 999px; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.08);">
-          <button type="button" id="heroSwitchSchoolBtn" onclick="switchHeroPreview('school')" style="flex: 1; border: none; background: var(--turquoise-500); color: #060D17; font-weight: 800; font-size: 0.8rem; padding: 0.4rem 0.6rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
+        <div style="display: flex; gap: 0.35rem; background: rgba(0,0,0,0.25); padding: 0.3rem; border-radius: 999px; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.08);">
+          <button type="button" id="heroSwitchSchoolBtn" onclick="switchHeroPreview('school')" style="flex: 1; border: none; background: var(--turquoise-500); color: #060D17; font-weight: 800; font-size: 0.78rem; padding: 0.4rem 0.4rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
             🏫 École Privée
           </button>
-          <button type="button" id="heroSwitchDaaraBtn" onclick="switchHeroPreview('daara')" style="flex: 1; border: none; background: transparent; color: var(--gris-300); font-weight: 700; font-size: 0.8rem; padding: 0.4rem 0.6rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
+          <button type="button" id="heroSwitchDaaraBtn" onclick="switchHeroPreview('daara')" style="flex: 1; border: none; background: transparent; color: var(--gris-300); font-weight: 700; font-size: 0.78rem; padding: 0.4rem 0.4rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
             🕌 Daara Moderne
+          </button>
+          <button type="button" id="heroSwitchInstitutBtn" onclick="switchHeroPreview('institut')" style="flex: 1; border: none; background: transparent; color: var(--gris-300); font-weight: 700; font-size: 0.78rem; padding: 0.4rem 0.4rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
+            🎓 Institut Pro (Thiès)
           </button>
         </div>
 
@@ -299,6 +311,53 @@
             </button>
           </div>
         </div>
+
+        <!-- Vue 3 : Institut & Formation Professionnelle (Spécial Thiès & Pôles Régionaux) -->
+        <div id="heroPreviewInstitut" style="display: none;">
+          <div class="preview-card-header">
+            <div class="preview-school-info">
+              <div class="preview-avatar-icon" style="background: rgba(56,189,248,0.15); color: #38BDF8;">🎓</div>
+              <div>
+                <div style="font-weight: 700; font-size: 1.05rem;">Institut Supérieur Pro (ISFP Thiès)</div>
+                <div style="font-size: 0.8rem; color: var(--gris-500);">Thiès Cité Malick Sy • BTS, CAP, CQP &amp; Métiers</div>
+              </div>
+            </div>
+            <span class="preview-status-pill" style="border-color: #38BDF8; color: #38BDF8;">● EN DIRECT</span>
+          </div>
+
+          <div class="preview-stats-grid">
+            <div class="mini-stat-card">
+              <div class="label">Scolarités &amp; Examens Wave / OM</div>
+              <div class="value" style="color: #38BDF8;">98.4% <span class="trend" style="color: #34D399;">↑ En temps réel</span></div>
+            </div>
+            <div class="mini-stat-card">
+              <div class="label">Effectif Étudiants &amp; Stagiaires</div>
+              <div class="value">185 <span style="font-size: 0.8rem; color: var(--gris-500);">Inscrits Actifs</span></div>
+            </div>
+          </div>
+
+          <div class="hizb-teaser-box" style="border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.05);">
+            <div class="hizb-teaser-header">
+              <div class="hizb-teaser-title" style="color: #38BDF8;">
+                <span>🏛️</span> Relevés LMD, Crédits &amp; Stages Thiès
+              </div>
+              <span style="font-weight: 700; color: #38BDF8; font-size: 0.85rem;">6 Filières Actives</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" style="width: 100%; background: linear-gradient(90deg, #38BDF8, #6366F1);"></div>
+            </div>
+            <div class="progress-bar-text">
+              <span>Gestion Modulaire LMD &amp; Conventions</span>
+              <span style="color: #38BDF8;">100% Conforme Formation Pro Sénégal</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.8rem;">
+            <button class="btn btn-primary" style="flex: 1; padding: 0.75rem; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; background: linear-gradient(135deg, #0284C7, #2563EB); border: none;" onclick="openWorkspaceDirect('FORMATION_PRO')">
+              <span>🎓</span> <span>Se Connecter à l'Espace Institut (Thiès)</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -342,6 +401,9 @@
           </button>
           <button id="pricingTabDaaras" class="pricing-tab-btn" data-i18n="tab_daaras">
             🕌 Daaras Modernes &amp; Internats
+          </button>
+          <button id="pricingTabInstituts" class="pricing-tab-btn">
+            🎓 Instituts &amp; Formation Pro
           </button>
         </div>
       </div>
@@ -459,9 +521,9 @@
           <button class="btn btn-outline" onclick="openRegistrationModal('Premium', '85 000 FCFA/mois')">Choisir Premium</button>
         </div>
 
-        <!-- Enterprise -->
+        <!-- Enterprise / Établissement -->
         <div class="pricing-card" data-plan="enterprise">
-          <h3 class="pricing-plan-name">Enterprise</h3>
+          <h3 class="pricing-plan-name">ETABLISSEMENT</h3>
           <p class="pricing-plan-desc">Réseaux scolaires et multi-campus régionaux.</p>
           <div class="pricing-price-wrap">
             <span class="pricing-amount">Sur Devis</span>
@@ -605,6 +667,150 @@
             </li>
           </ul>
           <button class="btn btn-outline" onclick="openRegistrationModal('Option Annuelle Sérénité Daara', '350 000 FCFA/an')">Choisir l'Annuel</button>
+        </div>
+      </div>
+
+      <!-- Grille Instituts & Formation Professionnelle (BTS, Métiers, Santé, Supérieur) -->
+      <div id="pricingViewInstituts" class="pricing-cards-grid" style="display: none;">
+        <!-- CARTE 1 : INSTITUT STARTER -->
+        <div class="pricing-card" data-plan="institut_starter">
+          <h3 class="pricing-plan-name" style="color: #38BDF8;">Institut Starter</h3>
+          <p class="pricing-plan-desc">Solution idéale pour les centres de formation, écoles de métiers et petits instituts privés.</p>
+          <div class="pricing-price-wrap">
+            <span class="pricing-amount" style="color: #38BDF8;">45 000</span>
+            <span class="pricing-frequency">FCFA / mois</span>
+          </div>
+
+          <ul class="pricing-features-list">
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>👥 Jusqu'à 300 étudiants</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>📋 Gestion des inscriptions et admissions</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🎓 Gestion des filières et promotions</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>💳 Paiement Wave &amp; Orange Money</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>📑 Relevés de notes et bulletins</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>💬 Alertes WhatsApp</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🔑 Accès étudiants et formateurs</strong>
+            </li>
+          </ul>
+          <button class="btn btn-outline" style="border-color: rgba(56, 189, 248, 0.4); color: #38BDF8;" onclick="openRegistrationModal('Institut Starter', '45 000 FCFA/mois')">Choisir Institut Starter</button>
+        </div>
+
+        <!-- CARTE 2 : INSTITUT PRO (RECOMMANDÉ) -->
+        <div class="pricing-card featured" data-plan="institut_pro" style="border-color: #3B82F6; background: linear-gradient(180deg, rgba(59, 130, 246, 0.12) 0%, rgba(14, 36, 63, 0.88) 100%); box-shadow: 0 0 30px rgba(59, 130, 246, 0.25);">
+          <span class="pricing-badge-popular" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFFFFF; font-weight: 800; letter-spacing: 0.8px;">RECOMMANDÉ</span>
+          <h3 class="pricing-plan-name" style="color: #60A5FA;">Institut Pro</h3>
+          <p class="pricing-plan-desc">Solution complète pour les BTS, instituts professionnels et centres de formation en croissance.</p>
+          <div class="pricing-price-wrap">
+            <span class="pricing-amount" style="color: #60A5FA;">75 000</span>
+            <span class="pricing-frequency">FCFA / mois</span>
+          </div>
+
+          <ul class="pricing-features-list">
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🎓 Étudiants et filières illimités</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🏢 Gestion des stages et conventions</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>📊 Comptabilité SYSCOHADA</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🗓️ Gestion des emplois du temps</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>👨‍🏫 Gestion des formateurs et vacations</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>📜 Génération des certificats et attestations</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>💬 Alertes WhatsApp automatiques</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>📈 Tableaux de bord avancés</strong>
+            </li>
+          </ul>
+          <button class="btn btn-primary" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); border: none; font-weight: 800; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onclick="openRegistrationModal('Institut Pro', '75 000 FCFA/mois')">Choisir Institut Pro</button>
+        </div>
+
+        <!-- CARTE 3 : GRANDE ÉCOLE / MULTI-CAMPUS -->
+        <div class="pricing-card" data-plan="grand_institut">
+          <h3 class="pricing-plan-name" style="color: var(--blanc-pur);">Grande École / Multi-Campus</h3>
+          <p class="pricing-plan-desc">Pour les universités privées, réseaux d'instituts et établissements multi-campus.</p>
+          <div class="pricing-price-wrap" style="flex-direction: column; align-items: flex-start; gap: 0.2rem;">
+            <div style="font-size: 0.82rem; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">À partir de</div>
+            <div style="display: flex; align-items: baseline; gap: 0.4rem;">
+              <span class="pricing-amount">150 000</span>
+              <span class="pricing-frequency">FCFA / mois</span>
+            </div>
+            <div style="font-size: 0.78rem; color: #94A3B8; font-style: italic; line-height: 1.35; margin-top: 0.35rem;">
+              Tarif ajusté selon le nombre de campus, d'étudiants et les besoins spécifiques de l'établissement.
+            </div>
+          </div>
+
+          <ul class="pricing-features-list">
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🏛️ Gestion multi-campus</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🏢 Gestion multi-établissements</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🎯 Direction centralisée</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>📈 Rapports consolidés en temps réel</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>🔗 API &amp; intégrations sur mesure</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>☁️ Serveur Cloud dédié</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>👥 Formation des équipes sur site</strong>
+            </li>
+            <li class="pricing-feature-item">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              <strong>👑 Support VIP 24h/24 et 7j/7</strong>
+            </li>
+          </ul>
+          <button class="btn btn-outline" onclick="openQuoteModal('Grande École / Multi-Campus')">Demander un devis</button>
         </div>
       </div>
 
@@ -866,7 +1072,12 @@
       <button class="ws-mob-tab" id="wsMobNavQuran" onclick="switchWsTab('wsQuranProgression', this)">📖 Coran (Hizb)</button>
       <button class="ws-mob-tab" id="wsMobNavDorm" onclick="switchWsTab('wsDormitory', this)">🛏️ Internat</button>
       <button class="ws-mob-tab" id="wsMobNavGrades" onclick="switchWsTab('wsGrades', this)">📑 Notes</button>
-      <button class="ws-mob-tab" style="color: var(--gold-400); border-color: rgba(245, 158, 11, 0.4); font-weight: 700;" onclick="openShareAccessLinksModal()">🔗 Liens Accès</button>
+      <button class="ws-mob-tab" id="wsMobNavStages" onclick="switchWsTab('wsStages', this)" style="display: none;">🏢 Stages &amp; Conventions</button>
+      <button class="ws-mob-tab" id="wsMobNavTimetable" onclick="openTimetableDirect(this)" style="display: none;">🗓️ Emplois du Temps</button>
+      <button class="ws-mob-tab" id="wsMobNavHR" onclick="switchWsTab('wsHR', this)" style="display: none;">
+        <span id="wsMobNavHRText">👨‍🏫 Formateurs</span>
+      </button>
+      <button class="ws-mob-tab" id="wsMobNavCertificates" onclick="switchWsTab('wsCertificates', this)" style="display: none;">📜 Certificats</button>
       <button class="ws-mob-tab" id="wsMobNavAccounting" onclick="switchWsTab('wsAccounting', this)">
         <span>📊 SYSCOHADA</span>
         <span class="ws-nav-lock-badge" id="wsMobLockAccounting" style="display: none;">Pro</span>
@@ -900,23 +1111,39 @@
           </div>
         </div>
 
-        <div class="ws-nav-category">Navigation Principale</div>
-        <a class="ws-nav-item active" onclick="switchWsTab('wsOverview', this)">
-          <span>📊 Vue d'Ensemble</span>
+        <div class="ws-nav-category" id="wsNavCategoryMain">Navigation Principale</div>
+        <a class="ws-nav-item active" id="wsNavOverview" onclick="switchWsTab('wsOverview', this)">
+          <span id="wsNavOverviewText">📊 Vue d'Ensemble</span>
+        </a>
+        <a class="ws-nav-item" id="wsNavStudents" onclick="switchWsTab('wsStudents', this)">
+          <span id="wsNavStudentsText">👥 Effectif &amp; Inscriptions</span>
+          <span class="badge-tag" style="background: rgba(0,210,180,0.15); color: #00D2B4;" id="wsCountBadge">0</span>
         </a>
         <a class="ws-nav-item" id="wsNavClasses" onclick="switchWsTab('wsClasses', this)">
-          <span>🏫 Classes &amp; Niveaux</span>
+          <span id="wsNavClassesText">🏫 Classes &amp; Niveaux</span>
           <span class="badge-tag" style="background: rgba(245,158,11,0.15); color: #FBBF24;" id="wsClassesBadge">0</span>
         </a>
+        <a class="ws-nav-item" id="wsNavStages" onclick="switchWsTab('wsStages', this)" style="display: none;">
+          <span id="wsNavStagesText">🏢 Stages &amp; Conventions</span>
+          <span class="badge-tag" style="background: rgba(56,189,248,0.15); color: #38BDF8;" id="wsStagesCountBadge">Conventions</span>
+        </a>
+        <a class="ws-nav-item" id="wsNavTimetable" onclick="openTimetableDirect(this)" style="display: none;">
+          <span id="wsNavTimetableText">🗓️ Gestion des emplois du temps</span>
+          <span class="badge-tag" style="background: rgba(56,189,248,0.15); color: #38BDF8;">Hebdo</span>
+        </a>
         <a class="ws-nav-item" id="wsNavHR" onclick="switchWsTab('wsHR', this)">
-          <span>👥 RH &amp; Emplois du Temps</span>
+          <span id="wsNavHRText">👥 RH &amp; Emplois du Temps</span>
           <span class="ws-nav-lock-badge" id="wsLockHR" style="display: none;">Pro</span>
         </a>
-        <a class="ws-nav-item" onclick="switchWsTab('wsFinance', this)">
-          <span>💳 Comptabilité &amp; Caisse Wave</span>
+        <a class="ws-nav-item" id="wsNavCertificates" onclick="switchWsTab('wsCertificates', this)" style="display: none;">
+          <span id="wsNavCertificatesText">📜 Certificats &amp; Attestations</span>
+          <span class="badge-tag" style="background: rgba(168,85,247,0.15); color: #A855F7;">Officiel</span>
+        </a>
+        <a class="ws-nav-item" id="wsNavFinance" onclick="switchWsTab('wsFinance', this)">
+          <span id="wsNavFinanceText">💳 Comptabilité &amp; Caisse Wave</span>
         </a>
         <a class="ws-nav-item" id="wsNavAccounting" onclick="switchWsTab('wsAccounting', this)">
-          <span>📊 Grand Livre SYSCOHADA</span>
+          <span id="wsNavAccountingText">📊 Grand Livre SYSCOHADA</span>
           <span class="ws-nav-lock-badge" id="wsLockAccounting" style="display: none;">Pro</span>
         </a>
         <a class="ws-nav-item" id="wsNavPayConfig" onclick="switchWsTab('wsPayConfig', this)">
@@ -924,16 +1151,12 @@
           <span class="badge-tag" style="background: rgba(0,210,180,0.15); color: #00D2B4; font-size: 0.68rem;">Wave / OM</span>
         </a>
         <a class="ws-nav-item" id="wsNavWhatsApp" onclick="switchWsTab('wsAlerts', this)">
-          <span>💬 Notifications WhatsApp</span>
+          <span id="wsNavWhatsAppText">💬 Notifications WhatsApp</span>
           <span class="ws-nav-lock-badge" id="wsLockWhatsApp" style="display: none;">Pro</span>
         </a>
 
-        <!-- Section Élèves & Pédagogie -->
-        <div class="ws-nav-category" id="wsCategoryPeda">Élèves &amp; Pédagogie</div>
-        <a class="ws-nav-item" onclick="switchWsTab('wsStudents', this)">
-          <span>👥 Effectif &amp; Inscriptions</span>
-          <span class="badge-tag" style="background: rgba(0,210,180,0.15); color: #00D2B4;" id="wsCountBadge">0</span>
-        </a>
+        <!-- Section Apprenants & Pédagogie -->
+        <div class="ws-nav-category" id="wsCategoryPeda">Apprenants &amp; Pédagogie</div>
         <a class="ws-nav-item" id="wsNavQuran" onclick="switchWsTab('wsQuranProgression', this)">
           <span>📖 Mémorisation Coran (Hizb)</span>
         </a>
@@ -941,7 +1164,7 @@
           <span>🛏️ Internat &amp; Dortoirs</span>
         </a>
         <a class="ws-nav-item" id="wsNavGrades" onclick="switchWsTab('wsGrades', this)">
-          <span>📑 Bulletins &amp; Notes</span>
+          <span id="wsNavGradesText">📑 Bulletins &amp; Notes</span>
         </a>
         <a class="ws-nav-item" id="wsNavLibrary" onclick="switchWsTab('wsLib', this)">
           <span id="wsNavLibText">📚 Bibliothèque Numérique</span>
@@ -960,11 +1183,11 @@
         </a>
         
         <div style="margin-top: auto; padding-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
-          <button class="btn" style="width: 100%; font-size: 0.8rem; padding: 0.6rem; background: rgba(0, 210, 180, 0.14); border: 1px solid rgba(0, 210, 180, 0.4); color: var(--turquoise-400); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; transition: all 0.2s ease;" onclick="openShareAccessLinksModal()" title="Envoyer les clés et liens d'accès aux Enseignants, Parents et Élèves">
+          <button class="btn" style="width: 100%; font-size: 0.8rem; padding: 0.6rem; background: rgba(0, 210, 180, 0.14); border: 1px solid rgba(0, 210, 180, 0.4); color: var(--turquoise-400); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; transition: all 0.2s ease;" onclick="openShareAccessLinksModal()" title="Envoyer les clés et liens d'accès aux Enseignants, Parents et Apprenants">
             🔗 Liens d'Accès (Oustaz / Parents)
           </button>
-          <button class="btn btn-gold" style="width: 100%; font-size: 0.8rem; padding: 0.6rem;" onclick="openNewRegistrationInWs()">
-            + Inscrire un Élève / Talibé
+          <button class="btn btn-gold" id="wsBtnSideInscrire" style="width: 100%; font-size: 0.8rem; padding: 0.6rem;" onclick="openNewRegistrationInWs()">
+            + Inscrire un Apprenant
           </button>
           <button class="btn" style="width: 100%; font-size: 0.78rem; padding: 0.5rem; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); color: #F87171; font-weight: 600; justify-content: center; cursor: pointer;" onclick="logoutEstablishment()">
             🚪 Se Déconnecter
@@ -1058,7 +1281,7 @@
             <div class="portal-card-header">
               <div class="card-title-group">
                 <div style="font-size: 1.4rem;">📋</div>
-                <h3 id="wsTableTitle">Dernières Activités &amp; Élèves Inscrits</h3>
+                <h3 id="wsTableTitle">Dernières Activités &amp; Apprenants Inscrits</h3>
               </div>
               <div style="display: flex; gap: 0.35rem;">
                 <button class="btn btn-gold" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="openModalNewStudent()">
@@ -1094,7 +1317,7 @@
             <div class="portal-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
               <div>
                 <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                  <span>🏫</span> <span>Gestion des Classes &amp; Pédagogie</span>
+                  <span id="wsClassesIcon">🏫</span> <span id="wsClassesTitle">Gestion des Classes &amp; Pédagogie</span>
                 </h3>
                 <div style="font-size: 0.82rem; color: var(--gris-400); margin-top: 0.2rem;" id="wsClassesSubtitle">
                   Structurez vos niveaux, attribuez les salles et gérez les effectifs par classe
@@ -1102,37 +1325,46 @@
               </div>
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <button class="btn btn-gold" onclick="openNewClassModal()" style="font-size: 0.82rem; padding: 0.45rem 0.95rem; font-weight: 700;">
-                  <span>➕</span> <span>Ajouter une Classe</span>
+                  <span>➕</span> <span id="wsClassesAddBtnText">Ajouter une Classe</span>
                 </button>
                 <button class="btn btn-outline" onclick="resetEstablishmentClassesToVirgin()" title="Effacer toutes les classes pour configurer vos propres classes de zéro" style="font-size: 0.82rem; padding: 0.45rem 0.95rem; border-color: rgba(239, 68, 68, 0.4); color: #EF4444; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.12)';" onmouseout="this.style.background='transparent';">
-                  <span>🧹</span> <span>Vider les Classes</span>
+                  <span>🧹</span> <span id="wsClassesResetBtnText">Vider les Classes</span>
                 </button>
               </div>
             </div>
 
             <!-- Barre de configuration rapide en 1 clic (Packs Officiels) -->
-            <div style="background: rgba(0, 210, 180, 0.06); border: 1px solid rgba(0, 210, 180, 0.2); border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 1.2rem;">
+            <div id="wsClassPacksSection" style="background: rgba(0, 210, 180, 0.06); border: 1px solid rgba(0, 210, 180, 0.2); border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 1.2rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.6rem;">
                 <div style="font-size: 0.82rem; font-weight: 700; color: var(--blanc-pur); display: flex; align-items: center; gap: 0.4rem;">
-                  <span>⚡</span> <span>Configuration Rapide : Charger un Pack de Classes en 1 Clic</span>
+                  <span>⚡</span> <span id="wsClassPacksTitle">Configuration Rapide : Charger un Pack de Classes en 1 Clic</span>
                 </div>
-                <span style="font-size: 0.72rem; color: var(--turquoise-400);">Initialise instantanément les classes officielles sénégalaises</span>
+                <span style="font-size: 0.72rem; color: var(--turquoise-400);" id="wsClassPacksSubtitle">Initialise instantanément les classes officielles sénégalaises</span>
               </div>
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(0,210,180,0.4); color: var(--turquoise-400);" onclick="applyClassPresetPack('maternelle')">
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="wsClassPresetPacksContainer">
+                <button type="button" class="btn btn-outline pack-btn-school" id="btnPackMaternelle" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(0,210,180,0.4); color: var(--turquoise-400);" onclick="applyClassPresetPack('maternelle')">
                   👶 Pack Maternelle (PS, MS, GS)
                 </button>
-                <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(245,158,11,0.4); color: #FBBF24;" onclick="applyClassPresetPack('primaire')">
+                <button type="button" class="btn btn-outline pack-btn-school" id="btnPackPrimaire" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(245,158,11,0.4); color: #FBBF24;" onclick="applyClassPresetPack('primaire')">
                   📚 Pack Primaire (CI à CM2)
                 </button>
-                <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(96,165,250,0.4); color: #60A5FA;" onclick="applyClassPresetPack('college')">
+                <button type="button" class="btn btn-outline pack-btn-school" id="btnPackCollege" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(96,165,250,0.4); color: #60A5FA;" onclick="applyClassPresetPack('college')">
                   🏫 Pack Collège (6ème à 3ème)
                 </button>
-                <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(168,85,247,0.4); color: #C084FC;" onclick="applyClassPresetPack('lycee')">
+                <button type="button" class="btn btn-outline pack-btn-school" id="btnPackLycee" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(168,85,247,0.4); color: #C084FC;" onclick="applyClassPresetPack('lycee')">
                   🎓 Pack Lycée (2nde à Terminale)
                 </button>
-                <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(16,185,129,0.4); color: #34D399;" onclick="applyClassPresetPack('daara')">
+                <button type="button" class="btn btn-outline pack-btn-daara" id="btnPackDaara" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(16,185,129,0.4); color: #34D399;" onclick="applyClassPresetPack('daara')">
                   🕌 Pack Daara Moderne (Ibtida'i à Thanawi)
+                </button>
+                <button type="button" class="btn btn-outline pack-btn-institut" id="btnPackFormationPro" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(56,189,248,0.4); color: #38BDF8;" onclick="applyClassPresetPack('formation_pro')">
+                  🎓 Pack Filières BTS (Génie Logiciel, CGE, Transit)
+                </button>
+                <button type="button" class="btn btn-outline pack-btn-institut" id="btnPackLicencesPro" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(0,210,180,0.5); color: #00D2B4; display: none;" onclick="applyClassPresetPack('licences_pro')">
+                  🏛️ Pack Licences Professionnelles &amp; Masters
+                </button>
+                <button type="button" class="btn btn-outline pack-btn-institut" id="btnPackCapCqp" style="font-size: 0.76rem; padding: 0.35rem 0.75rem; border-color: rgba(245,158,11,0.5); color: #FBBF24; display: none;" onclick="applyClassPresetPack('cap_cqp')">
+                  ⚙️ Pack Certificats Métiers (CAP, CQP, BTP)
                 </button>
               </div>
             </div>
@@ -1149,12 +1381,12 @@
           <div class="portal-card">
             <div class="portal-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
               <div>
-                <h3 style="margin: 0;">Répertoire des Élèves &amp; Talibés</h3>
+                <h3 style="margin: 0;" id="wsLearnersListTitle">Répertoire des Apprenants</h3>
                 <div style="font-size: 0.8rem; color: var(--gris-400);" id="wsStudentsSubtitle">Effectif actif de votre établissement</div>
               </div>
               <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                <button class="btn btn-gold" onclick="openModalNewStudent()" title="Ajouter un nouvel élève / talibé" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">
-                  <span>➕</span> <span>Inscrire un Élève</span>
+                <button class="btn btn-gold" onclick="openModalNewStudent()" title="Ajouter un nouvel apprenant" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+                  <span>➕</span> <span id="wsBtnInscrireText">Inscrire un Apprenant</span>
                 </button>
                 <button class="btn btn-outline" onclick="openModalImportCsv()" title="Importer une liste Excel ou CSV" style="font-size: 0.82rem; padding: 0.4rem 0.85rem; border-color: var(--turquoise-500); color: var(--turquoise-400);">
                   <span>📥</span> <span>Importer CSV / Excel</span>
@@ -1271,21 +1503,21 @@
                 🚀 Débloquer Aujourd'hui &amp; Notifier WhatsApp/SMS
               </button>
               <button class="btn btn-outline" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;" onclick="simulateStudentBulletinView()">
-                👁️ Aperçu Espace Élève
+                <span id="wsBtnApercuText">👁️ Aperçu Espace Apprenant</span>
               </button>
             </div>
           </div>
 
           <div class="portal-card">
             <div class="portal-card-header">
-              <h3>Relevés de Notes &amp; Bulletins Officiels</h3>
+              <h3 id="wsGradesSectionTitle">Relevés de Notes &amp; Bulletins Officiels</h3>
             </div>
             <div class="modern-table-wrapper">
               <table class="modern-table">
                 <thead>
                   <tr>
-                    <th>Élève</th>
-                    <th>Classe</th>
+                    <th id="wsGradesThStudent">Apprenant</th>
+                    <th id="wsGradesThClass">Niveau / Classe / Filière</th>
                     <th>Moyenne</th>
                     <th>Rang</th>
                     <th>Bulletin</th>
@@ -1319,7 +1551,7 @@
                   <tr>
                     <th>Réf. SYSCOHADA</th>
                     <th>Date</th>
-                    <th>Élève / Payeur</th>
+                    <th id="wsFinanceThPayer">Apprenant / Payeur</th>
                     <th>Motif</th>
                     <th>Montant</th>
                     <th>Opérateur</th>
@@ -1891,6 +2123,158 @@
           </div>
         </div>
 
+        <!-- Onglet 11 : Gestion des Stages et Conventions (Exclusivité Institut Pro) -->
+        <div id="wsStages" class="ws-feature-container">
+          <div class="portal-card" style="margin-bottom: 1.5rem; background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.85)); border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
+            <div class="portal-card-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1rem; margin-bottom: 1.2rem;">
+              <div class="card-title-group">
+                <div style="font-size: 1.8rem;">🏢</div>
+                <div>
+                  <h3 style="color: var(--blanc-pur); margin: 0; font-size: 1.25rem;">Gestion des Stages, Conventions d'Entreprise &amp; Insertion Pro</h3>
+                  <p style="font-size: 0.85rem; color: var(--gris-400); margin: 0.2rem 0 0;">Module Institut Pro • Émission de conventions tripartites, suivi des tuteurs en entreprise et des soutenances de mémoire.</p>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" onclick="openNewConventionModal()" style="display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 700; font-size: 0.85rem; padding: 0.55rem 1.1rem; background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
+                <span>➕</span> <span>Nouvelle Convention de Stage</span>
+              </button>
+            </div>
+
+            <!-- Grille des KPIs Stages & Conventions -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 0.5rem;">
+              <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 1rem; display: flex; gap: 0.8rem; align-items: center;">
+                <div style="font-size: 1.6rem; background: rgba(56, 189, 248, 0.12); padding: 0.5rem; border-radius: 8px;">📑</div>
+                <div>
+                  <div style="font-size: 0.75rem; color: var(--gris-400); text-transform: uppercase; font-weight: 700;">Conventions Émises</div>
+                  <div style="font-weight: 800; color: #38BDF8; font-size: 1.3rem;" id="kpiConventionsTotal">4</div>
+                  <span style="font-size: 0.72rem; color: #34D399; font-weight: 600;">100% conformes MESRI</span>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 1rem; display: flex; gap: 0.8rem; align-items: center;">
+                <div style="font-size: 1.6rem; background: rgba(16, 185, 129, 0.12); padding: 0.5rem; border-radius: 8px;">💼</div>
+                <div>
+                  <div style="font-size: 0.75rem; color: var(--gris-400); text-transform: uppercase; font-weight: 700;">En Immersion Active</div>
+                  <div style="font-weight: 800; color: #34D399; font-size: 1.3rem;" id="kpiConventionsActive">2</div>
+                  <span style="font-size: 0.72rem; color: var(--gris-400);">En poste en entreprise</span>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 1rem; display: flex; gap: 0.8rem; align-items: center;">
+                <div style="font-size: 1.6rem; background: rgba(245, 158, 11, 0.12); padding: 0.5rem; border-radius: 8px;">🏢</div>
+                <div>
+                  <div style="font-size: 0.75rem; color: var(--gris-400); text-transform: uppercase; font-weight: 700;">Entreprises Partenaires</div>
+                  <div style="font-weight: 800; color: #FBBF24; font-size: 1.3rem;">12 Sociétés</div>
+                  <span style="font-size: 0.72rem; color: var(--gris-400);">Sonatel, Wave, AGL, Atos...</span>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 1rem; display: flex; gap: 0.8rem; align-items: center;">
+                <div style="font-size: 1.6rem; background: rgba(168, 85, 247, 0.12); padding: 0.5rem; border-radius: 8px;">🎓</div>
+                <div>
+                  <div style="font-size: 0.75rem; color: var(--gris-400); text-transform: uppercase; font-weight: 700;">Validation Soutenances</div>
+                  <div style="font-weight: 800; color: #C084FC; font-size: 1.3rem;">94%</div>
+                  <span style="font-size: 0.72rem; color: #34D399; font-weight: 600;">Taux de réussite BTS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tableau des Conventions de Stage -->
+          <div class="portal-card">
+            <div class="portal-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
+              <div>
+                <h3 style="margin: 0; font-size: 1.15rem;">Registre des Conventions de Stage Tripartites</h3>
+                <span style="font-size: 0.75rem; color: var(--gris-400);">Conventions en vigueur pour l'année académique 2026-2027</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline" style="font-size: 0.78rem; padding: 0.4rem 0.8rem;" onclick="filterStagesTable('all')">Toutes</button>
+                <button type="button" class="btn btn-outline" style="font-size: 0.78rem; padding: 0.4rem 0.8rem;" onclick="filterStagesTable('VALIDEE')">Validées</button>
+                <button type="button" class="btn btn-outline" style="font-size: 0.78rem; padding: 0.4rem 0.8rem;" onclick="filterStagesTable('EN_COURS')">En cours</button>
+                <button type="button" class="btn btn-primary" style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: linear-gradient(135deg, #3B82F6, #1D4ED8);" onclick="openNewConventionModal()">
+                  + Nouvelle Convention
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive" style="margin-top: 1rem;">
+              <table class="portal-table" style="width: 100%; font-size: 0.84rem;">
+                <thead>
+                  <tr>
+                    <th>Réf. Convention</th>
+                    <th>Étudiant (Stagiaire)</th>
+                    <th>Filière BTS / Licence</th>
+                    <th>Entreprise d'Accueil</th>
+                    <th>Période &amp; Durée</th>
+                    <th>Statut</th>
+                    <th style="text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="wsStagesTableBody">
+                  <!-- Rempli dynamiquement par renderStagesTab() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Onglet 12 : Génération des Certificats et Attestations (Exclusivité Institut Pro) -->
+        <div id="wsCertificates" class="ws-feature-container">
+          <div class="portal-card" style="margin-bottom: 1.5rem; background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.85)); border: 1px solid rgba(168, 85, 247, 0.35); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
+            <div class="portal-card-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1rem; margin-bottom: 1.2rem;">
+              <div class="card-title-group">
+                <div style="font-size: 1.8rem;">📜</div>
+                <div>
+                  <h3 style="color: var(--blanc-pur); margin: 0; font-size: 1.25rem;">Génération des Certificats &amp; Attestations Officielles</h3>
+                  <p style="font-size: 0.85rem; color: var(--gris-400); margin: 0.2rem 0 0;">Module Institut Pro • Édition instantanée d'attestations de scolarité, de stage et de réussite avec QR Code de certification.</p>
+                </div>
+              </div>
+              <span class="badge-tag" style="background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.4); font-weight: 700;">
+                ⭐ Conforme MESRI / Sénégal
+              </span>
+            </div>
+
+            <!-- Grille de Configuration & Sélection -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Sélectionner un Étudiant *</label>
+                <select id="certifSelectStudent" class="form-input" onchange="updateCertificateLivePreview()">
+                  <!-- Rempli dynamiquement -->
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Type de Document Officiel *</label>
+                <select id="certifSelectType" class="form-input" onchange="updateCertificateLivePreview()">
+                  <option value="SCOLARITE" selected>📜 Attestation d'Inscription &amp; de Scolarité (Officielle)</option>
+                  <option value="CONVENTION">🏢 Convention Tripartite de Stage en Entreprise</option>
+                  <option value="REUSSITE">🎓 Attestation de Réussite / Fin de Cycle BTS</option>
+                  <option value="ASSIDUITE">📑 Certificat d'Assiduité &amp; de Présence</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Studio d'Aperçu Officiel & Boutons d'Action -->
+          <div class="portal-card" style="padding: 1.8rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.6rem;">
+              <h4 style="color: var(--blanc-pur); margin: 0; font-size: 1.05rem;">Aperçu du Document Officiel (Format A4)</h4>
+              <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline" onclick="shareCertificateWhatsApp()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; padding: 0.5rem 0.9rem; color: #25D366; border-color: rgba(37, 211, 102, 0.4);">
+                  <span>💬</span> <span>Transmettre par WhatsApp</span>
+                </button>
+                <button type="button" class="btn btn-primary" onclick="printOfficialCertificate()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; padding: 0.5rem 1.1rem; background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
+                  <span>🖨️</span> <span>Imprimer / Télécharger (PDF A4)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Fiche A4 stylisée avec filigrane -->
+            <div id="officialCertificatePreview" style="background: #FFFFFF; color: #0F172A; border-radius: 8px; padding: 2.5rem 2rem; border: 2px solid #CBD5E1; box-shadow: 0 10px 25px rgba(0,0,0,0.3); font-family: 'Times New Roman', serif; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+              <!-- Rempli dynamiquement par updateCertificateLivePreview() -->
+            </div>
+          </div>
+        </div>
+
       </main>
     </div>
   </section>
@@ -1905,27 +2289,27 @@
       <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
       
       <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-        <span style="font-size: 1.8rem;" id="modalStudentIcon">🕌</span>
+        <span style="font-size: 1.8rem;" id="modalStudentIcon">🏫</span>
         <div>
-          <h3 id="modalStudentTitle" style="margin: 0; font-size: 1.3rem; color: var(--blanc-pur);">Inscription d'un Nouveau Talibé</h3>
-          <p id="modalStudentSub" style="margin: 0; font-size: 0.82rem; color: var(--gris-400);">Affectation immédiate au dortoir, mémorisation coranique et pension.</p>
+          <h3 id="modalStudentTitle" style="margin: 0; font-size: 1.3rem; color: var(--blanc-pur);">Inscription d'un Nouvel Apprenant</h3>
+          <p id="modalStudentSub" style="margin: 0; font-size: 0.82rem; color: var(--gris-400);">Affectation pédagogique, classe ou filière et carnet de scolarité.</p>
         </div>
       </div>
 
       <div style="background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.25); border-radius: var(--radius-md); padding: 0.6rem 0.9rem; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
         <span style="font-size: 0.8rem; color: var(--gris-300);">Établissement actif : <strong id="modalStudentEtabName" class="text-turquoise">Mon Établissement Partenaire</strong></span>
-        <span id="modalStudentModeBadge" class="badge-tag badge-primary" style="font-size: 0.75rem;">Mode Daara Moderne</span>
+        <span id="modalStudentModeBadge" class="badge-tag badge-gold" style="font-size: 0.75rem;">Mode École Privée</span>
       </div>
 
       <form id="newStudentForm" onsubmit="event.preventDefault(); submitModalNewStudent();">
         <!-- Nom & Prénom -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.82rem;">Prénom de l'apprenant *</label>
+            <label class="form-label" id="modalStudentPrenomLabel" style="font-size: 0.82rem;">Prénom de l'apprenant *</label>
             <input type="text" id="newStudentPrenom" class="form-input" placeholder="Ex: Mouhamed Bachir" required>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.82rem;">Nom de famille *</label>
+            <label class="form-label" id="modalStudentNomLabel" style="font-size: 0.82rem;">Nom de famille *</label>
             <input type="text" id="newStudentNom" class="form-input" placeholder="Ex: Sow" required>
           </div>
         </div>
@@ -1959,36 +2343,61 @@
           </div>
         </div>
 
-        <!-- Section Spécifique ÉCOLE : Classe -->
+        <!-- Section Spécifique ÉCOLE / INSTITUT : Classe ou Filière -->
         <div id="ecoleSpecificFields" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-md); padding: 0.9rem; margin-bottom: 0.85rem;">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.82rem;">Classe de l'élève *</label>
-            <select id="newStudentClasse" class="form-input">
-              <option value="CI">CI (Cours d'Initiation)</option>
-              <option value="CP">CP (Cours Préparatoire)</option>
-              <option value="CE1">CE1</option>
-              <option value="CE2">CE2</option>
-              <option value="CM1">CM1</option>
-              <option value="CM2" selected>CM2 (Certificat de Fin d'Études)</option>
-              <option value="6ème">6ème (Collège)</option>
-              <option value="5ème">5ème</option>
-              <option value="4ème">4ème</option>
-              <option value="3ème">3ème (BFEM)</option>
-              <option value="Seconde">Seconde (Lycée)</option>
-              <option value="Première">Première</option>
-              <option value="Terminale">Terminale (BAC)</option>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label class="form-label" id="modalStudentClasseLabel" style="font-size: 0.82rem; margin-bottom: 0;">Niveau / Classe / Filière *</label>
+              <button type="button" id="toggleCustomClasseBtn" onclick="toggleCustomClasseInput()" style="background: none; border: none; padding: 0; font-size: 0.76rem; color: #38BDF8; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">
+                <span>✏️</span> <span>Saisie manuelle</span>
+              </button>
+            </div>
+            <select id="newStudentClasse" class="form-input" onchange="handleNewStudentClasseChange(this.value)">
+              <optgroup label="🎓 Formations Supérieures &amp; Filières Pro">
+                <option value="BTS 1 - Informatique &amp; Génie Logiciel (GL)" selected>BTS 1 - Informatique &amp; Génie Logiciel (GL)</option>
+                <option value="BTS 2 - Informatique &amp; Génie Logiciel (GL)">BTS 2 - Informatique &amp; Génie Logiciel (GL)</option>
+                <option value="BTS 1 - Comptabilité &amp; Gestion des Entreprises (CGE)">BTS 1 - Comptabilité &amp; Gestion des Entreprises (CGE)</option>
+                <option value="BTS 2 - Comptabilité &amp; Gestion des Entreprises (CGE)">BTS 2 - Comptabilité &amp; Gestion des Entreprises (CGE)</option>
+                <option value="BTS 1 - Commerce International &amp; Transit (CI)">BTS 1 - Commerce International &amp; Transit (CI)</option>
+                <option value="Licence 3 Pro - Génie Logiciel &amp; Cloud">Licence 3 Pro - Génie Logiciel &amp; Cloud</option>
+                <option value="Licence 3 Pro - Finance, Comptabilité &amp; Audit SYSCOHADA">Licence 3 Pro - Finance, Comptabilité &amp; Audit</option>
+                <option value="CAP Électricité &amp; Électrotechnique">CAP Électricité &amp; Électrotechnique</option>
+                <option value="CQP Métiers du BTP &amp; Génie Civil">CQP Métiers du BTP &amp; Génie Civil</option>
+              </optgroup>
+              <optgroup label="🏫 Enseignement Général &amp; Scolaire">
+                <option value="Terminale">Terminale (BAC)</option>
+                <option value="Première">Première</option>
+                <option value="Seconde">Seconde (Lycée)</option>
+                <option value="3ème">3ème (BFEM)</option>
+                <option value="6ème">6ème (Collège)</option>
+                <option value="CM2">CM2 (Certificat de Fin d'Études)</option>
+                <option value="CI">CI (Cours d'Initiation)</option>
+              </optgroup>
+              <option value="__CUSTOM__">✍️ Autre filière ou classe (saisie libre)...</option>
             </select>
+            <!-- Zone de saisie manuelle si la filière n'est pas dans la liste -->
+            <div id="newStudentCustomClasseContainer" style="display: none; margin-top: 0.6rem;">
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="newStudentCustomClasseInput" class="form-input" placeholder="Ex: Licence Pro Gestion Hôtelière, Master 2 Data Science, BTS Transit..." style="border-color: #38BDF8; background: rgba(56, 189, 248, 0.08);">
+                <button type="button" class="btn btn-outline" onclick="toggleCustomClasseInput(false)" style="padding: 0.45rem 0.75rem; font-size: 0.75rem; white-space: nowrap; border-color: rgba(255,255,255,0.2);" title="Revenir aux choix de la liste">
+                  ✕ Annuler
+                </button>
+              </div>
+              <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 0.3rem;">
+                💡 Entrez votre filière ou spécialité personnalisée. Elle sera automatiquement retenue pour cet apprenant.
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Coordonnées Tuteur / Parent -->
+        <!-- Coordonnées Tuteur / Parent / Contact -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.82rem;">Nom du Parent / Tuteur légal *</label>
+            <label class="form-label" id="modalStudentParentLabel" style="font-size: 0.82rem;">Responsable légal ou contact d'urgence *</label>
             <input type="text" id="newStudentParentNom" class="form-input" placeholder="Ex: Cheikh Tidiane Sow" required>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.82rem;">Téléphone WhatsApp Parent *</label>
+            <label class="form-label" id="modalStudentParentTelLabel" style="font-size: 0.82rem;">Téléphone WhatsApp du contact *</label>
             <input type="text" id="newStudentParentTel" class="form-input" placeholder="+221 77 123 45 67" value="+221 77 " required>
           </div>
         </div>
@@ -1997,8 +2406,88 @@
           <button type="button" class="btn btn-outline" onclick="closeAllModals()" style="padding: 0.55rem 1.2rem; font-size: 0.85rem;">
             Annuler
           </button>
-          <button type="submit" class="btn btn-gold" style="padding: 0.55rem 1.4rem; font-size: 0.85rem; font-weight: 700;">
-            ✓ Valider l'Inscription &amp; Affecter au Dortoir
+          <button type="submit" id="modalStudentSubmitBtn" class="btn btn-gold" style="padding: 0.55rem 1.4rem; font-size: 0.85rem; font-weight: 700;">
+            ✓ Valider l'Inscription de l'Apprenant
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Convention de Stage (Institut Pro) -->
+  <div id="newConventionModal" class="modal-overlay" style="z-index: 2320;">
+    <div class="modal-card" style="max-width: 680px; max-height: 92vh; overflow-y: auto;">
+      <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.8rem;">
+        <span style="font-size: 1.8rem;">🏢</span>
+        <div>
+          <h3 style="margin: 0; font-size: 1.3rem; color: var(--blanc-pur);">Nouvelle Convention de Stage Tripartite</h3>
+          <p style="margin: 0; font-size: 0.82rem; color: var(--gris-400);">Émission officielle sous l'égide de l'Institut et conforme au MESRI.</p>
+        </div>
+      </div>
+
+      <form id="newConventionForm" onsubmit="event.preventDefault(); submitNewConvention();">
+        <div class="form-group">
+          <label class="form-label" style="font-size: 0.82rem;">Sélectionner l'Étudiant-Stagiaire *</label>
+          <select id="convStudentSelect" class="form-input" required>
+            <!-- Rempli dynamiquement -->
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.82rem;">Entreprise d'Accueil (Raison Sociale) *</label>
+            <input type="text" id="convCompany" class="form-input" placeholder="Ex: Sonatel SA, Wave Digital Finance..." required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.82rem;">Secteur d'Activité / Métier</label>
+            <input type="text" id="convSector" class="form-input" placeholder="Ex: Télécoms, Banque, Transit, Audit..." value="Informatique &amp; Télécoms">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" style="font-size: 0.82rem;">Adresse du Lieu de Stage (Siège / Agence) *</label>
+          <input type="text" id="convAddress" class="form-input" placeholder="Ex: Technopole de Dakar, Route de Rufisque" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.82rem;">Tuteur en Entreprise (Maître de stage) *</label>
+            <input type="text" id="convSupervisor" class="form-input" placeholder="Ex: M. Cheikh Ndiaye (Lead Tech)" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.82rem;">Téléphone / Contact WhatsApp du Tuteur *</label>
+            <input type="text" id="convSupervisorTel" class="form-input" placeholder="+221 77 000 00 00" value="+221 77 " required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" style="font-size: 0.82rem;">Missions &amp; Sujet du Stage (Cahier des charges) *</label>
+          <textarea id="convSubject" class="form-input" rows="2" placeholder="Ex: Conception et développement d'APIs micro-services, tests d'intégration et documentation technique." required></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.82rem;">Date de Début *</label>
+            <input type="date" id="convStartDate" class="form-input" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.82rem;">Date de Fin *</label>
+            <input type="date" id="convEndDate" class="form-input" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.82rem;">Indemnité Mensuelle</label>
+            <input type="text" id="convIndemnity" class="form-input" placeholder="Ex: 100 000 FCFA" value="100 000 FCFA/mois">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.6rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-outline" onclick="closeAllModals()" style="padding: 0.55rem 1.2rem; font-size: 0.85rem;">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" style="padding: 0.55rem 1.4rem; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
+            ✓ Valider &amp; Émettre la Convention
           </button>
         </div>
       </form>
@@ -2627,7 +3116,7 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 0.9rem;">
           <div>
-            <label class="form-label">Discipline / Matière *</label>
+            <label class="form-label" id="teacherMatiereLabel">Discipline / Matière *</label>
             <input type="text" id="teacherMatiereInput" class="form-input" placeholder="Ex: Mathématiques & SVT" list="teacherMatiereList" required>
             <datalist id="teacherMatiereList">
               <option value="Mathématiques">
@@ -2946,45 +3435,53 @@
         </div>
 
         <div style="margin-bottom: 1rem;">
-          <label class="form-label" style="font-size: 0.8rem; color: var(--gris-300);">Matière / Discipline</label>
+          <label class="form-label" id="editTtSubjectLabel" style="font-size: 0.8rem; color: var(--gris-300);">Matière / Discipline</label>
           <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-            <select id="editTtSubjectPreset" class="form-select" style="flex: 1;" onchange="if(this.value) document.getElementById('editTtSubject').value = this.value;">
-              <option value="">-- Sélection rapide ou saisie libre --</option>
+            <select id="editTtSubjectPreset" class="form-select" style="flex: 1;" onchange="onTtSubjectPresetChange(this)">
+              <option value="">-- Disciplines Scolaires (Sélection rapide) --</option>
+              <option value="__CUSTOM__">✍️ Saisie libre</option>
               <option value="Mathématiques">Mathématiques</option>
               <option value="Français">Français</option>
-              <option value="Sciences & Vie">Sciences & Vie (SVT)</option>
+              <option value="Sciences &amp; Vie">Sciences &amp; Vie (SVT)</option>
               <option value="Sciences Physiques">Sciences Physiques</option>
               <option value="Arabe / Hifz">Arabe / Hifz</option>
-              <option value="Tajwîd & Coran">Tajwîd & Coran</option>
+              <option value="Tajwîd &amp; Coran">Tajwîd &amp; Coran</option>
               <option value="Histoire / Géo">Histoire / Géographie</option>
               <option value="Anglais">Anglais</option>
               <option value="Éducation Civique">Éducation Civique</option>
               <option value="Arts Plastiques">Arts Plastiques</option>
               <option value="Activités Sportives (EPS)">Activités Sportives (EPS)</option>
-              <option value="Informatique & TIC">Informatique & TIC</option>
+              <option value="Informatique &amp; TIC">Informatique &amp; TIC</option>
               <option value="Après-midi Libre">Après-midi Libre</option>
-              <option value="Prière & Repos">Prière & Repos</option>
+              <option value="Prière &amp; Repos">Prière &amp; Repos</option>
               <option value="Fin de semaine">Fin de semaine</option>
             </select>
+            <button type="button" class="btn btn-outline" style="white-space: nowrap; font-size: 0.78rem; padding: 0.4rem 0.75rem; border-color: rgba(56, 189, 248, 0.4); color: #38BDF8; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;" onclick="triggerCustomSubjectInput()" title="Saisie manuelle d'un module ou cours personnalisé">
+              ✍️ Saisie libre
+            </button>
           </div>
-          <input type="text" id="editTtSubject" class="form-input" placeholder="Intitulé du cours (ex: Géométrie, Dictée...)" required>
+          <input type="text" id="editTtSubject" class="form-input" placeholder="Intitulé du cours ou module (ex: Génie Logiciel, Droit OHADA, Mathématiques...)" required>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 1.4rem;">
           <div>
-            <label class="form-label" style="font-size: 0.8rem; color: var(--gris-300);">Enseignant / Intervenant</label>
-            <input type="text" id="editTtTeacher" class="form-input" placeholder="ex: M. Diallo, Mme Ba..." list="editTtTeacherList">
+            <label class="form-label" style="font-size: 0.8rem; color: var(--gris-300);">Formateur / Enseignant / Intervenant</label>
+            <input type="text" id="editTtTeacher" class="form-input" placeholder="ex: Ing. Ndiaye, Me Diop, M. Diallo..." list="editTtTeacherList">
             <datalist id="editTtTeacherList">
-              <option value="M. Diallo">
-              <option value="Mme Ba">
-              <option value="Oustaz Ndiaye">
-              <option value="M. Diop">
-              <option value="Mme Traoré">
+              <option value="Ing. Cheikh Tidiane Ndiaye">
+              <option value="Me Ousmane Diop">
+              <option value="Dr. Mamadou Cissé">
+              <option value="Mme Fatou Fall">
+              <option value="M. Amadou Sy">
+              <option value="M. Abdoulaye Diallo">
+              <option value="Mme Mariama Ba">
+              <option value="Oustaz Serigne Modou Ndiaye">
+              <option value="Mme Awa Traoré">
             </datalist>
           </div>
           <div>
-            <label class="form-label" style="font-size: 0.8rem; color: var(--gris-300);">Salle de cours</label>
-            <input type="text" id="editTtRoom" class="form-input" placeholder="ex: S.101, Labo 1, Terrain">
+            <label class="form-label" style="font-size: 0.8rem; color: var(--gris-300);">Salle, Amphi ou Labo</label>
+            <input type="text" id="editTtRoom" class="form-input" placeholder="ex: Labo Info 1, Amphi A, Atelier Élec, S.101">
           </div>
         </div>
 
@@ -3745,8 +4242,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Nom de l'École ou du Daara <span style="color: #EF4444; font-weight: 800;">*</span></label>
-          <input type="text" id="regSchoolName" class="form-input" placeholder="Ex: Nom officiel de votre école ou Daara" required>
+          <label class="form-label">Nom de l'École, de l'Institut ou du Daara <span style="color: #EF4444; font-weight: 800;">*</span></label>
+          <input type="text" id="regSchoolName" class="form-input" placeholder="Ex: Institut Technique / École Privée / Daara..." required>
         </div>
 
         <div class="form-group">
@@ -3756,6 +4253,7 @@
             <option value="Collège / Lycée Privé" selected>Collège / Lycée Privé</option>
             <option value="Complexe Franco-Arabe / Bilingue">Complexe Franco-Arabe / Bilingue</option>
             <option value="Daara Moderne (Internat / Demi-pension)">Daara Moderne (Internat / Demi-pension)</option>
+            <option value="Institut / Centre de Formation Professionnelle & Technique">Institut / Centre de Formation Professionnelle & Technique (BTS, CAP, CQP, Métiers)</option>
           </select>
         </div>
 
@@ -4059,7 +4557,7 @@
     </div>
   </div>
 
-  <!-- Modal 5.5 : Demande de Devis Personnalisé Offre Enterprise & Réseaux Multi-Campus -->
+  <!-- Modal 5.5 : Demande de Devis Personnalisé Offre Établissement & Réseaux Multi-Campus -->
   <div id="quoteModal" class="modal-overlay">
     <div class="modal-card" style="max-width: 680px;">
       <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
@@ -4069,7 +4567,7 @@
         <div style="margin-bottom: 1.2rem;">
           <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem;">
             <span style="font-size: 1.6rem;">🏢</span>
-            <h3 style="margin: 0; font-size: 1.35rem; color: var(--blanc-pur);">Demande de Devis — Formule Enterprise</h3>
+            <h3 style="margin: 0; font-size: 1.35rem; color: var(--blanc-pur);">Demande de Devis — Formule Établissement</h3>
           </div>
           <p style="font-size: 0.85rem; color: var(--gris-400); margin: 0.2rem 0 0;">
             Pour groupes scolaires, complexes multi-campus régionaux et institutions d'envergure.
@@ -4079,7 +4577,7 @@
         <!-- Encadré Prestations Grands Comptes -->
         <div style="background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.25); border-radius: 8px; padding: 0.85rem 1.1rem; margin-bottom: 1.2rem; font-size: 0.82rem;">
           <div style="font-weight: 700; color: var(--turquoise-400); margin-bottom: 0.35rem;">
-            🏛️ Inclus dans l'Accompagnement Enterprise :
+            🏛️ Inclus dans l'Accompagnement Établissement :
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; color: var(--gris-300);">
             <div>✓ Consolidation multi-établissements</div>
@@ -4187,12 +4685,12 @@
         </div>
 
         <button class="btn btn-gold" style="width: 100%; padding: 0.9rem; font-size: 1rem; font-weight: 800; justify-content: center; box-shadow: 0 0 20px rgba(212,175,55,0.4);" onclick="submitEnterpriseQuote()">
-          📋 Transmettre ma Demande de Devis Enterprise
+          📋 Transmettre ma Demande de Devis Établissement
         </button>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.8rem; font-size: 0.8rem; color: var(--gris-400);">
           <span>⏱️ Réponse chiffrée &amp; cadrage sous 24h</span>
-          <a href="https://wa.me/221761503938?text=Bonjour,%20je%20souhaite%20un%20devis%20personnalis%C3%A9%20Enterprise%20SunuSchoolExpress" target="_blank" style="color: var(--turquoise-400); font-weight: 700; text-decoration: underline;">
+          <a href="https://wa.me/221761503938?text=Bonjour,%20je%20souhaite%20un%20devis%20personnalis%C3%A9%20Etablissement%20SunuSchoolExpress" target="_blank" style="color: var(--turquoise-400); font-weight: 700; text-decoration: underline;">
             💬 Support Commercial WhatsApp
           </a>
         </div>
@@ -4673,7 +5171,7 @@
             Clé d'Accès Enseignant ou Code Professeur :
           </label>
           <div style="position: relative;">
-            <input type="text" id="accessKeyValueInput" class="form-input" placeholder="Ex: ENS-2026-01" required style="width: 100%; padding-left: 2.5rem; font-family: monospace; font-size: 0.95rem; letter-spacing: 0.5px;">
+            <input type="text" id="accessKeyValueInput" class="form-input" placeholder="" required style="width: 100%; padding-left: 2.5rem; font-family: monospace; font-size: 0.95rem; letter-spacing: 0.5px;">
             <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 1rem; color: var(--turquoise-400);">🔑</span>
           </div>
         </div>
@@ -4691,10 +5189,10 @@
       <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
       
       <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem;">
-        <span style="font-size: 1.6rem;">🏫</span>
+        <span style="font-size: 1.6rem;" id="newClassModalIcon">🏫</span>
         <h3 style="color: var(--blanc-pur); margin: 0;" id="newClassModalTitle">Ajouter une Nouvelle Classe</h3>
       </div>
-      <p style="font-size: 0.82rem; color: var(--gris-400); margin-bottom: 1.2rem;">
+      <p style="font-size: 0.82rem; color: var(--gris-400); margin-bottom: 1.2rem;" id="newClassModalSubtitle">
         Définissez le niveau, le cycle, la salle et l'enseignant référent
       </p>
 
@@ -4702,24 +5200,31 @@
         <input type="hidden" id="editClassId" value="">
         
         <div class="form-group" style="margin-bottom: 0.9rem;">
-          <label class="form-label">Nom officiel de la classe *</label>
-          <input type="text" id="classNameInput" class="form-input" placeholder="Ex: CM2 A, 6ème B, Hifz Niveau 1..." required>
+          <label class="form-label" id="newClassLabelNom">Filière / Promotion *</label>
+          <input type="text" id="classNameInput" class="form-input" placeholder="Ex: BTS 1 Génie Logiciel, Licence 3 Pro Finance, CAP Électro..." required>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 0.9rem;">
           <div>
-            <label class="form-label">Cycle Pédagogique *</label>
-            <select id="classCycleSelect" class="form-select">
-              <option value="Maternelle">Maternelle / Préscolaire</option>
-              <option value="Élémentaire" selected>Élémentaire (Primaire)</option>
-              <option value="Collège">Enseignement Moyen (Collège)</option>
-              <option value="Lycée">Enseignement Secondaire (Lycée)</option>
-              <option value="Daara">Daara Moderne &amp; Hifz</option>
+            <label class="form-label" id="newClassLabelCycle">Cycle / Type de Formation *</label>
+            <select id="classCycleSelect" class="form-select" onchange="toggleNewClassCustomCycle(this.value)">
+              <option value="BTS">BTS</option>
+              <option value="CAP">CAP</option>
+              <option value="BEP">BEP</option>
+              <option value="BT">BT</option>
+              <option value="Licence">Licence</option>
+              <option value="Master">Master</option>
+              <option value="Formation Continue">Formation Continue</option>
+              <option value="Certification Professionnelle">Certification Professionnelle</option>
+              <option value="Formation Qualifiante">Formation Qualifiante</option>
+              <option value="Formation Modulaire">Formation Modulaire</option>
+              <option value="__CUSTOM_CYCLE__">✍️ Autre cycle / niveau (saisie libre)...</option>
             </select>
+            <input type="text" id="newClassCustomCycleInput" class="form-input" placeholder="Ex: Titre Professionnel, Mastère..." style="display: none; margin-top: 0.45rem;">
           </div>
           <div>
-            <label class="form-label">Salle de cours assignée</label>
-            <input type="text" id="classRoomInput" class="form-input" placeholder="Ex: Salle 12, Pavillon B">
+            <label class="form-label">Salle, Amphi ou Labo assigné</label>
+            <input type="text" id="classRoomInput" class="form-input" placeholder="Ex: Labo Info 1, Amphi A, Salle 12">
           </div>
         </div>
 
@@ -4729,7 +5234,7 @@
             <input type="number" id="classCapacityInput" class="form-input" placeholder="45" value="45" min="5" max="100">
           </div>
           <div>
-            <label class="form-label">Professeur Principal / Référent</label>
+            <label class="form-label" id="newClassLabelRef">Responsable Pédagogique / Enseignant Référent</label>
             <select id="classTeacherSelect" class="form-select">
               <option value="">-- Aucun enseignant assigné --</option>
             </select>
@@ -4737,8 +5242,8 @@
         </div>
 
         <div style="display: flex; gap: 0.8rem;">
-          <button type="submit" class="btn btn-gold" style="flex: 1; padding: 0.75rem; font-weight: 800;">
-            💾 Enregistrer la Classe
+          <button type="submit" class="btn btn-gold" id="newClassSubmitBtn" style="flex: 1; padding: 0.75rem; font-weight: 800;">
+            💾 Enregistrer
           </button>
           <button type="button" class="btn btn-outline" style="padding: 0.75rem 1rem;" onclick="closeAllModals()">
             Annuler
@@ -5179,12 +5684,12 @@
           </div>
           <div>
             <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-              <h3 style="margin: 0; font-size: 1.3rem; color: var(--blanc-pur);" id="studentNameDisplay">Espace Élève : Mouhamed Sow</h3>
-              <span class="badge-tag badge-info" id="studentKeyBadge" style="background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3);">✓ Matricule : MAT-2026-042</span>
-              <span class="badge-tag badge-success" id="studentStatusBadge">Élève Régulier • Délégué</span>
+              <h3 style="margin: 0; font-size: 1.3rem; color: var(--blanc-pur);" id="studentNameDisplay">Espace Élève</h3>
+              <span class="badge-tag badge-info" id="studentKeyBadge" style="background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3);">✓ Matricule</span>
+              <span class="badge-tag badge-success" id="studentStatusBadge">Élève</span>
             </div>
             <div style="font-size: 0.84rem; color: var(--gris-400); margin-top: 0.2rem;" id="studentSchoolInfoDisplay">
-              Classe : <strong style="color: var(--turquoise-400);">6ème A (Collège Privé)</strong> • Établissement : <strong style="color: var(--gold-400);">Mon Établissement</strong>
+              Classe : <strong style="color: var(--turquoise-400);">--</strong> • Établissement : <strong style="color: var(--gold-400);">--</strong>
             </div>
             <!-- Sélecteur d'élève réel si multi-élèves -->
             <div id="studentSelectWrapper" style="display: none; margin-top: 0.45rem;"></div>
@@ -5202,7 +5707,7 @@
         <div style="display: flex; align-items: center; gap: 0.6rem;">
           <span style="font-size: 1.1rem;">🔄</span>
           <span style="font-size: 0.86rem; color: var(--gris-300);">Profil Scolaire :</span>
-          <strong id="studentCurrentModeBadge" class="badge-tag badge-primary" style="font-size: 0.78rem;">🏫 Mode École Privée (Mouhamed Sow)</strong>
+          <strong id="studentCurrentModeBadge" class="badge-tag badge-primary" style="font-size: 0.78rem;">🏫 Espace Élève</strong>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
           <button type="button" id="studentSwitchBtnEcole" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.35rem 0.85rem;" onclick="switchStudentPortalContext('ECOLE')">
@@ -5621,23 +6126,47 @@
     </div>
   </footer>
 
-  <!-- ==================== MODAL INSTALLATION APPLICATION MOBILE ==================== -->
+  <!-- ==================== BANNIÈRE PROMPT INSTALLATION DIRECTE AUTOMATIQUE ==================== -->
+  <div id="pwaDirectAutoPrompt" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999; max-width: 440px; width: calc(100% - 40px); background: #07152B; border: 1.5px solid #00D2B4; border-radius: 16px; padding: 1.15rem; box-shadow: 0 15px 40px rgba(0,0,0,0.7), 0 0 25px rgba(0,210,180,0.25); font-family: 'Outfit', sans-serif;">
+    <div style="display: flex; align-items: flex-start; gap: 0.9rem; margin-bottom: 0.85rem;">
+      <img src="assets/icons/icon-192.png" alt="Logo SunuSchool" style="width: 52px; height: 52px; border-radius: 12px; object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,210,180,0.4); border: 1.5px solid rgba(0,210,180,0.5);">
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: #00D2B4; font-weight: 800;">Application Officielle</div>
+        <h4 style="margin: 0.15rem 0 0.25rem; font-size: 1.05rem; color: #FFFFFF; font-weight: 800;">Installer SunuSchool</h4>
+        <p style="margin: 0; font-size: 0.82rem; color: #94A3B8; line-height: 1.35;">
+          Installez l'application sur votre appareil (ordinateur ou smartphone) pour un accès direct et un fonctionnement 100% hors-ligne.
+        </p>
+      </div>
+      <button type="button" onclick="dismissPwaAutoPrompt()" style="background: transparent; border: none; color: #64748B; font-size: 1.15rem; cursor: pointer; padding: 0; line-height: 1;" title="Fermer">✕</button>
+    </div>
+    <div style="display: flex; gap: 0.6rem;">
+      <button type="button" onclick="handlePwaAutoPromptInstall()" style="flex: 1; background: linear-gradient(135deg, #00D2B4, #059669); color: #051329; font-weight: 800; border: none; border-radius: 10px; padding: 0.7rem 0.9rem; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 15px rgba(0,210,180,0.4); transition: transform 0.2s;">
+        <span style="font-size: 1.1rem;">📲</span>
+        <span>Installer l'application</span>
+      </button>
+      <button type="button" onclick="dismissPwaAutoPrompt()" style="background: rgba(255,255,255,0.08); color: #CBD5E1; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 0.7rem 0.8rem; font-size: 0.85rem; cursor: pointer;">
+        Plus tard
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL INSTALLATION APPLICATION (PC & MOBILE) ==================== -->
   <div id="mobileAppInstallModal" class="modal-overlay" style="display: none; z-index: 3000;">
     <div class="modal-card" style="max-width: 520px; text-align: left; background: #07152B; border: 1.5px solid rgba(0, 210, 180, 0.4); border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7); padding: 1.8rem; position: relative;">
       <button type="button" class="modal-close-btn" onclick="closeMobileInstallModal()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.1); border: none; color: #FFF; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem;">✕</button>
 
       <div style="text-align: center; margin-bottom: 1.2rem;">
-        <div style="width: 68px; height: 68px; margin: 0 auto 0.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0, 210, 180, 0.35);">
-          <img src="assets/icons/app-download.png" alt="Symbole Téléchargement" style="width: 68px; height: 68px; border-radius: 50%; object-fit: contain;">
+        <div style="width: 72px; height: 72px; margin: 0 auto 0.8rem; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0, 210, 180, 0.4); border: 2px solid #00D2B4; overflow: hidden;">
+          <img src="assets/icons/icon-192.png" alt="Logo Officiel SunuSchool" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
         <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #00D2B4; font-weight: 800; margin-bottom: 0.25rem;">
-          Application Mobile PWA • 100% Hors-Ligne
+          Application Progressive PWA • 100% Hors-Ligne
         </div>
         <h3 style="font-size: 1.35rem; color: #FFFFFF; margin: 0 0 0.4rem; font-family: 'Outfit', sans-serif;">
-          Télécharger l'App sur Téléphone
+          Installer l'Application SunuSchool
         </h3>
         <p style="font-size: 0.84rem; color: #94A3B8; margin: 0; line-height: 1.45;">
-          Installez SunuSchool-Express directement sur votre smartphone en 1 clic, sans passer par le Play Store / App Store !
+          Installez SunuSchool-Express sur votre ordinateur ou votre smartphone en 1 clic avec le logo officiel !
         </p>
       </div>
 
@@ -5650,13 +6179,16 @@
         </button>
       </div>
 
-      <!-- Sélecteur OS : Android ou iPhone -->
-      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.2rem; background: rgba(255,255,255,0.05); padding: 0.3rem; border-radius: 10px;">
-        <button type="button" id="tabInstallAndroid" onclick="switchInstallTab('android')" style="flex: 1; padding: 0.55rem; font-size: 0.84rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: #00D2B4; color: #051329; transition: all 0.2s;">
-          🤖 Android (Samsung, Xiaomi...)
+      <!-- Sélecteur OS : Ordinateur, Android ou iPhone -->
+      <div style="display: flex; gap: 0.4rem; margin-bottom: 1.2rem; background: rgba(255,255,255,0.05); padding: 0.3rem; border-radius: 10px;">
+        <button type="button" id="tabInstallAndroid" onclick="switchInstallTab('android')" style="flex: 1; padding: 0.55rem 0.3rem; font-size: 0.78rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: #00D2B4; color: #051329; transition: all 0.2s;">
+          🤖 Android
         </button>
-        <button type="button" id="tabInstallIos" onclick="switchInstallTab('ios')" style="flex: 1; padding: 0.55rem; font-size: 0.84rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: transparent; color: #FFF; transition: all 0.2s;">
-          🍎 iPhone &amp; iPad (Apple)
+        <button type="button" id="tabInstallIos" onclick="switchInstallTab('ios')" style="flex: 1; padding: 0.55rem 0.3rem; font-size: 0.78rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: transparent; color: #FFF; transition: all 0.2s;">
+          🍎 iPhone / iPad
+        </button>
+        <button type="button" id="tabInstallPc" onclick="switchInstallTab('pc')" style="flex: 1; padding: 0.55rem 0.3rem; font-size: 0.78rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: transparent; color: #FFF; transition: all 0.2s;">
+          💻 PC / Mac
         </button>
       </div>
 
@@ -5665,7 +6197,7 @@
         <div style="display: flex; gap: 0.75rem; margin-bottom: 0.85rem; align-items: flex-start;">
           <div style="width: 26px; height: 26px; border-radius: 50%; background: #00D2B4; color: #051329; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">1</div>
           <div style="font-size: 0.84rem; color: #E2E8F0; line-height: 1.4;">
-            Dans votre navigateur <strong>Google Chrome</strong> sur votre téléphone, appuyez sur les <strong>3 petits points verticaux (⋮)</strong> en haut à droite.
+            Dans votre navigateur <strong>Google Chrome</strong> sur votre téléphone, appuyez sur le bouton <strong>« Installer »</strong> en haut ou sur les <strong>3 petits points verticaux (⋮)</strong> en haut à droite.
           </div>
         </div>
         <div style="display: flex; gap: 0.75rem; margin-bottom: 0.85rem; align-items: flex-start;">
@@ -5677,7 +6209,7 @@
         <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
           <div style="width: 26px; height: 26px; border-radius: 50%; background: #10B981; color: #FFF; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">✓</div>
           <div style="font-size: 0.84rem; color: #E2E8F0; line-height: 1.4;">
-            C'est prêt ! L'icône officielle <strong>SunuSchool</strong> apparaît sur votre écran d'accueil et s'ouvre en plein écran.
+            C'est prêt ! L'icône officielle <strong>SunuSchool</strong> apparaît sur votre écran d'accueil avec son logo complet.
           </div>
         </div>
       </div>
@@ -5699,7 +6231,29 @@
         <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
           <div style="width: 26px; height: 26px; border-radius: 50%; background: #10B981; color: #FFF; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">✓</div>
           <div style="font-size: 0.84rem; color: #E2E8F0; line-height: 1.4;">
-            Touchez <strong>« Ajouter »</strong> en haut à droite : SunuSchool est installée sur votre iPhone comme une vraie application !
+            Touchez <strong>« Ajouter »</strong> en haut à droite : SunuSchool est installée avec son icône officielle !
+          </div>
+        </div>
+      </div>
+
+      <!-- Guide PC / Mac -->
+      <div id="guideInstallPc" style="display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem; margin-bottom: 1.2rem;">
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 0.85rem; align-items: flex-start;">
+          <div style="width: 26px; height: 26px; border-radius: 50%; background: #38BDF8; color: #051329; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">1</div>
+          <div style="font-size: 0.84rem; color: #E2E8F0; line-height: 1.4;">
+            Dans la barre d'adresse de votre navigateur (Chrome / Edge), cliquez sur la petite icône <strong>d'ordinateur ou d'installation 📥</strong> située à droite de l'adresse web.
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 0.85rem; align-items: flex-start;">
+          <div style="width: 26px; height: 26px; border-radius: 50%; background: #38BDF8; color: #051329; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">2</div>
+          <div style="font-size: 0.84rem; color: #E2E8F0; line-height: 1.4;">
+            Cliquez sur <strong>« Installer »</strong> : une fenêtre dédiée s'ouvre et un raccourci avec le logo est créé sur votre bureau.
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+          <div style="width: 26px; height: 26px; border-radius: 50%; background: #10B981; color: #FFF; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">✓</div>
+          <div style="font-size: 0.84rem; color: #E2E8F0; line-height: 1.4;">
+            SunuSchool se lance comme un logiciel natif Windows ou macOS, rapide et utilisable même sans connexion internet !
           </div>
         </div>
       </div>

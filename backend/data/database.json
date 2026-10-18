@@ -1,5 +1,26 @@
 {
-  "etablissements": [],
+  "etablissements": [
+    {
+      "id": "etab-ucadschool",
+      "code": "SSE-SN-6202",
+      "secretKey": "ADM-6202",
+      "name": "ucadschool",
+      "type": "FORMATION_PRO",
+      "city": "Dakar",
+      "phone": "779448155",
+      "email": "dakar44@gmail.com",
+      "directeurNom": "Direction ucadschool",
+      "plan": "Formule École Pro",
+      "prixMensuel": 55000,
+      "effectif": 0,
+      "statut": "ACTIF",
+      "statutAbonnement": "ACTIF",
+      "fraisAdhesionPayes": true,
+      "dateAdhesion": "2026-10-18",
+      "echeanceAbonnement": "2026-11-30",
+      "waveTransactionRef": "Valide par Admin HQ"
+    }
+  ],
   "classes": [],
   "enseignants": [],
   "eleves": [],

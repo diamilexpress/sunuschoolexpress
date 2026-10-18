@@ -217,6 +217,7 @@ function checkAdminSession() {
         try { syncCloudEstablishments(); } catch(e) {}
       }, 5000);
     }
+    try { initAdminPushNotifications(); } catch(e) {}
   }
 }
 
@@ -285,6 +286,7 @@ function completeAdminLoginSuccess(userEmail, token) {
   const overlay = document.getElementById('masterLoginOverlay');
   if (overlay) overlay.style.display = 'none';
   loadAdminData();
+  try { initAdminPushNotifications(); } catch(e) {}
 }
 
 function showAdminLoginError(errEl, message) {
@@ -321,8 +323,6 @@ function logoutAdmin() {
 function findMatchingEtabIndex(list, r) {
   if (!Array.isArray(list) || !r) return -1;
   const rName = (r.name || '').toLowerCase().trim();
-  const rPhone = (r.phone || '').replace(/[^0-9]/g, '').slice(-9);
-  const rEmail = (r.email || '').toLowerCase().trim();
   const rCode = (r.code || '').toUpperCase().trim();
   const rId = r.id || '';
 
@@ -332,17 +332,21 @@ function findMatchingEtabIndex(list, r) {
     if (rId && e.id && e.id === rId) return true;
     if (rCode && e.code && e.code.toUpperCase() === rCode) return true;
     
-    // 2. Même nom d'établissement (évite doublon si codes différents générés lors de la souscription)
+    // 2. Même nom d'établissement
     const eName = (e.name || '').toLowerCase().trim();
     if (rName && eName && rName === eName) return true;
 
-    // 3. Même téléphone (si au moins 7 chiffres comparables)
-    const ePhone = (e.phone || '').replace(/[^0-9]/g, '').slice(-9);
-    if (rPhone && ePhone && rPhone.length >= 7 && rPhone === ePhone) return true;
+    // 3. Uniquement si l'un des deux noms est vide ou générique (ex: "Nouvel Établissement", "Mon Établissement")
+    const isGeneric = !rName || !eName || rName.includes('nouvel') || eName.includes('nouvel') || rName.includes('mon ') || eName.includes('mon ');
+    if (isGeneric) {
+      const rPhone = (r.phone || '').replace(/[^0-9]/g, '').slice(-9);
+      const ePhone = (e.phone || '').replace(/[^0-9]/g, '').slice(-9);
+      if (rPhone && ePhone && rPhone.length >= 7 && rPhone === ePhone) return true;
 
-    // 4. Même email (hors emails génériques ou plateforme)
-    const eEmail = (e.email || '').toLowerCase().trim();
-    if (rEmail && eEmail && !rEmail.includes('direction@ecole.sn') && !rEmail.includes('sunuschoolexpress@gmail.com') && rEmail === eEmail) return true;
+      const rEmail = (r.email || '').toLowerCase().trim();
+      const eEmail = (e.email || '').toLowerCase().trim();
+      if (rEmail && eEmail && !rEmail.includes('direction@ecole.sn') && !rEmail.includes('sunuschoolexpress@gmail.com') && rEmail === eEmail) return true;
+    }
 
     return false;
   });
@@ -959,12 +963,14 @@ function getStudentCountForEtab(e) {
 
 function getMonthlyPriceForPlan(plan) {
   const p = (plan || '').toLowerCase();
+  if (p.includes('150') || p.includes('multi-campus') || p.includes('grande école') || p.includes('grande ecole')) return 150000;
   if (p.includes('85') || p.includes('premium')) return 85000;
-  if (p.includes('75')) return 75000;
+  if (p.includes('75') || (p.includes('institut') && p.includes('pro'))) return 75000;
+  if (p.includes('45') || (p.includes('institut') && p.includes('starter'))) return 45000;
   if (p.includes('55') || p.includes('pro')) return 55000;
   if (p.includes('35') || p.includes('daara') || p.includes('internat')) return 35000;
   if (p.includes('20') || p.includes('starter')) return 20000;
-  return 35000;
+  return 45000;
 }
 
 function isPendingEtab(e) {
@@ -1000,7 +1006,26 @@ function updateKpis() {
   }
 
   const kpiPending = document.getElementById('kpiPendingCount');
-  if (kpiPending) kpiPending.textContent = pending.length + adminState.quotes.length;
+  const totalPending = pending.length + (adminState.quotes ? adminState.quotes.length : 0);
+  if (kpiPending) kpiPending.textContent = totalPending;
+
+  // 🔔 ALERTE EN DIRECT : Si une nouvelle demande arrive pendant la session ouverte
+  if (typeof lastKnownPendingCount !== 'undefined' && lastKnownPendingCount !== null && totalPending > lastKnownPendingCount) {
+    const diff = totalPending - lastKnownPendingCount;
+    if (typeof playPushNotificationSound === 'function') playPushNotificationSound();
+    if (typeof showToast === 'function') {
+      showToast(`🔔 ${diff} nouvelle(s) demande(s) d'établissement reçue(s) !`);
+    }
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(`🏫 Nouvelle Demande d'Établissement !`, {
+          body: `${diff} nouvelle(s) demande(s) viennent d'arriver dans votre console SunuSchool HQ.`,
+          icon: './assets/icons/icon-192.png'
+        });
+      } catch(e) {}
+    }
+  }
+  lastKnownPendingCount = totalPending;
 
   const kpiActive = document.getElementById('kpiActiveEtabsCount');
   if (kpiActive) kpiActive.textContent = active.length;
@@ -1067,8 +1092,9 @@ function renderPendingTable() {
   tbody.innerHTML = '';
   pending.forEach(e => {
     const tr = document.createElement('tr');
-    const isDaara = e.type === 'DAARA' || (e.plan && e.plan.toLowerCase().includes('daara'));
-    const icon = isDaara ? '🕌' : '🏫';
+    const isInstitut = e.type === 'FORMATION_PRO' || e.type === 'INSTITUT' || (e.plan && (e.plan.toLowerCase().includes('institut') || e.plan.toLowerCase().includes('bts') || e.plan.toLowerCase().includes('formation'))) || (e.name && (e.name.toLowerCase().includes('institut') || e.name.toLowerCase().includes('formation') || e.name.toLowerCase().includes('métier') || e.name.toLowerCase().includes('metier')));
+    const isDaara = !isInstitut && (e.type === 'DAARA' || (e.plan && e.plan.toLowerCase().includes('daara')));
+    const icon = isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫');
     const cleanTel = (e.phone || '').replace(/[^0-9]/g, '');
 
     tr.innerHTML = `
@@ -1180,8 +1206,9 @@ function renderAllEtabsTable() {
   list.forEach(e => {
     const tr = document.createElement('tr');
     const isApproved = (e.statut === 'ACTIF' || e.statutAbonnement === 'ACTIF' || e.statutAbonnement === 'ESSAI_GRATUIT') && e.fraisAdhesionPayes !== false;
-    const isDaara = e.type === 'DAARA' || (e.plan && e.plan.toLowerCase().includes('daara'));
-    const icon = isDaara ? '🕌' : '🏫';
+    const isInstitut = e.type === 'FORMATION_PRO' || e.type === 'INSTITUT' || (e.plan && (e.plan.toLowerCase().includes('institut') || e.plan.toLowerCase().includes('bts') || e.plan.toLowerCase().includes('formation'))) || (e.name && (e.name.toLowerCase().includes('institut') || e.name.toLowerCase().includes('formation') || e.name.toLowerCase().includes('métier') || e.name.toLowerCase().includes('metier')));
+    const isDaara = !isInstitut && (e.type === 'DAARA' || (e.plan && e.plan.toLowerCase().includes('daara')));
+    const icon = isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫');
     const studentCount = getStudentCountForEtab(e);
 
     tr.innerHTML = `
@@ -1200,7 +1227,7 @@ function renderAllEtabsTable() {
       </td>
       <td>
         <span style="background: rgba(0, 210, 180, 0.12); color: #00D2B4; border: 1px solid rgba(0, 210, 180, 0.35); padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-          👥 ${studentCount} ${isDaara ? (studentCount > 1 ? 'Talibés' : 'Talibé') : (studentCount > 1 ? 'Élèves' : 'Élève')}
+          👥 ${studentCount} ${isInstitut ? (studentCount > 1 ? 'Étudiants' : 'Étudiant') : (isDaara ? (studentCount > 1 ? 'Talibés' : 'Talibé') : (studentCount > 1 ? 'Élèves' : 'Élève'))}
         </span>
       </td>
       <td>
@@ -1795,8 +1822,8 @@ function renderQuotesTable() {
       <tr>
         <td colspan="6" style="text-align: center; padding: 2.5rem; color: #64748B;">
           <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
-          <strong>${filterState.searchQuotes ? 'Aucun devis ne correspond à votre recherche.' : 'Aucune demande de devis enterprise en attente.'}</strong><br>
-          ${filterState.searchQuotes ? 'Vérifiez votre saisie ou réinitialisez le champ.' : 'Toutes les demandes de devis réseaux scolaires et multi-campus ont été traitées.'}
+          <strong>${filterState.searchQuotes ? 'Aucun devis ne correspond à votre recherche.' : 'Aucune demande de devis établissement en attente.'}</strong><br>
+          ${filterState.searchQuotes ? 'Vérifiez votre saisie ou réinitialisez le champ.' : 'Toutes les demandes de devis établissements et multi-campus ont été traitées.'}
         </td>
       </tr>
     `;
@@ -1866,8 +1893,22 @@ function openEditModalHQ(idOrCode) {
   document.getElementById('editEtabCity').value = etab.city || 'Dakar';
   document.getElementById('editEtabDirecteur').value = etab.directeurNom || '';
   document.getElementById('editEtabPhone').value = etab.phone || '';
-  document.getElementById('editEtabEmail').value = etab.email || '';
-  document.getElementById('editEtabPlan').value = etab.plan || 'Formule Pro';
+  const planSelect = document.getElementById('editEtabPlan');
+  if (planSelect) {
+    const pTarget = (etab.plan || 'Formule Pro').trim().toLowerCase();
+    const existingOption = Array.from(planSelect.options).find(o => o.value.trim().toLowerCase() === pTarget);
+    if (existingOption) {
+      planSelect.value = existingOption.value;
+    } else if (etab.plan) {
+      const opt = document.createElement('option');
+      opt.value = etab.plan;
+      opt.textContent = etab.plan;
+      planSelect.appendChild(opt);
+      planSelect.value = etab.plan;
+    } else {
+      planSelect.value = 'Formule Pro';
+    }
+  }
   document.getElementById('editEtabPrix').value = etab.prixMensuel || getMonthlyPriceForPlan(etab.plan);
   document.getElementById('editEtabStatut').value = etab.statut || (etab.statutAbonnement === 'ACTIF' ? 'ACTIF' : 'EN_ATTENTE');
   document.getElementById('editEtabFraisAdhesion').value = String(etab.fraisAdhesionPayes !== false);
@@ -2014,8 +2055,10 @@ function generateReceiptHQ(idOrCode) {
   const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const recuNum = `SSE-REC-${(etab.code || 'SN').replace(/[^0-9]/g, '') || Math.floor(1000 + Math.random()*9000)}-${now.getFullYear()}`;
   const waveRef = etab.waveTransactionRef || `WAV-${Math.floor(100000 + Math.random()*900000)}-SN`;
-  const isDaara = etab.type === 'DAARA' || (etab.plan && etab.plan.toLowerCase().includes('daara'));
-  const typeLabel = isDaara ? 'Institut Coranique / Daara Moderne' : 'École Privée / Collège / Lycée';
+  const isInstitut = etab.type === 'FORMATION_PRO' || etab.type === 'INSTITUT' || (etab.plan && (etab.plan.toLowerCase().includes('institut') || etab.plan.toLowerCase().includes('bts') || etab.plan.toLowerCase().includes('formation'))) || (etab.name && (etab.name.toLowerCase().includes('institut') || etab.name.toLowerCase().includes('formation') || etab.name.toLowerCase().includes('métier') || etab.name.toLowerCase().includes('metier')));
+  const isDaara = !isInstitut && (etab.type === 'DAARA' || (etab.plan && etab.plan.toLowerCase().includes('daara')));
+  const typeLabel = isInstitut ? 'Institut Supérieur / Formation Professionnelle & Métiers' : (isDaara ? 'Institut Coranique / Daara Moderne' : 'École Privée / Collège / Lycée');
+  const typeIcon = isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫');
 
   const receiptWindow = window.open('', '_blank', 'width=850,height=750');
   if (!receiptWindow) return alert("Veuillez autoriser les fenêtres pop-up pour afficher le reçu officiel.");
@@ -2071,10 +2114,10 @@ function generateReceiptHQ(idOrCode) {
         <div class="details-grid">
           <div class="info-box">
             <h3>Établissement Bénéficiaire</h3>
-            <p><strong>${etab.name}</strong></p>
+            <p><strong>${typeIcon} ${etab.name}</strong></p>
             <p>Code SSE : <strong>${etab.code || 'N/A'}</strong></p>
             <p>Type : ${typeLabel}</p>
-            <p>Directeur : ${etab.directeurNom || 'Direction Générale'}</p>
+            <p>${isInstitut ? 'Directeur des Études / DG' : (isDaara ? 'Serigne Daara / Responsable' : 'Directeur')} : ${etab.directeurNom || 'Direction Générale'}</p>
             <p>Téléphone : ${etab.phone || 'N/A'}</p>
             <p>Ville : ${etab.city || 'Sénégal'}</p>
           </div>
@@ -2292,7 +2335,7 @@ function switchAdminTab(tabKey) {
 
   const titleMap = {
     pending: "Gestion des Adhésions Wave & Abonnements",
-    quotes: "Demandes de Devis Enterprise & Surclassements",
+    quotes: "Demandes de Devis Établissement & Surclassements",
     etabs: "Parc des Établissements Partenaires",
     finance: "Trésorerie SYSCOHADA & Revenus SaaS",
     audit: "Journal d'Audit Global & Sécurité",
@@ -2602,6 +2645,8 @@ window.forceSyncFromCloudUI = async function() {
 
 window.hardRefreshAdmin = async function() {
   try {
+    localStorage.removeItem('sunuschool_establishments_registry');
+    localStorage.removeItem('sse_saas_database');
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       for (const r of registrations) {
@@ -2676,6 +2721,395 @@ async function confirmResetToCleanSlate() {
 }
 
 window.confirmResetToCleanSlate = confirmResetToCleanSlate;
+
+// ==============================================================================
+// GESTION DU SYSTÈME DE NOTIFICATIONS PUSH W3C (Mobile & Ordinateur)
+// ==============================================================================
+const DEFAULT_VAPID_PUBLIC_KEY = 'BFd57hS0DXRKspsOK4hVxl2EHk2Q4t63I4hD0PMVCy_4MYw0ZNaYZJ8rjgtsNgY0wGhRtqRE-W7oE_-RpW_5cZM';
+let swPushRegistration = null;
+let currentPushSubscription = null;
+let lastKnownPendingCount = null;
+
+// Conversion Base64 URL Safe vers Uint8Array pour le PushManager
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+// Bip sonore mélodieux via l'API Web Audio (aucun fichier externe requis, zéro latence)
+function playPushNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    
+    // Note 1 (Mi / E5 - 659 Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(659.25, now);
+    gain1.gain.setValueAtTime(0.25, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.3);
+
+    // Note 2 (La / A5 - 880 Hz)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880, now + 0.15);
+    gain2.gain.setValueAtTime(0.3, now + 0.15);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.15);
+    osc2.stop(now + 0.55);
+  } catch (e) {
+    console.debug('Audio chime error:', e);
+  }
+}
+window.playPushNotificationSound = playPushNotificationSound;
+
+// Initialisation au démarrage de la console Super Admin HQ
+async function initAdminPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.info('[Push] Les notifications push ne sont pas supportées sur ce navigateur.');
+    updatePushUI('UNSUPPORTED');
+    return;
+  }
+
+  try {
+    // 1. Enregistrement ou récupération du Service Worker
+    swPushRegistration = await navigator.serviceWorker.register('./sw.js?v=4.2.0');
+    await navigator.serviceWorker.ready;
+
+    // 2. Vérification de l'abonnement push existant
+    currentPushSubscription = await swPushRegistration.pushManager.getSubscription();
+
+    if (currentPushSubscription) {
+      updatePushUI('ACTIVE');
+      // Synchroniser discrètement l'abonnement avec le backend Render & local
+      syncSubscriptionWithBackend(currentPushSubscription);
+    } else {
+      if (Notification.permission === 'granted') {
+        subscribeAdminPushDevice(false);
+      } else if (Notification.permission === 'denied') {
+        updatePushUI('BLOCKED');
+      } else {
+        updatePushUI('IDLE');
+      }
+    }
+  } catch (err) {
+    console.warn('[Push] Erreur initialisation SW Push:', err);
+    updatePushUI('IDLE');
+  }
+}
+window.initAdminPushNotifications = initAdminPushNotifications;
+
+// Mise à jour visuelle des boutons et badges dans l'interface Admin
+function updatePushUI(state) {
+  const iconEl = document.getElementById('pushIconDisplay');
+  const textEl = document.getElementById('pushTextDisplay');
+  const btnEl = document.getElementById('btnPushAdminSubscribe');
+  const badgeSidebar = document.getElementById('pushBadgeSidebar');
+  const pillEl = document.getElementById('pushStatusPill');
+  const descEl = document.getElementById('pushStatusDesc');
+  const mainBtn = document.getElementById('btnMainPushToggle');
+  const mainBtnText = document.getElementById('btnMainPushToggleText');
+
+  if (state === 'ACTIVE') {
+    if (iconEl) iconEl.textContent = '🔔';
+    if (textEl) textEl.textContent = 'Alertes Actives';
+    if (btnEl) {
+      btnEl.style.background = 'rgba(16, 185, 129, 0.15)';
+      btnEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      btnEl.style.color = '#10B981';
+      btnEl.title = 'Notifications push actives sur cet appareil. Cliquez pour gérer.';
+    }
+    if (badgeSidebar) {
+      badgeSidebar.textContent = 'ON';
+      badgeSidebar.style.background = '#10B981';
+    }
+    if (pillEl) {
+      pillEl.textContent = '🟢 Actif sur cet appareil';
+      pillEl.style.background = 'rgba(16, 185, 129, 0.2)';
+      pillEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      pillEl.style.color = '#10B981';
+    }
+    if (descEl) {
+      descEl.innerHTML = '✓ <strong>Parfait !</strong> Cet appareil recevra une alerte sonore et une notification instantanée dès qu\'une nouvelle demande d\'école ou de daara arrive.';
+    }
+    if (mainBtn) {
+      mainBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+      mainBtn.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      mainBtn.style.color = '#F87171';
+    }
+    if (mainBtnText) mainBtnText.textContent = 'Désactiver les alertes sur cet appareil';
+  } else if (state === 'BLOCKED') {
+    if (iconEl) iconEl.textContent = '🔕';
+    if (textEl) textEl.textContent = 'Alertes Bloquées';
+    if (btnEl) {
+      btnEl.style.background = 'rgba(239, 68, 68, 0.15)';
+      btnEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      btnEl.style.color = '#F87171';
+      btnEl.title = 'Notifications bloquées par votre navigateur. Autorisez-les dans les paramètres du site.';
+    }
+    if (badgeSidebar) {
+      badgeSidebar.textContent = 'BLOQUÉ';
+      badgeSidebar.style.background = '#EF4444';
+    }
+    if (pillEl) {
+      pillEl.textContent = '🔴 Bloqué par le navigateur';
+      pillEl.style.background = 'rgba(239, 68, 68, 0.2)';
+      pillEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      pillEl.style.color = '#F87171';
+    }
+    if (descEl) {
+      descEl.innerHTML = '⚠️ Les notifications ont été refusées. Pour les réactiver, cliquez sur le cadenas 🔒 à gauche de l\'adresse dans votre navigateur et activez les <strong>Notifications</strong>.';
+    }
+    if (mainBtn) {
+      mainBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+      mainBtn.style.color = '#94A3B8';
+    }
+    if (mainBtnText) mainBtnText.textContent = 'Autorisation requise dans les paramètres du navigateur';
+  } else if (state === 'UNSUPPORTED') {
+    if (badgeSidebar) {
+      badgeSidebar.textContent = 'N/A';
+      badgeSidebar.style.background = '#64748B';
+    }
+    if (pillEl) {
+      pillEl.textContent = '⚪ Non supporté';
+      pillEl.style.background = 'rgba(255, 255, 255, 0.1)';
+      pillEl.style.color = '#94A3B8';
+    }
+    if (descEl) {
+      descEl.textContent = 'Ce navigateur ne prend pas en charge les notifications push W3C. Utilisez Google Chrome, Microsoft Edge ou Safari PWA.';
+    }
+  } else {
+    // IDLE
+    if (iconEl) iconEl.textContent = '🔔';
+    if (textEl) textEl.textContent = 'Activer Push';
+    if (btnEl) {
+      btnEl.style.background = 'rgba(59, 130, 246, 0.15)';
+      btnEl.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+      btnEl.style.color = '#60A5FA';
+      btnEl.title = 'Activer les alertes directes sur ce téléphone ou PC';
+    }
+    if (badgeSidebar) {
+      badgeSidebar.textContent = 'OFF';
+      badgeSidebar.style.background = '#3B82F6';
+    }
+    if (pillEl) {
+      pillEl.textContent = '⏳ En attente d\'activation';
+      pillEl.style.background = 'rgba(245, 158, 11, 0.2)';
+      pillEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+      pillEl.style.color = '#F59E0B';
+    }
+    if (descEl) {
+      descEl.textContent = 'Activez les alertes pour être notifié instantanément sur cet appareil (mobile ou PC) dès qu\'une école fait une demande.';
+    }
+    if (mainBtn) {
+      mainBtn.style.background = 'linear-gradient(135deg, #3B82F6, #1D4ED8)';
+      mainBtn.style.borderColor = 'transparent';
+      mainBtn.style.color = '#FFFFFF';
+    }
+    if (mainBtnText) mainBtnText.textContent = 'Activer les Notifications Push sur cet appareil';
+  }
+}
+
+// Ouvrir / Fermer la Modal
+function openPushSettingsModalHQ() {
+  const modal = document.getElementById('modalPushSettingsHQ');
+  if (modal) modal.style.display = 'flex';
+  if (currentPushSubscription) {
+    updatePushUI('ACTIVE');
+  } else if (Notification.permission === 'granted') {
+    updatePushUI('ACTIVE');
+  } else if (Notification.permission === 'denied') {
+    updatePushUI('BLOCKED');
+  } else {
+    updatePushUI('IDLE');
+  }
+}
+function closePushSettingsModalHQ() {
+  const modal = document.getElementById('modalPushSettingsHQ');
+  if (modal) modal.style.display = 'none';
+}
+window.openPushSettingsModalHQ = openPushSettingsModalHQ;
+window.closePushSettingsModalHQ = closePushSettingsModalHQ;
+
+// Action du bouton principal de la modal (Abonner ou Désabonner)
+async function handlePushSubscribeClick() {
+  if (currentPushSubscription) {
+    await unsubscribeAdminPushDevice();
+  } else {
+    await subscribeAdminPushDevice(true);
+  }
+}
+window.handlePushSubscribeClick = handlePushSubscribeClick;
+
+// Abonnement au Service Web Push
+async function subscribeAdminPushDevice(userInitiated = true) {
+  try {
+    if (!('Notification' in window)) {
+      alert("Ce navigateur ne supporte pas les notifications système.");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      updatePushUI('BLOCKED');
+      if (userInitiated) {
+        showToast("⚠️ Permission de notification non accordée.", true);
+      }
+      return;
+    }
+
+    if (!swPushRegistration) {
+      swPushRegistration = await navigator.serviceWorker.register('./sw.js?v=4.2.0');
+    }
+    await navigator.serviceWorker.ready;
+
+    // Récupérer la clé publique VAPID depuis le backend ou fallback sécurisé
+    let vapidKey = DEFAULT_VAPID_PUBLIC_KEY;
+    try {
+      const res = await fetch(`${getBackendBaseUrl()}/api/push/vapid-key`);
+      if (res.ok) {
+        const j = await res.json();
+        if (j.publicKey) vapidKey = j.publicKey;
+      }
+    } catch(e) {}
+
+    const convertedKey = urlBase64ToUint8Array(vapidKey);
+
+    // Souscrire auprès du serveur de push du navigateur (FCM Google, Mozilla, Apple)
+    currentPushSubscription = await swPushRegistration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: convertedKey
+    });
+
+    // Enregistrer l'appareil auprès du backend
+    await syncSubscriptionWithBackend(currentPushSubscription);
+
+    localStorage.setItem('sse_admin_push_subscribed', 'true');
+    updatePushUI('ACTIVE');
+
+    if (userInitiated) {
+      showToast("🔔 Notifications Push activées avec succès sur cet appareil !");
+      playPushNotificationSound();
+    }
+  } catch (err) {
+    console.error('[Push] Erreur souscription:', err);
+    if (userInitiated) {
+      showToast("⚠️ Erreur lors de l'activation des notifications: " + err.message, true);
+    }
+  }
+}
+window.subscribeAdminPushDevice = subscribeAdminPushDevice;
+
+// Désabonnement
+async function unsubscribeAdminPushDevice() {
+  try {
+    if (currentPushSubscription) {
+      const endpoint = currentPushSubscription.endpoint;
+      await currentPushSubscription.unsubscribe();
+      currentPushSubscription = null;
+
+      // Notifier le backend
+      try {
+        const backendUrls = [getBackendBaseUrl(), 'https://sunuschoolexpress.onrender.com'];
+        backendUrls.forEach(url => {
+          fetch(`${url}/api/push/unsubscribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint })
+          }).catch(() => {});
+        });
+      } catch(e) {}
+    }
+    localStorage.removeItem('sse_admin_push_subscribed');
+    updatePushUI('IDLE');
+    showToast("Notifications push désactivées pour cet appareil.");
+  } catch(e) {
+    console.warn('[Push] Erreur désabonnement:', e);
+  }
+}
+window.unsubscribeAdminPushDevice = unsubscribeAdminPushDevice;
+
+// Enregistrer l'abonnement sur les backends disponibles (Render & local)
+async function syncSubscriptionWithBackend(subscription) {
+  if (!subscription) return;
+  const urls = [getBackendBaseUrl()];
+  if (!urls.includes('https://sunuschoolexpress.onrender.com')) {
+    urls.push('https://sunuschoolexpress.onrender.com');
+  }
+
+  for (const base of urls) {
+    try {
+      const res = await fetch(`${base}/api/push/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+      if (res.ok) {
+        console.info(`[Push] ✓ Abonnement synchronisé avec ${base}`);
+      } else if (res.status === 404) {
+        console.warn(`[Push] Endpoint push non disponible sur ${base} (404) — le backend doit être redéployé.`);
+      } else {
+        console.warn(`[Push] Erreur sync ${base}: HTTP ${res.status}`);
+      }
+    } catch(e) {
+      console.warn(`[Push] Backend ${base} injoignable:`, e.message || e);
+    }
+  }
+}
+
+// Tester immédiatement la notification sur l'écran
+async function testPushNotificationAdmin() {
+  playPushNotificationSound();
+
+  // Test 1 : Déclencher via le Service Worker directement (instantané)
+  if (swPushRegistration && swPushRegistration.showNotification) {
+    swPushRegistration.showNotification('🔔 Test SunuSchool HQ — Alerte Active !', {
+      body: 'Félicitations ! Vous recevrez désormais les notifications dès qu\'une école ou un daara fait une demande.',
+      icon: './assets/icons/icon-192.png',
+      badge: './assets/icons/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: 'test-push-alert',
+      data: { url: './admin.html' }
+    });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('🔔 Test SunuSchool HQ — Alerte Active !', {
+      body: 'Félicitations ! Vous recevrez désormais les notifications dès qu\'une école ou un daara fait une demande.',
+      icon: './assets/icons/icon-192.png'
+    });
+  }
+
+  // Test 2 : Déclencher aussi via le backend Render s'il est joignable
+  try {
+    const res = await fetch(`${getBackendBaseUrl()}/api/push/test`, { method: 'POST' });
+    const j = await res.json();
+    if (j.success) {
+      showToast('⚡ Notification test transmise par le serveur Cloud !');
+      return;
+    }
+  } catch(e) {}
+
+  showToast('🔔 Notification test affichée sur votre écran !');
+}
+window.testPushNotificationAdmin = testPushNotificationAdmin;
+
 
 
 

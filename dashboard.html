@@ -19,8 +19,12 @@
     }
   </script>
   <meta name="theme-color" content="#00D2B4">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SunuSchool">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
 </head>
 
 <body>
@@ -324,7 +328,7 @@
                 <span id="overviewTableTitle">Derniers Dossiers &amp; Mises à Jour Scolaires</span>
               </div>
               <div class="filter-bar">
-                <input type="text" class="search-input" placeholder="🔍 Rechercher un élève, matricule..."
+                <input type="text" id="overviewSearchInput" class="search-input" placeholder="🔍 Rechercher un apprenant, matricule..."
                   onkeyup="filterTable(this, 'overviewRecentTable')">
                 <button class="btn btn-outline btn-sm" onclick="renderOverviewKpis()">🔄 Actualiser</button>
               </div>
@@ -334,8 +338,8 @@
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th id="overviewThStudent">Élève / Talibé</th>
-                    <th id="overviewThClass">Classe / Niveau</th>
+                    <th id="overviewThStudent">Apprenant / Talibé</th>
+                    <th id="overviewThClass">Classe / Filière</th>
                     <th id="overviewThLevel">Niveau Coran / Moyenne</th>
                     <th id="overviewThPension">Statut Pension</th>
                     <th>Action</th>
@@ -428,23 +432,23 @@
         <div id="view-school" class="tab-view">
           <div class="data-card">
             <div class="data-card-header">
-              <div class="data-card-title">
+              <div class="data-card-title" id="schoolViewCardTitle">
                 <span>🏫</span>
-                <span>Répertoire des Élèves &amp; Classes (CI à Terminale)</span>
+                <span>Répertoire des Apprenants &amp; Promotions</span>
               </div>
-              <button id="schoolHeaderActionBtn" class="btn btn-primary btn-sm" onclick="openNewEleveModal()">+ Nouvel Élève</button>
+              <button id="schoolHeaderActionBtn" class="btn btn-primary btn-sm" onclick="openNewEleveModal()">+ Inscrire un Apprenant</button>
             </div>
 
             <div class="table-responsive">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Élève (Nom &amp; Matricule)</th>
-                    <th>Classe Actuelle</th>
-                    <th>Moyenne &amp; Rang</th>
-                    <th>Parent Référent</th>
-                    <th>Statut Frais</th>
-                    <th>Dossier &amp; Bulletin</th>
+                    <th id="thSchoolStudent">Apprenant (Nom &amp; Matricule)</th>
+                    <th id="thSchoolClass">Niveau / Classe / Filière</th>
+                    <th id="thSchoolGrades">Moyenne &amp; Rang</th>
+                    <th id="thSchoolParent">Responsable légal ou contact</th>
+                    <th id="thSchoolStatus">Statut Frais</th>
+                    <th id="thSchoolAction">Dossier &amp; Relevé</th>
                   </tr>
                 </thead>
                 <tbody id="schoolStudentsTable">
@@ -461,44 +465,53 @@
             <div class="data-card-header" style="flex-wrap: wrap; gap: 0.75rem;">
               <div>
                 <div class="data-card-title">
-                  <span>🏫</span>
-                  <span>Gestion des Classes &amp; Niveaux Pédagogiques</span>
+                  <span id="dashboardClassesHeaderIcon">🏫</span>
+                  <span id="dashboardClassesHeaderTitle">Gestion des Classes &amp; Niveaux Pédagogiques</span>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                <div id="dashboardClassesHeaderSubtitle" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
                   Packs en 1 clic selon les cycles officiels sénégalais et Daaras, gestion des salles, effectifs et accès directs aux emplois du temps.
                 </div>
               </div>
               <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                 <span class="badge-tag badge-blue" id="dashboardClassesTotalBadge">0 Classe Active</span>
-                <button class="btn btn-primary btn-sm" onclick="openNewClassModal()" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); color: #fff; font-weight: 700;">
+                <button class="btn btn-primary btn-sm" id="dashboardClassesAddBtn" onclick="openNewClassModal()" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); color: #fff; font-weight: 700;">
                   + Nouvelle Classe
                 </button>
               </div>
             </div>
 
             <!-- Packs d'initialisation en 1 Clic -->
-            <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-sm); padding: 1rem; margin: 1rem 0;">
+            <div id="dashClassPacksSection" style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-sm); padding: 1rem; margin: 1rem 0;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                 <div style="font-size: 0.82rem; font-weight: 800; color: #FBBF24; display: flex; align-items: center; gap: 0.4rem;">
-                  <span>⚡</span> <span>Génération Rapide de Sections (Packs en 1 Clic)</span>
+                  <span>⚡</span> <span id="dashClassPacksTitle">Génération Rapide de Sections (Packs en 1 Clic)</span>
                 </div>
-                <small style="font-size: 0.75rem; color: var(--text-secondary);">Injecte instantanément les grilles officielles sans écraser les données existantes</small>
+                <small id="dashClassPacksSubtitle" style="font-size: 0.75rem; color: var(--text-secondary);">Injecte instantanément les grilles officielles sans écraser les données existantes</small>
               </div>
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('maternelle')" style="border-color: #EC4899; color: #EC4899; font-weight: 600;">
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="dashClassPresetPacksContainer">
+                <button type="button" class="btn btn-outline btn-sm dash-pack-school" id="dashBtnPackMaternelle" onclick="applyClassPresetPack('maternelle')" style="border-color: #EC4899; color: #EC4899; font-weight: 600;">
                   👶 Pack Maternelle (PS, MS, GS)
                 </button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('primaire')" style="border-color: #38BDF8; color: #38BDF8; font-weight: 600;">
+                <button type="button" class="btn btn-outline btn-sm dash-pack-school" id="dashBtnPackPrimaire" onclick="applyClassPresetPack('primaire')" style="border-color: #38BDF8; color: #38BDF8; font-weight: 600;">
                   📚 Pack Primaire (CI à CM2)
                 </button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('college')" style="border-color: #00D2B4; color: #00D2B4; font-weight: 600;">
+                <button type="button" class="btn btn-outline btn-sm dash-pack-school" id="dashBtnPackCollege" onclick="applyClassPresetPack('college')" style="border-color: #00D2B4; color: #00D2B4; font-weight: 600;">
                   🏫 Pack Collège (6ème à 3ème)
                 </button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('lycee')" style="border-color: #A855F7; color: #A855F7; font-weight: 600;">
+                <button type="button" class="btn btn-outline btn-sm dash-pack-school" id="dashBtnPackLycee" onclick="applyClassPresetPack('lycee')" style="border-color: #A855F7; color: #A855F7; font-weight: 600;">
                   🎓 Pack Lycée (2nde à Terminale)
                 </button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="applyClassPresetPack('daara')" style="border-color: #F59E0B; color: #F59E0B; font-weight: 600;">
+                <button type="button" class="btn btn-outline btn-sm dash-pack-daara" id="dashBtnPackDaara" onclick="applyClassPresetPack('daara')" style="border-color: #F59E0B; color: #F59E0B; font-weight: 600;">
                   🕌 Pack Daara Moderne (Hifz &amp; Fiqh)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm dash-pack-institut" id="dashBtnPackFormationPro" onclick="applyClassPresetPack('formation_pro')" style="border-color: #38BDF8; color: #38BDF8; font-weight: 600;">
+                  🎓 Pack Filières BTS (Génie Logiciel, CGE, Transit)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm dash-pack-institut" id="dashBtnPackLicencesPro" onclick="applyClassPresetPack('licences_pro')" style="border-color: #00D2B4; color: #00D2B4; font-weight: 600; display: none;">
+                  🏛️ Pack Licences Pro &amp; Masters
+                </button>
+                <button type="button" class="btn btn-outline btn-sm dash-pack-institut" id="dashBtnPackCapCqp" onclick="applyClassPresetPack('cap_cqp')" style="border-color: #FBBF24; color: #FBBF24; font-weight: 600; display: none;">
+                  ⚙️ Pack Certificats Métiers (CAP, CQP)
                 </button>
               </div>
             </div>
@@ -601,17 +614,17 @@
               </div>
             </div>
 
-            <!-- Répertoire des élèves pour édition individuelle de bulletin -->
+            <!-- Répertoire des apprenants pour édition individuelle de bulletin ou relevé -->
             <div class="table-responsive">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Élève (Nom &amp; Matricule)</th>
-                    <th>Classe / Niveau</th>
-                    <th>Moyenne Générale / Coran</th>
-                    <th>Rang</th>
-                    <th>Mention &amp; Appréciation</th>
-                    <th>Action Bulletin</th>
+                    <th id="thGradesStudent">Apprenant (Nom &amp; Matricule)</th>
+                    <th id="thGradesClass">Niveau / Classe / Filière</th>
+                    <th id="thGradesScore">Moyenne Générale / Coran</th>
+                    <th id="thGradesRank">Rang</th>
+                    <th id="thGradesMention">Mention &amp; Appréciation</th>
+                    <th id="thGradesAction">Action Bulletin / Relevé</th>
                   </tr>
                 </thead>
                 <tbody id="gradesTable">
@@ -710,7 +723,7 @@
                   <tr>
                     <th>Référence &amp; Date</th>
                     <th>Canal de Règlement</th>
-                    <th>Élève &amp; Motif</th>
+                    <th id="thCaisseEleve">Apprenant / Payeur &amp; Motif</th>
                     <th>Montant Encaissé</th>
                     <th>Imputation SYSCOHADA</th>
                     <th>Statut</th>
@@ -849,6 +862,183 @@
                 </thead>
                 <tbody id="timetableTableBody">
                   <!-- Injecté dynamiquement par renderTimetableGrid() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 7.6 : CONVENTIONS TRIPARTITES & STAGES (INSTITUT PRO) ==================== -->
+        <div id="view-stages" class="tab-view">
+          <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #10B981;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>🤝</span> <span>Conventions Tripartites de Stage &amp; Immersion Pro</span>
+                  <span class="badge-tag badge-green">BTS, Licences &amp; Métiers</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  Pilotage des stages obligatoires en entreprise, conventions tripartites (Étudiant • Entreprise • Institut) et soutenances de mémoire.
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-sm" onclick="openNewConventionModal()" style="background: linear-gradient(135deg, #10B981, #00D2B4); color: #fff; font-weight: 700;">
+                  + Nouvelle Convention Tripartite
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="printStagesReport()" style="border-color: #38BDF8; color: #38BDF8; font-weight: 700;">
+                  🖨️ Imprimer Registre des Stages
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI Stages -->
+          <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
+            <div class="kpi-card">
+              <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">📋</div>
+              <div>
+                <div class="kpi-val" id="kpiTotalConventions" style="color: #10B981;">3</div>
+                <div class="kpi-label">Conventions Enregistrées</div>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.15); color: #38BDF8;">🏢</div>
+              <div>
+                <div class="kpi-val" id="kpiStagesEnCours" style="color: #38BDF8;">2</div>
+                <div class="kpi-label">Stagiaires en Immersion Active</div>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon-box" style="background: rgba(245, 158, 11, 0.15); color: #F59E0B;">🔍</div>
+              <div>
+                <div class="kpi-val" id="kpiStagesEnAttente" style="color: #F59E0B;">1</div>
+                <div class="kpi-label">En Recherche / En Signature</div>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #A855F7;">🤝</div>
+              <div>
+                <div class="kpi-val" id="kpiEntreprisesPartenaires" style="color: #A855F7;">14</div>
+                <div class="kpi-label">Entreprises Partenaires Agréées</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table des conventions -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h3 style="font-size: 1rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📑</span> <span>Répertoire des Conventions de Stage Tripartites</span>
+              </h3>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="filterStageInput" class="form-control" placeholder="Rechercher étudiant, entreprise..." style="max-width: 260px; font-size: 0.8rem; padding: 0.35rem 0.65rem;" oninput="renderStagesTable()">
+                <select id="filterStageStatus" class="form-control" style="max-width: 170px; font-size: 0.8rem; padding: 0.35rem 0.65rem;" onchange="renderStagesTable()">
+                  <option value="ALL">Tous les statuts</option>
+                  <option value="EN_COURS">En Immersion</option>
+                  <option value="SIGNEE">Signée (Début imminent)</option>
+                  <option value="VALIDE">Stage &amp; Soutenance Validés</option>
+                  <option value="EN_ATTENTE">En Signature / Négociation</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Étudiant &amp; Filière</th>
+                    <th>Entreprise d'Accueil</th>
+                    <th>Tuteurs (Entreprise &amp; Institut)</th>
+                    <th>Période &amp; Durée</th>
+                    <th>Mission Clé</th>
+                    <th>Statut Stage</th>
+                    <th style="text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="stagesConventionsTableBody">
+                  <!-- Injecté dynamiquement par renderStagesTable() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VUE 7.7 : ATTESTATIONS & DIPLÔMES AVEC QR CODE (INSTITUT PRO) ==================== -->
+        <div id="view-certificats" class="tab-view">
+          <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #F59E0B;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>📜</span> <span>Attestations Officielles, Diplômes &amp; QR Codes Sécurisés</span>
+                  <span class="badge-tag badge-purple">Conforme LMD &amp; MFPAI</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  Génération instantanée d'attestations de scolarité, attestations de réussite BTS/Licence (60 crédits ECTS), certificats de fin de stage et CQP avec sceau officiel et QR Code d'authenticité.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 Cartes de Génération Rapide -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="card" style="background: rgba(15, 36, 62, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1.2rem;">
+              <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">🎓</div>
+              <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Attestation de Réussite BTS / Licence</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin: 0.4rem 0 1rem 0;">Certifie la validation des 60 crédits ECTS annuels et l'admission avec mention officielle.</div>
+              <button class="btn btn-primary btn-sm" onclick="openIssueCertificatModal('ATTESTATION_REUSSITE_BTS')" style="width: 100%; background: linear-gradient(135deg, #0284C7, #00D2B4); font-weight: 700;">
+                Générer Attestation Réussite →
+              </button>
+            </div>
+
+            <div class="card" style="background: rgba(15, 36, 62, 0.75); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.2rem;">
+              <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">🏢</div>
+              <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Attestation de Fin de Stage Pro</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin: 0.4rem 0 1rem 0;">Atteste de l'accomplissement réussi de l'immersion en entreprise et de la soutenance de rapport.</div>
+              <button class="btn btn-primary btn-sm" onclick="openIssueCertificatModal('ATTESTATION_FIN_STAGE')" style="width: 100%; background: linear-gradient(135deg, #10B981, #059669); font-weight: 700;">
+                Générer Attestation Stage →
+              </button>
+            </div>
+
+            <div class="card" style="background: rgba(15, 36, 62, 0.75); border: 1px solid rgba(245, 158, 11, 0.3); padding: 1.2rem;">
+              <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">📄</div>
+              <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Attestation de Scolarité &amp; Inscription</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin: 0.4rem 0 1rem 0;">Document administratif officiel pour banques, ambassades, bourses d'études et mutuelles.</div>
+              <button class="btn btn-primary btn-sm" onclick="openIssueCertificatModal('ATTESTATION_SCOLARITE')" style="width: 100%; background: linear-gradient(135deg, #F59E0B, #D97706); font-weight: 700;">
+                Générer Attestation Scolarité →
+              </button>
+            </div>
+
+            <div class="card" style="background: rgba(15, 36, 62, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); padding: 1.2rem;">
+              <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">🏆</div>
+              <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Certificat CQP / Qualification Métier</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin: 0.4rem 0 1rem 0;">Titre de qualification professionnelle pour ateliers pratiques, CAP et certifications courtes.</div>
+              <button class="btn btn-primary btn-sm" onclick="openIssueCertificatModal('CERTIFICAT_CQP')" style="width: 100%; background: linear-gradient(135deg, #A855F7, #7C3AED); font-weight: 700;">
+                Générer Certificat CQP →
+              </button>
+            </div>
+          </div>
+
+          <!-- Table des documents délivrés -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h3 style="font-size: 1rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🛡️</span> <span>Registre des Documents &amp; Diplômes Délivrés (Traçabilité QR Code)</span>
+              </h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Type de Document</th>
+                    <th>Étudiant Bénéficiaire</th>
+                    <th>Filière &amp; Promotion</th>
+                    <th>Code de Vérification Cryptographique</th>
+                    <th>Date d'Émission</th>
+                    <th style="text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="certificatsIssuedTableBody">
+                  <!-- Injecté dynamiquement par renderCertificatsTable() -->
                 </tbody>
               </table>
             </div>
@@ -1190,35 +1380,36 @@
     </div>
   </div>
 
-  <!-- 4. Modal Nouvel Élève / Talibé -->
+  <!-- 4. Modal Nouvel Élève / Talibé / Étudiant -->
   <div class="modal-backdrop" id="modalNewEleve">
     <div class="modal-window">
       <div class="modal-header">
-        <div class="modal-title">➕ Nouvelle Inscription (Élève / Talibé)</div>
+        <div class="modal-title" id="modalNewEleveTitle">➕ Inscription d'un Nouvel Apprenant</div>
         <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Prénom de l'enfant</label>
+            <label class="form-label" id="modalNewElevePrenomLabel">Prénom de l'apprenant</label>
             <input type="text" id="newPrenom" class="form-control" placeholder="Ex: Ousmane">
           </div>
           <div class="form-group">
-            <label class="form-label">Nom de famille</label>
+            <label class="form-label" id="modalNewEleveNomLabel">Nom de famille</label>
             <input type="text" id="newNom" class="form-control" placeholder="Ex: Ndiaye">
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Type d'Élève</label>
-            <select id="newType" class="form-control">
+            <label class="form-label" id="modalNewEleveTypeLabel">Type d'Établissement &amp; Profil</label>
+            <select id="newType" class="form-control" onchange="handleNewEleveTypeChange(this.value)">
               <option value="TALIBE">🕌 Talibé Daara Moderne (Internat / Hifz)</option>
               <option value="SCOLAIRE">🏫 Élève École Privée (CI à Terminale)</option>
+              <option value="ETUDIANT">🎓 Étudiant Institut / BTS / Supérieur</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Téléphone Parent (WhatsApp)</label>
+            <label class="form-label" id="modalNewEleveParentTelLabel">Téléphone Contact (WhatsApp)</label>
             <input type="text" id="newParentTel" class="form-control" value="+221 77 ">
           </div>
         </div>
@@ -1234,14 +1425,65 @@
           </div>
         </div>
 
+        <!-- Section Spécifique Institut & BTS -->
+        <div id="newInstitutGroup" style="display: none; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.85rem; font-weight: 800; color: #38BDF8; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem;">
+            <span>🎓</span> <span>Spécificités Formation Professionnelle &amp; Supérieure</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Diplôme Préparé</label>
+              <select id="newStudentDiplome" class="form-control">
+                <option value="BTS (Brevet de Technicien Supérieur)">BTS (Brevet de Technicien Supérieur)</option>
+                <option value="Licence Professionnelle (L3)">Licence Professionnelle (L3)</option>
+                <option value="CAP (Certificat d'Aptitude)">CAP (Certificat d'Aptitude Pro)</option>
+                <option value="CQP (Qualification Professionnelle)">CQP (Qualification Pro)</option>
+                <option value="Master Professionnel">Master Professionnel</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Statut Convention de Stage</label>
+              <select id="newStudentStatutStage" class="form-control">
+                <option value="En recherche active">En recherche active de stage</option>
+                <option value="Convention validée">Convention de stage validée</option>
+                <option value="En immersion entreprise">En immersion entreprise</option>
+                <option value="Stage soutenu & validé">Stage soutenu &amp; validé</option>
+                <option value="Salarié / Dispense">Salarié / Dispense de stage</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Entreprise Partenaire (Convention Tripartite)</label>
+            <input type="text" id="newStudentEntreprise" class="form-control" placeholder="Ex: Sonatel, Wave Digital Finance, TotalEnergies, CBAO, AGL, Free...">
+          </div>
+        </div>
+
+        <div class="form-row" id="newStudentClassRow" style="display: none;">
+          <div class="form-group" style="width: 100%;">
+            <label class="form-label" id="modalNewEleveClassLabel">Filière / Niveau d'étude</label>
+            <input type="text" id="newStudentClasseInput" class="form-control" list="vocationalFilieresList" placeholder="Ex: BTS 1 - Informatique &amp; Génie Logiciel">
+            <datalist id="vocationalFilieresList">
+              <option value="BTS 1 - Informatique &amp; Génie Logiciel">
+              <option value="BTS 2 - Informatique &amp; Génie Logiciel">
+              <option value="BTS 1 - Comptabilité &amp; Gestion des Entreprises (CGE)">
+              <option value="BTS 2 - Comptabilité &amp; Gestion des Entreprises (CGE)">
+              <option value="BTS 1 - Commerce International &amp; Transit">
+              <option value="BTS 2 - Commerce International &amp; Transit">
+              <option value="Licence 3 Pro - Finance, Banque &amp; Audit">
+              <option value="CAP - Électricité &amp; Électromécanique">
+              <option value="CQP - Maintenance Réseaux &amp; Systèmes">
+            </datalist>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="form-label">Nom complet du Parent / Tuteur</label>
+          <label class="form-label" id="modalNewEleveParentNomLabel">Responsable légal ou contact d'urgence</label>
           <input type="text" id="newParentNom" class="form-control" placeholder="Ex: M. Cheikh Ndiaye">
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
-        <button type="button" class="btn btn-primary" onclick="submitNewEleve()">✓ Confirmer l'Inscription</button>
+        <button type="button" class="btn btn-primary" id="modalNewEleveSubmitBtn" onclick="submitNewEleve()">✓ Confirmer l'Inscription</button>
       </div>
     </div>
   </div>
@@ -1341,9 +1583,9 @@
           </div>
         </div>
 
-        <!-- Élève / Talibé concerné -->
+        <!-- Élève / Talibé / Étudiant concerné -->
         <div class="form-group">
-          <label class="form-label">Élève ou Talibé concerné</label>
+          <label class="form-label" id="labelPayEleveConcerned">Apprenant concerné</label>
           <select id="payEleveSelect" class="form-control" onchange="onEncaissementStudentChanged()">
             <!-- Rempli dynamiquement -->
           </select>
@@ -1352,13 +1594,13 @@
         <!-- Motif & Montant -->
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Motif du Règlement</label>
+            <label class="form-label" id="labelPayMotif">Motif du Règlement</label>
             <select id="payMotifSelect" class="form-control" onchange="onEncaissementMotifChanged()">
               <option value="PENSION_INTERNAT">Pension &amp; Internat Daara</option>
-              <option value="SCOLARITE_MENSUELLE" selected>Scolarité Mensuelle</option>
+              <option value="SCOLARITE_MENSUELLE" selected>Scolarité Mensuelle / Frais Formation</option>
               <option value="INSCRIPTION">Frais d'Inscription &amp; Dossier</option>
               <option value="CANTINE">Cantine &amp; Restauration</option>
-              <option value="FOURNITURES">Tenue &amp; Fournitures Scolaires</option>
+              <option value="FOURNITURES">Tenue &amp; Fournitures</option>
             </select>
           </div>
           <div class="form-group">
@@ -1370,7 +1612,7 @@
         <!-- Coordonnées Payeur -->
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Nom du Parent / Payeur</label>
+            <label class="form-label" id="labelPayPayeurNom">Responsable légal ou contact d'urgence</label>
             <input type="text" id="payPayeurNom" class="form-control" value="M. Ibrahima Sow">
           </div>
           <div class="form-group">
@@ -1604,8 +1846,8 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Parent Référent</th>
-                <th>Élève / Talibé</th>
+                <th id="thParentKeysParent">Responsable légal ou contact</th>
+                <th id="thParentKeysStudent">Apprenant (Nom &amp; Matricule)</th>
                 <th>Clé d'Accès Unique</th>
                 <th>Action Immédiate</th>
               </tr>
@@ -1643,10 +1885,10 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Élève / Talibé</th>
-                <th>Classe</th>
-                <th>Statut Présence</th>
-                <th>Alerte Immédiate Parent</th>
+                <th id="thAttendanceStudent">Apprenant</th>
+                <th id="thAttendanceClass">Niveau / Classe / Filière</th>
+                <th id="thAttendanceStatus">Statut Présence</th>
+                <th id="thAttendanceAlert">Alerte Contact / Parent</th>
               </tr>
             </thead>
             <tbody id="attendanceTable">
@@ -1682,7 +1924,7 @@
         <!-- Barre de Sélection de l'Élève & Période -->
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.25rem; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <label class="form-label" style="margin: 0; white-space: nowrap; font-weight: 700;">👤 Élève à évaluer :</label>
+            <label class="form-label" id="labelGradesEntryStudent" style="margin: 0; white-space: nowrap; font-weight: 700;">👤 Apprenant à évaluer :</label>
             <select id="gradesEntryStudentSelect" class="form-control" style="min-width: 260px;" onchange="onGradesStudentSelected(this.value)">
               <!-- Options dynamiques des élèves scolaires -->
             </select>
@@ -1880,18 +2122,48 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Matière / Séance Pédagogique</label>
-          <input type="text" id="editSlotSubject" class="form-control" placeholder="Ex: Mathématiques ou Hifz &amp; Tajwîd">
+          <label class="form-label" id="editSlotSubjectLabel">Matière / Module / Séance Pédagogique</label>
+          <input type="text" id="editSlotSubject" class="form-control" list="vocationalModulesDatalist" placeholder="Ex: Mathématiques, Génie Logiciel ou Hifz">
+          <datalist id="vocationalModulesDatalist">
+            <option value="Algorithmique &amp; Python Avancé">
+            <option value="Architecture Web &amp; APIs REST">
+            <option value="Bases de Données &amp; SQL (PostgreSQL)">
+            <option value="Réseaux Informatiques &amp; Sécurité">
+            <option value="Comptabilité Approfondie SYSCOHADA">
+            <option value="Fiscalité &amp; Déclarations d'Entreprise">
+            <option value="Droit Commercial Général OHADA">
+            <option value="Audit &amp; Contrôle de Gestion">
+            <option value="Douane, Tarifs Extérieurs &amp; GAINDE">
+            <option value="Logistique Internationale &amp; Fret">
+            <option value="Atelier Électricité &amp; Automatisme">
+            <option value="Anglais Professionnel &amp; Soutenance">
+          </datalist>
+        </div>
+
+        <!-- Suggestions de modules rapides (Chips) -->
+        <div id="editSlotPresetsWrapper" style="margin-bottom: 0.85rem;">
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">⚡ Suggestions rapides pour ce créneau :</div>
+          <div id="editSlotPresetsChips" style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+            <!-- Rempli dynamiquement par JS selon Institut / Daara / École -->
+          </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Enseignant ou Oustaz</label>
-            <input type="text" id="editSlotTeacher" class="form-control" placeholder="Ex: M. Ba ou Oustaz Ndiaye">
+            <label class="form-label" id="editSlotTeacherLabel">Enseignant / Formateur / Oustaz</label>
+            <input type="text" id="editSlotTeacher" class="form-control" list="vocationalTrainersDatalist" placeholder="Ex: M. Ba, Dr. Cissé ou Oustaz Ndiaye">
+            <datalist id="vocationalTrainersDatalist">
+              <option value="Dr. Mamadou Cissé">
+              <option value="Ing. Abdoulaye Ndiaye">
+              <option value="Me Aminata Diop">
+              <option value="M. Cheikh Sy">
+              <option value="Mme Aïssatou Fall">
+              <option value="M. Ousmane Niang">
+            </datalist>
           </div>
           <div class="form-group">
-            <label class="form-label">Salle / Pavillon</label>
-            <input type="text" id="editSlotRoom" class="form-control" placeholder="Ex: Salle B12 ou Salle Coran A">
+            <label class="form-label" id="editSlotRoomLabel">Salle / Atelier / Laboratoire</label>
+            <input type="text" id="editSlotRoom" class="form-control" placeholder="Ex: Labo Info 1, Amphi A, Atelier Élec">
           </div>
         </div>
       </div>
@@ -1930,9 +2202,10 @@
             <div class="form-group">
               <label class="form-label">Cycle Pédagogique</label>
               <select id="createTimetableNewClassCycle" class="form-control">
-                <option value="Primaire">Primaire (CI - CM2)</option>
-                <option value="Moyen">Moyen (6ème - 3ème)</option>
+                <option value="Formation Professionnelle">🎓 Formation Professionnelle (BTS, CAP, CQP, Métiers)</option>
                 <option value="Secondaire">Secondaire (2nde - Tle)</option>
+                <option value="Moyen">Moyen (6ème - 3ème)</option>
+                <option value="Primaire">Primaire (CI - CM2)</option>
                 <option value="Daara">Daara Coranique</option>
               </select>
             </div>
@@ -1947,6 +2220,7 @@
           <label class="form-label">Modèle Pédagogique de Départ (Template)</label>
           <select id="createTimetableTemplateSelect" class="form-control">
             <option value="auto">✨ Modèle Adapté Automatique (Recommandé)</option>
+            <option value="institut">🎓 Institut Pro &amp; BTS (Génie Logiciel, Finance, Transit, Ateliers)</option>
             <option value="college">📚 Collège Sénégalais (Maths, Français, PC, SVT, Anglais, HG, EPS)</option>
             <option value="lycee">🎓 Lycée Général (Philosophie, Maths, PC, SVT, Littérature)</option>
             <option value="primaire">✏️ Primaire (Calcul, Lecture, Éveil, Récitation, Dictée)</option>
@@ -1973,39 +2247,46 @@
         <input type="hidden" id="editDashboardClassId" value="">
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nom de la Classe / Section *</label>
-            <input type="text" id="dashboardClassNameInput" class="form-control" placeholder="Ex: CM2 A, 6ème B, Hifz Niveau 1" required>
+            <label class="form-label" id="modalDashboardClassLabelNom">Filière / Promotion *</label>
+            <input type="text" id="dashboardClassNameInput" class="form-control" placeholder="Ex: BTS 1 Génie Logiciel, CM2 A, Hifz Niveau 1" required>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Cycle Pédagogique *</label>
-              <select id="dashboardClassCycleSelect" class="form-control">
-                <option value="Maternelle">👶 Maternelle / Préscolaire</option>
-                <option value="Élémentaire" selected>📚 Élémentaire / Primaire</option>
-                <option value="Collège">🏫 Collège (Moyen)</option>
-                <option value="Lycée">🎓 Lycée (Secondaire)</option>
-                <option value="Daara">🕌 Daara Moderne Coranique</option>
+              <label class="form-label" id="modalDashboardClassLabelCycle">Cycle / Type de Formation *</label>
+              <select id="dashboardClassCycleSelect" class="form-control" onchange="toggleDashboardCustomCycle(this.value)">
+                <option value="BTS">BTS</option>
+                <option value="CAP">CAP</option>
+                <option value="BEP">BEP</option>
+                <option value="BT">BT</option>
+                <option value="Licence">Licence</option>
+                <option value="Master">Master</option>
+                <option value="Formation Continue">Formation Continue</option>
+                <option value="Certification Professionnelle">Certification Professionnelle</option>
+                <option value="Formation Qualifiante">Formation Qualifiante</option>
+                <option value="Formation Modulaire">Formation Modulaire</option>
+                <option value="__CUSTOM_CYCLE__">✍️ Autre cycle / niveau (saisie libre)...</option>
               </select>
+              <input type="text" id="dashboardClassCustomCycleInput" class="form-control" placeholder="Ex: Titre Professionnel, Mastère..." style="display: none; margin-top: 0.45rem;">
             </div>
             <div class="form-group">
               <label class="form-label">Capacité Maximale</label>
-              <input type="number" id="dashboardClassCapacityInput" class="form-control" value="45" min="10" max="100">
+              <input type="number" id="dashboardClassCapacityInput" class="form-control" value="45" min="5" max="100">
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Salle / Bâtiment</label>
-              <input type="text" id="dashboardClassRoomInput" class="form-control" placeholder="Ex: Salle 12, Pavillon B">
+              <label class="form-label" id="modalDashboardClassLabelRoom">Salle / Amphi / Labo</label>
+              <input type="text" id="dashboardClassRoomInput" class="form-control" placeholder="Ex: Labo Info 1, Amphi A, Salle 12">
             </div>
             <div class="form-group">
-              <label class="form-label">Professeur Principal / Référent</label>
-              <input type="text" id="dashboardClassTeacherInput" class="form-control" placeholder="Ex: M. Abdoulaye Diallo">
+              <label class="form-label" id="modalDashboardClassLabelTeacher">Responsable Pédagogique / Référent</label>
+              <input type="text" id="dashboardClassTeacherInput" class="form-control" placeholder="Ex: Dr. Diallo, Ing. Ndiaye">
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
-          <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); font-weight: 700;">✓ Enregistrer la Classe</button>
+          <button type="submit" id="modalDashboardClassSubmitBtn" class="btn btn-primary" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); font-weight: 700;">✓ Enregistrer</button>
         </div>
       </form>
     </div>
@@ -2061,7 +2342,7 @@
           </div>
 
           <div class="form-group" style="margin-top: 0.5rem;">
-            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" id="modalDashboardTeacherClassesLabel" style="display: flex; justify-content: space-between; align-items: center;">
               <span>Classes Affectées (Cliquer pour assigner / retirer) :</span>
               <small style="color: var(--primary); font-size: 0.72rem;">Multi-sélection active</small>
             </label>
@@ -2072,7 +2353,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
-          <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); font-weight: 700;">✓ Valider le Contrat Enseignant</button>
+          <button type="submit" id="modalDashboardTeacherSubmitBtn" class="btn btn-primary" style="background: linear-gradient(135deg, #00D2B4, #3B82F6); font-weight: 700;">✓ Valider le Contrat Enseignant</button>
         </div>
       </form>
     </div>
@@ -2170,12 +2451,144 @@
     </div>
   </div>
 
+  <!-- ==================== 21. MODAL NOUVELLE CONVENTION TRIPARTITE DE STAGE ==================== -->
+  <div class="modal-backdrop" id="modalNewConvention">
+    <div class="modal-window" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title">🤝 Établir une Convention Tripartite de Stage</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Convention officielle conforme au Code du Travail sénégalais et aux directives du Ministère de l'Enseignement Supérieur (MESRI/MFPAI).
+        </p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Étudiant Stagiaire *</label>
+            <select id="convStudentSelect" class="form-control" onchange="onConventionStudentSelectChange()">
+              <!-- Rempli dynamiquement -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Filière &amp; Niveau</label>
+            <input type="text" id="convFiliereInput" class="form-control" readonly style="background: rgba(255,255,255,0.05); color: #38BDF8;">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Entreprise d'Accueil Partenaire *</label>
+            <input type="text" id="convEntrepriseInput" class="form-control" list="entreprisesPartenairesList" placeholder="Ex: Sonatel, Wave, TotalEnergies, CBAO...">
+            <datalist id="entreprisesPartenairesList">
+              <option value="Sonatel (Orange Sénégal)">
+              <option value="Wave Digital Finance">
+              <option value="TotalEnergies Marketing Sénégal">
+              <option value="CBAO Groupe Attijariwafa bank">
+              <option value="Africa Global Logistics (AGL Sénégal)">
+              <option value="Free Sénégal (Saga Africa)">
+              <option value="Société Générale Sénégal">
+              <option value="Port Autonome de Dakar (PAD)">
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Siège / Adresse Entreprise</label>
+            <input type="text" id="convAdresseEntrepriseInput" class="form-control" placeholder="Ex: Boulevard de la République, Dakar">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tuteur Professionnel (Maître de stage)</label>
+            <input type="text" id="convTuteurEntrepriseInput" class="form-control" placeholder="Ex: M. Babacar Ndiaye (Lead Tech)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone / Contact Tuteur</label>
+            <input type="text" id="convTelTuteurInput" class="form-control" placeholder="+221 77 ">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tuteur Pédagogique (Institut)</label>
+            <input type="text" id="convTuteurPedagogiqueInput" class="form-control" placeholder="Ex: Dr. Mamadou Cissé">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Indemnité de Stage (Gratification)</label>
+            <input type="text" id="convIndemniteInput" class="form-control" placeholder="Ex: 75 000 FCFA / mois" value="75 000 FCFA / mois">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date de Début</label>
+            <input type="date" id="convDateDebutInput" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date de Fin</label>
+            <input type="date" id="convDateFinInput" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Missions Professionnelles &amp; Projet du Stagiaire</label>
+          <textarea id="convMissionInput" class="form-control" rows="2" placeholder="Ex: Conception et intégration d'une API de gestion de stock, documentation technique et participation aux revues de code."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="submitNewConvention()" style="background: linear-gradient(135deg, #10B981, #00D2B4); border: none; font-weight: 700;">
+          ✓ Valider &amp; Générer la Convention Tripartite
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 22. MODAL VISUALISATION & IMPRESSION CONVENTION TRIPARTITE A4 ==================== -->
+  <div class="modal-backdrop" id="modalOfficialConvention">
+    <div class="modal-window" style="max-width: 860px;">
+      <div class="modal-header">
+        <div class="modal-title">📄 Convention Tripartite de Stage en Entreprise</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body" id="officialConventionRenderArea" style="max-height: 75vh; overflow-y: auto;">
+        <!-- Généré par dashboard.js -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()" style="background: linear-gradient(135deg, #0284C7, #00D2B4); border: none; font-weight: 700;">
+          🖨️ Imprimer la Convention Officielle (A4)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 23. MODAL DIPLÔME / ATTESTATION LMD AVEC QR CODE ==================== -->
+  <div class="modal-backdrop" id="modalOfficialCertificate">
+    <div class="modal-window" style="max-width: 860px;">
+      <div class="modal-header">
+        <div class="modal-title">📜 Document Officiel Sécurisé (Attestation &amp; QR Code)</div>
+        <button type="button" class="modal-close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="modal-body" id="officialCertificateRenderArea" style="max-height: 75vh; overflow-y: auto;">
+        <!-- Généré par dashboard.js -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Fermer</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()" style="background: linear-gradient(135deg, #F59E0B, #D97706); border: none; font-weight: 700;">
+          🖨️ Imprimer le Document Officiel A4
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Flottant -->
   <div id="appToast">
     <span>✅</span>
     <div id="toastMessage">Opération réussie</div>
   </div>
 
+  <script src="supabase-client.js?v=4.1.8"></script>
   <script src="dashboard.js?v=4.1.8"></script>
 </body>
 

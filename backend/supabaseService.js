@@ -6,11 +6,13 @@
 
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 
+const DEFAULT_VALID_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3cm5ranprd3psenpvY2ZueHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MDUzMDgsImV4cCI6MjEwNjE4MTMwOH0.hkDRg0Tl36OPnSkd0SbCttp3cnUY53JJzluXrLasCP4';
 let SUPABASE_URL = process.env.SUPABASE_URL || 'https://hwrnkjzkwzlzzocfnxww.supabase.co';
 let SUPABASE_KEY = process.env.SUPABASE_KEY;
 
-if (!SUPABASE_KEY) {
+if (!SUPABASE_KEY || SUPABASE_KEY.startsWith('sb_secret_')) {
   try {
     const envFile = path.join(__dirname, '.env');
     if (fs.existsSync(envFile)) {
@@ -18,11 +20,18 @@ if (!SUPABASE_KEY) {
       lines.forEach(l => {
         const line = l.trim();
         if (line && line.startsWith('SUPABASE_KEY=')) {
-          SUPABASE_KEY = line.split('=')[1].trim();
+          const val = line.split('=')[1].trim();
+          if (val && !val.startsWith('sb_secret_')) {
+            SUPABASE_KEY = val;
+          }
         }
       });
     }
   } catch(e) {}
+}
+
+if (!SUPABASE_KEY || SUPABASE_KEY.startsWith('sb_secret_')) {
+  SUPABASE_KEY = DEFAULT_VALID_KEY;
 }
 
 function supabaseRequest(path, method = 'GET', body = null, extraHeaders = {}) {

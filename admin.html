@@ -1007,7 +1007,7 @@
         <li>
           <a class="admin-nav-item" id="navTabQuotes" onclick="switchAdminTab('quotes')">
             <span>📋</span>
-            <span>Devis Enterprise &amp; Demandes</span>
+            <span>Devis Établissement &amp; Demandes</span>
             <span class="admin-nav-badge" id="pendingQuotesBadge" style="background: #8B5CF6;">0</span>
           </a>
         </li>
@@ -1035,12 +1035,19 @@
             <span>Monitoring &amp; ISO 27001</span>
           </a>
         </li>
+        <li>
+          <a class="admin-nav-item" id="navTabPush" onclick="openPushSettingsModalHQ()">
+            <span>🔔</span>
+            <span>Notifications Directes</span>
+            <span class="admin-nav-badge" id="pushBadgeSidebar" style="background: #3B82F6;">OFF</span>
+          </a>
+        </li>
       </ul>
 
       <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #64748B;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
           <span>Version SaaS</span>
-          <strong style="color: #10B981; font-weight: 800;">v3.9.9 Cloud Direct</strong>
+          <strong style="color: #10B981; font-weight: 800;">v4.2.0 Push Live</strong>
         </div>
         <button type="button" onclick="hardRefreshAdmin()" style="width: 100%; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); color: var(--gold-light); font-size: 0.72rem; padding: 0.45rem; border-radius: 6px; cursor: pointer; font-weight: 700; margin-bottom: 0.5rem; transition: background 0.2s;" title="Efface le cache du téléphone et recharge immédiatement">
           🔄 Vider Cache &amp; Recharger
@@ -1068,6 +1075,13 @@
         </div>
 
         <div class="admin-topbar-right">
+          <!-- Bouton Notifications Push (Mobile & PC) -->
+          <button id="btnPushAdminSubscribe" onclick="openPushSettingsModalHQ()" class="btn-action-view" style="padding: 0.42rem 0.8rem; font-size: 0.82rem; font-weight: 700; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 8px;" title="Gérer et activer les notifications push directes sur ce téléphone ou PC">
+            <span id="pushIconDisplay">🔔</span>
+            <span id="pushTextDisplay" class="reset-text-desktop">Alertes Push</span>
+            <span class="reset-text-mobile">🔔</span>
+          </button>
+
           <div id="cloudStatusBadge" class="admin-cloud-badge offline" onclick="checkBackendOnline(updateCloudBadgeUI)" title="Cliquer pour retester la connexion au Cloud Render">
             <span class="cloud-dot"></span>
             <span id="cloudStatusText" class="cloud-text-full">Connexion Cloud...</span>
@@ -1179,12 +1193,12 @@
           </div>
         </section>
 
-        <!-- ==================== VUE 1.5 : DEMANDES DE DEVIS ENTERPRISE & SURCLASSEMENTS ==================== -->
+        <!-- ==================== VUE 1.5 : DEMANDES DE DEVIS ÉTABLISSEMENT & SURCLASSEMENTS ==================== -->
         <section id="viewQuotes" class="admin-tab-view" style="display: none;">
           <div class="admin-table-container">
             <div class="admin-view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
               <div>
-                <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">📋 Demandes de Devis Enterprise &amp; Surclassements</h2>
+                <h2 style="margin: 0; font-size: 1.2rem; color: #FFFFFF;">📋 Demandes de Devis Établissement &amp; Surclassements</h2>
                 <p style="margin: 0.2rem 0 0; font-size: 0.82rem; color: #94A3B8;">
                   Demandes de devis réseau multi-campus et demandes de passage vers les formules supérieures.
                 </p>
@@ -1258,7 +1272,7 @@
                 <option value="STARTER">Formule Starter (15k)</option>
                 <option value="PRO">Formule Pro (25k)</option>
                 <option value="DAARA">Daara Moderne (15k)</option>
-                <option value="ENTERPRISE">Formule Enterprise (50k)</option>
+                <option value="ENTERPRISE">Formule Établissement (50k)</option>
               </select>
               <select id="filterEtabsStatus" class="admin-filter-select" onchange="handleFilterEtabsStatus(this.value)">
                 <option value="ALL">Tous les statuts</option>
@@ -1489,6 +1503,7 @@
             <select id="editEtabType" class="admin-form-control">
               <option value="ECOLE">🏫 École Privée / Collège / Lycée</option>
               <option value="DAARA">🕌 Daara Moderne / Institut Coranique</option>
+              <option value="FORMATION_PRO">🎓 Institut / Centre de Formation Pro &amp; Technique</option>
               <option value="GROUPE">🏢 Groupe Multi-Campus</option>
             </select>
           </div>
@@ -1520,11 +1535,14 @@
           <div class="admin-form-group">
             <label>Formule d'Abonnement</label>
             <select id="editEtabPlan" class="admin-form-control" onchange="handleEditPlanChange(this.value)">
-              <option value="Essai Gratuit">Essai Gratuit 30 Jours</option>
-              <option value="Formule Starter">Formule Starter (15 000 FCFA / mois)</option>
-              <option value="Formule Pro">Formule Pro (25 000 FCFA / mois)</option>
-              <option value="Formule Daara Moderne">Formule Daara Moderne (15 000 FCFA / mois)</option>
-              <option value="Formule Enterprise">Formule Enterprise Multi-Campus (50 000 FCFA / mois)</option>
+              <option value="Starter">Formule Starter (20 000 FCFA / mois)</option>
+              <option value="Formule Pro">Formule Pro (55 000 FCFA / mois)</option>
+              <option value="Premium">Formule Premium (85 000 FCFA / mois)</option>
+              <option value="Standard Daara">Standard Daara (35 000 FCFA / mois)</option>
+              <option value="Pack Internat Promo Daara">Pack Internat Daara (20 000 FCFA / mois)</option>
+              <option value="Institut Starter">Institut Starter (45 000 FCFA / mois)</option>
+              <option value="Institut Pro">Institut Pro (75 000 FCFA / mois)</option>
+              <option value="Grande École / Multi-Campus">Grande École / Multi-Campus (150 000 FCFA / mois)</option>
             </select>
           </div>
         </div>
@@ -1594,7 +1612,74 @@
     </div>
   </div>
 
-  <script src="supabase-client.js?v=4.1.8"></script>
-  <script src="admin.js?v=4.1.8"></script>
+  <!-- ==================== MODAL NOTIFICATIONS PUSH HQ ==================== -->
+  <div id="modalPushSettingsHQ" class="admin-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 9999;">
+    <div class="admin-modal-card" style="max-width: 540px; border-top: 4px solid #3B82F6;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem;">
+        <div style="display: flex; gap: 0.8rem; align-items: center;">
+          <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            🔔
+          </div>
+          <div>
+            <h3 style="font-family: 'Outfit', sans-serif; margin: 0 0 0.2rem; font-size: 1.25rem; color: #FFFFFF;">
+              Alertes Push en Direct
+            </h3>
+            <p style="color: #94A3B8; font-size: 0.82rem; margin: 0;">
+              Notifications automatiques Téléphone &amp; Ordinateur
+            </p>
+          </div>
+        </div>
+        <button type="button" class="admin-modal-close" onclick="closePushSettingsModalHQ()">✕</button>
+      </div>
+
+      <!-- Statut actuel de l'appareil -->
+      <div id="pushStatusBanner" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <span style="font-size: 0.82rem; color: #CBD5E1; font-weight: 700;">État sur cet appareil :</span>
+          <span id="pushStatusPill" style="font-size: 0.76rem; font-weight: 800; padding: 0.25rem 0.7rem; border-radius: 99px; background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.4);">
+            ⏳ En attente
+          </span>
+        </div>
+        <div id="pushStatusDesc" style="font-size: 0.8rem; color: #94A3B8; line-height: 1.4;">
+          Activez les alertes pour être prévenu sur votre écran dès qu'une nouvelle école ou un nouveau daara s'inscrit.
+        </div>
+      </div>
+
+      <!-- Actions de configuration -->
+      <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.4rem;">
+        <button type="button" id="btnMainPushToggle" onclick="handlePushSubscribeClick()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFFFFF; font-weight: 800; padding: 0.8rem 1.2rem; border: none; border-radius: 8px; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35); transition: all 0.2s;">
+          <span>🔔</span>
+          <span id="btnMainPushToggleText">Activer les Notifications Push sur cet appareil</span>
+        </button>
+
+        <button type="button" id="btnTestPushNow" onclick="testPushNotificationAdmin()" style="background: rgba(255, 255, 255, 0.06); color: #F8FAFC; border: 1px solid rgba(255, 255, 255, 0.15); font-weight: 700; padding: 0.7rem 1.2rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+          <span>⚡</span>
+          <span>Tester la notification sur mon écran maintenant</span>
+        </button>
+      </div>
+
+      <!-- Événements déclencheurs -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem; margin-bottom: 1.2rem;">
+        <div style="font-size: 0.78rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase; margin-bottom: 0.6rem; letter-spacing: 0.5px;">
+          Vous recevrez une alerte directe pour :
+        </div>
+        <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.8rem; color: #94A3B8; line-height: 1.6;">
+          <li><strong style="color: #60A5FA;">Nouvelle demande d'adhésion :</strong> école privée ou daara avec coordonnées complètes.</li>
+          <li><strong style="color: #10B981;">Confirmation de paiement Wave :</strong> virement d'adhésion de 10 000 FCFA avec référence.</li>
+          <li><strong style="color: #F59E0B;">Demande de devis personnalisé :</strong> formule multi-campus et grands réseaux.</li>
+        </ul>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="button" onclick="closePushSettingsModalHQ()" class="btn-action-reject" style="padding: 0.55rem 1.2rem; font-size: 0.85rem;">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="supabase-client.js?v=4.2.0"></script>
+  <script src="admin.js?v=4.2.0"></script>
 </body>
 </html>
+

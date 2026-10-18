@@ -3,7 +3,7 @@
  * Cache-First Strategy pour fonctionnement 100% autonome sans Internet
  */
 
-const CACHE_NAME = 'sunuschool-pwa-v4.1.8';
+const CACHE_NAME = 'sunuschool-pwa-v4.2.0';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -18,6 +18,9 @@ const ASSETS_TO_CACHE = [
   './admin.js?v=4.1.8',
   './manifest.json',
   './assets/icons/favicon.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/icons/apple-touch-icon.png',
   './assets/icons/app-download.png',
   './assets/logo.svg',
   './assets/logo-icon.svg'
@@ -104,6 +107,51 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       });
+    })
+  );
+});
+
+// 4. RÉCEPTION DES NOTIFICATIONS PUSH W3C (Mobile Android / iOS PWA & Ordinateur PC/Mac)
+self.addEventListener('push', (event) => {
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { title: '🔔 SunuSchool Express HQ', body: event.data.text() };
+    }
+  }
+
+  const title = data.title || '🔔 Nouvelle Demande Établissement — SunuSchool HQ';
+  const options = {
+    body: data.body || 'Une nouvelle demande d\'adhésion d\'école ou de daara a été enregistrée.',
+    icon: data.icon || './assets/icons/icon-192.png',
+    badge: data.badge || './assets/icons/icon-192.png',
+    vibrate: [200, 100, 200, 100, 200],
+    tag: data.tag || 'sse-etab-notification',
+    renotify: true,
+    requireInteraction: true,
+    data: data.data || { url: './admin.html' }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// 5. CLIC SUR LA NOTIFICATION PUSH : OUVRE OU FOCUS DIRECT SUR L'ADMIN HQ
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || './admin.html';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url && client.url.includes('admin.html') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });

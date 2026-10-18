@@ -6331,6 +6331,36 @@ html[data-theme="light"] .ws-etab-selector {
   color: #34D399;
 }
 
+.course-it {
+  background: rgba(56, 189, 248, 0.16);
+  border-left: 3px solid #38BDF8;
+  color: #7DD3FC;
+}
+
+.course-finance {
+  background: rgba(16, 185, 129, 0.16);
+  border-left: 3px solid #10B981;
+  color: #6EE7B7;
+}
+
+.course-transit {
+  background: rgba(0, 210, 180, 0.16);
+  border-left: 3px solid #00D2B4;
+  color: #5EEAD4;
+}
+
+.course-atelier {
+  background: rgba(168, 85, 247, 0.16);
+  border-left: 3px solid #A855F7;
+  color: #D8B4FE;
+}
+
+.course-soft {
+  background: rgba(245, 158, 11, 0.16);
+  border-left: 3px solid #F59E0B;
+  color: #FCD34D;
+}
+
 .course-fr {
   background: rgba(0, 210, 180, 0.15);
   border-left: 3px solid #00D2B4;
@@ -7713,9 +7743,9 @@ html[data-theme="light"] .ws-etab-selector {
 .app-download-symbol-img {
   width: 38px;
   height: 38px;
-  border-radius: 50%;
+  border-radius: 9px;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
   transition: filter 0.25s ease, box-shadow 0.25s ease;
   pointer-events: none;
@@ -7752,13 +7782,30 @@ iframe#netlify-drawer,
 div[class*="netlify-drawer"],
 div[id*="netlify-drawer"],
 button[class*="netlify"],
-[data-testid="feedback-trigger"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+/* ==============================================================================
+   PROMPT D'INSTALLATION AUTOMATIQUE PWA (PC & MOBILE)
+   ============================================================================== */
+@keyframes pwaSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
+#pwaDirectAutoPrompt {
+  animation: pwaSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
-
-
+@media (max-width: 600px) {
+  #pwaDirectAutoPrompt {
+    bottom: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}
