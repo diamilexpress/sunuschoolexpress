@@ -3,7 +3,7 @@
  * Cache-First Strategy pour fonctionnement 100% autonome sans Internet
  */
 
-const CACHE_NAME = 'sunuschool-pwa-v4.2.0';
+const CACHE_NAME = 'sunuschool-pwa-v4.2.1';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -12,10 +12,10 @@ const ASSETS_TO_CACHE = [
   './admin.html',
   './dashboard.css',
   './styles.css',
-  './dashboard.js?v=4.1.8',
-  './supabase-client.js?v=4.1.8',
-  './app.js?v=4.1.8',
-  './admin.js?v=4.1.8',
+  './dashboard.js?v=4.2.1',
+  './supabase-client.js?v=4.2.1',
+  './app.js?v=4.2.1',
+  './admin.js?v=4.2.1',
   './manifest.json',
   './assets/icons/favicon.svg',
   './assets/icons/icon-192.png',
@@ -60,6 +60,9 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith('http')) return;
+
+  // IMPORTANT : Ne JAMAIS intercepter les requêtes vers des domaines externes (Supabase Cloud, Render, Wave, QR...)
+  if (url.origin !== self.location.origin) return;
   if (url.pathname.includes('/api/')) return;
 
   const isNavigate = event.request.mode === 'navigate';
@@ -96,17 +99,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Autres ressources (images, favicons, fonts) : Cache-First
+  // Autres ressources locales (images, favicons, fonts) : Cache-First avec fallback sécurisé
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
-      return fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const resClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
-        }
-        return networkResponse;
-      });
+      return fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const resClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return new Response('', { status: 404, statusText: 'Not Found' });
+        });
     })
   );
 });

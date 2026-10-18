@@ -5411,11 +5411,13 @@ function activateDedicatedWorkspace(est) {
   const lockAccounting = document.getElementById('wsLockAccounting');
   const navHR = document.getElementById('wsNavHR');
   const lockHR = document.getElementById('wsLockHR');
+  const navHRText = document.getElementById('wsNavHRText');
 
   const mobAccounting = document.getElementById('wsMobNavAccounting');
   const mobLockAccounting = document.getElementById('wsMobLockAccounting');
   const mobHR = document.getElementById('wsMobNavHR');
   const mobLockHR = document.getElementById('wsMobLockHR');
+  const mobHRText = document.getElementById('wsMobNavHRText');
 
   const navLibText = document.getElementById('wsNavLibText');
   const mobNavLibText = document.getElementById('wsMobNavLibText');
@@ -5700,9 +5702,12 @@ function activateDedicatedWorkspace(est) {
     if (navPayConfig) navPayConfig.style.display = 'flex';
 
     // Quotas & KPIs Spécifiques Institut Pro
-    document.getElementById('wsKpiQuota').textContent = 'Étudiants et filières illimités (Formule Institut Pro)';
-    document.getElementById('wsKpiLabelCustom1').textContent = 'Taux de Réussite BTS';
-    document.getElementById('wsKpiLabelCustom2').textContent = 'Conventions de Stage Actives';
+    const kpiQuota = document.getElementById('wsKpiQuota');
+    if (kpiQuota) kpiQuota.textContent = 'Étudiants et filières illimités (Formule Institut Pro)';
+    const kpiCustom1 = document.getElementById('wsKpiLabelCustom1');
+    if (kpiCustom1) kpiCustom1.textContent = 'Taux de Réussite BTS';
+    const kpiCustom2 = document.getElementById('wsKpiLabelCustom2');
+    if (kpiCustom2) kpiCustom2.textContent = 'Conventions de Stage Actives';
 
   } else {
     // ÉCOLES ORDINAIRES
