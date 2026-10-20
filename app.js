@@ -4722,6 +4722,23 @@ function validateEstablishmentAccessKey(found, keyVal) {
     if (emfKeys.includes(kClean)) return true;
   }
 
+  // 3-bis. Règle spéciale Ucads School
+  const isUcads = (found.name || '').toUpperCase().includes('UCAD') || (found.code || '').includes('6202') || (found.id || '').includes('ucad');
+  if (isUcads) {
+    const ucadsKeys = ['ADM-6202', '6202', 'UCADS', 'UCAD'];
+    if (ucadsKeys.includes(kClean)) return true;
+  }
+
+  // 3-ter. Règle spéciale Souadou Excellence
+  const isSouadou = (found.name || '').toLowerCase().includes('souadou') || 
+                    (found.code || '').includes('8734') || 
+                    (found.code || '').includes('8037') || 
+                    (found.id || '').includes('souadou');
+  if (isSouadou) {
+    const souadouKeys = ['ADM-8734', '8734', 'ADM-8037', '8037', 'SOUADOU', 'EXCELLENCE'];
+    if (souadouKeys.includes(kClean)) return true;
+  }
+
   // 4. Clé nettoyée de tout caractère spécial
   const kAlphaNum = kClean.replace(/[^A-Z0-9]/g, '');
   for (const vk of validKeys) {
@@ -4756,11 +4773,42 @@ function openWorkspaceDirect(preferredType = null) {
   }
 
   // 3. CONTRÔLE CRUCIAL : Validation administrative obligatoire par SunuSchool-Express
+  const isSouadou = (est.name || '').toLowerCase().includes('souadou') || (est.code || '').includes('8734') || (est.code || '').includes('8037');
+  if (isSouadou) {
+    est.statut = 'ACTIF';
+    est.statutAbonnement = 'ACTIF';
+    est.fraisAdhesionPayes = true;
+    try {
+      localStorage.setItem('sunuschool_establishment', JSON.stringify(est));
+      localStorage.setItem('sunuschool_active_workspace', 'true');
+    } catch(e) {}
+  }
+
   const isApproved = (est.statut === 'ACTIF' || est.statutAbonnement === 'ACTIF' || est.statutAbonnement === 'ESSAI_GRATUIT') && 
                      (est.statut !== 'EN_ATTENTE_VALIDATION') && 
                      (est.fraisAdhesionPayes !== false);
 
   if (!isApproved) {
+    // Si en attente locale mais que Supabase Cloud est disponible, interroger le cloud avant de bloquer
+    if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getEtablissements === 'function') {
+      window.SSE_SUPABASE.getEtablissements().then(cloudList => {
+        if (Array.isArray(cloudList)) {
+          const fresh = cloudList.find(e => (est.id && e.id === est.id) || (est.code && e.code === est.code) || (est.phone && e.phone === est.phone) || (est.name && e.name && e.name.toLowerCase() === est.name.toLowerCase()));
+          if (fresh && (fresh.statut === 'ACTIF' || fresh.statutAbonnement === 'ACTIF' || fresh.fraisAdhesionPayes === true)) {
+            fresh.statut = 'ACTIF';
+            fresh.statutAbonnement = 'ACTIF';
+            fresh.fraisAdhesionPayes = true;
+            localStorage.setItem('sunuschool_establishment', JSON.stringify(fresh));
+            localStorage.setItem('sunuschool_active_workspace', 'true');
+            currentEstablishment = fresh;
+            activateDedicatedWorkspace(fresh);
+            return;
+          }
+        }
+        openPendingValidationNotice(est);
+      }).catch(() => openPendingValidationNotice(est));
+      return;
+    }
     openPendingValidationNotice(est);
     return;
   }
@@ -5018,6 +5066,11 @@ async function handleAuthGateLoginSubmit(e) {
     const isUcadsTarget = estName.includes('ucad') || estCode.includes('6202') || estId.includes('ucad') || (estEmail && estEmail.includes('dakar44'));
     if (isUcadsInput && isUcadsTarget) return true;
 
+    // Support alias direct Souadou Excellence
+    const isSouadouInput = codeVal === 'SOUADOU' || codeVal.includes('8734') || codeVal.includes('8037') || rawCode.toLowerCase().includes('souadou') || rawCode.toLowerCase().includes('772599755');
+    const isSouadouTarget = estName.includes('souadou') || estCode.includes('8734') || estCode.includes('8037') || estId.includes('souadou') || (estPhone && estPhone.includes('772599755'));
+    if (isSouadouInput && isSouadouTarget) return true;
+
     return false;
   };
 
@@ -5110,6 +5163,28 @@ async function handleAuthGateLoginSubmit(e) {
     saveEstablishmentToRegistry(found);
   }
 
+  // 3-quater. Fallback garanti pour Souadou Excellence
+  if (!found && (codeVal === 'SOUADOU' || codeVal.includes('8734') || codeVal.includes('8037') || rawCode.toLowerCase().includes('souadou') || rawCode.toLowerCase().includes('772599755') || rawCode.toLowerCase().includes('excellence@email.com'))) {
+    found = {
+      id: "etab-souadouexcellence",
+      code: "SSE-SN-8734",
+      name: "Souadou Excellence",
+      type: "ECOLE",
+      city: "Dakar",
+      phone: "772599755",
+      email: "Excellence@email.com",
+      secretKey: "ADM-8734",
+      directeurNom: "Direction Souadou Excellence",
+      plan: "Formule École Pro",
+      prixMensuel: 55000,
+      effectif: 0,
+      statut: "ACTIF",
+      statutAbonnement: "ACTIF",
+      fraisAdhesionPayes: true
+    };
+    saveEstablishmentToRegistry(found);
+  }
+
   if (found) {
     // VÉRIFICATION STRICTE DE LA CLÉ D'ACCÈS
     const isKeyValid = validateEstablishmentAccessKey(found, keyVal);
@@ -5126,16 +5201,46 @@ async function handleAuthGateLoginSubmit(e) {
       return;
     }
 
-    // Assurer que EMF et Ucads School sont toujours actifs et déverrouillés
-    if ((found.name || '').toUpperCase().includes('EMF') || (found.name || '').toUpperCase().includes('UCAD') || (found.code || '').includes('6202')) {
+    // Assurer que EMF, Ucads School et Souadou Excellence sont toujours actifs et déverrouillés
+    const isApprovedBypass = (found.name || '').toUpperCase().includes('EMF') || 
+                             (found.name || '').toUpperCase().includes('UCAD') || 
+                             (found.code || '').includes('6202') ||
+                             (found.name || '').toLowerCase().includes('souadou') ||
+                             (found.code || '').includes('8734') ||
+                             (found.code || '').includes('8037') ||
+                             (found.id || '').includes('souadou');
+    if (isApprovedBypass) {
       found.statut = 'ACTIF';
       found.statutAbonnement = 'ACTIF';
       found.fraisAdhesionPayes = true;
+      saveEstablishmentToRegistry(found);
     }
 
-    const isApproved = (found.statut === 'ACTIF' || found.statutAbonnement === 'ACTIF' || found.statutAbonnement === 'ESSAI_GRATUIT') && 
-                       (found.statut !== 'EN_ATTENTE_VALIDATION') && 
-                       (found.fraisAdhesionPayes !== false);
+    let isApproved = isApprovedBypass || (
+      (found.statut === 'ACTIF' || found.statutAbonnement === 'ACTIF' || found.statutAbonnement === 'ESSAI_GRATUIT') && 
+      (found.statut !== 'EN_ATTENTE_VALIDATION') && 
+      (found.fraisAdhesionPayes !== false)
+    );
+
+    if (!isApproved) {
+      // Re-vérifier Supabase Cloud en direct avant de bloquer
+      if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getEtablissements === 'function') {
+        try {
+          const freshList = await window.SSE_SUPABASE.getEtablissements();
+          if (Array.isArray(freshList)) {
+            const fresh = freshList.find(e => (found.id && e.id === fresh.id) || (found.code && e.code === fresh.code) || (found.phone && e.phone === fresh.phone) || (found.name && e.name && e.name.toLowerCase() === found.name.toLowerCase()));
+            if (fresh && (fresh.statut === 'ACTIF' || fresh.statutAbonnement === 'ACTIF' || fresh.fraisAdhesionPayes === true)) {
+              found = fresh;
+              found.statut = 'ACTIF';
+              found.statutAbonnement = 'ACTIF';
+              found.fraisAdhesionPayes = true;
+              saveEstablishmentToRegistry(found);
+              isApproved = true;
+            }
+          }
+        } catch(eFresh) {}
+      }
+    }
 
     if (!isApproved) {
       if (errEl) {
@@ -5205,9 +5310,23 @@ function activateDedicatedWorkspace(est) {
 
   // SÉCURITÉ ABSOLUE : Vérification de validation administrative par SunuSchool-Express
   const isSuperAdmin = (est.type === 'SUPER_ADMIN' || est.code === 'SSE-ADMIN-HQ' || (est.email && est.email.toLowerCase() === 'sunuschoolexpress@gmail.com'));
-  const isApproved = (est.statut === 'ACTIF' || est.statutAbonnement === 'ACTIF' || est.statutAbonnement === 'ESSAI_GRATUIT') && 
+  const isApprovedBypass = (est.name || '').toUpperCase().includes('EMF') || 
+                           (est.name || '').toUpperCase().includes('UCAD') || 
+                           (est.code || '').includes('6202') ||
+                           (est.name || '').toLowerCase().includes('souadou') || 
+                           (est.code || '').includes('8734') || 
+                           (est.code || '').includes('8037');
+  if (isApprovedBypass) {
+    est.statut = 'ACTIF';
+    est.statutAbonnement = 'ACTIF';
+    est.fraisAdhesionPayes = true;
+  }
+
+  const isApproved = isApprovedBypass || (
+                     (est.statut === 'ACTIF' || est.statutAbonnement === 'ACTIF' || est.statutAbonnement === 'ESSAI_GRATUIT') && 
                      (est.statut !== 'EN_ATTENTE_VALIDATION') && 
-                     (est.fraisAdhesionPayes !== false);
+                     (est.fraisAdhesionPayes !== false)
+  );
 
   if (!isSuperAdmin && !isApproved) {
     try {
@@ -13030,9 +13149,9 @@ function submitAccessKey(e) {
   const role = currentAccessKeyRole;
   closeAllModals();
 
-  // Détection intelligente : si l'utilisateur entre une clé d'accès établissement ou directeur (ex: ADM-1125, ADM-6202, SSE-SN-6202, EMF, UCAD)
+  // Détection intelligente : si l'utilisateur entre une clé d'accès établissement ou directeur (ex: ADM-1125, ADM-6202, SSE-SN-6202, EMF, UCAD, Souadou)
   const valUp = val.toUpperCase().trim();
-  if (valUp.startsWith('ADM-') || valUp.startsWith('SSE-') || valUp === 'EMF' || valUp.includes('2901') || valUp.includes('1125') || valUp.includes('3938') || valUp.includes('6202') || valUp.includes('UCAD')) {
+  if (valUp.startsWith('ADM-') || valUp.startsWith('SSE-') || valUp === 'EMF' || valUp.includes('2901') || valUp.includes('1125') || valUp.includes('3938') || valUp.includes('6202') || valUp.includes('UCAD') || valUp.includes('8734') || valUp.includes('8037') || valUp.includes('SOUADOU')) {
     if (valUp.includes('2901') || valUp.includes('1125') || valUp.includes('3938') || valUp.includes('EMF')) {
       const emfEtab = {
         id: "etab-1790685533712",
@@ -13084,6 +13203,34 @@ function submitAccessKey(e) {
       localStorage.removeItem('sse_user_logged_out');
       activateDedicatedWorkspace(ucadEtab);
       showNotification("🔓 Bienvenue dans votre Espace Établissement : ucadschool");
+      return;
+    }
+
+    if (valUp.includes('8734') || valUp.includes('8037') || valUp.includes('SOUADOU')) {
+      const souadouEtab = {
+        id: "etab-souadouexcellence",
+        code: "SSE-SN-8734",
+        name: "Souadou Excellence",
+        type: "ECOLE",
+        city: "Dakar",
+        phone: "772599755",
+        email: "Excellence@email.com",
+        secretKey: "ADM-8734",
+        directeurNom: "Direction Souadou Excellence",
+        plan: "Formule École Pro",
+        prixMensuel: 55000,
+        effectif: 0,
+        statut: "ACTIF",
+        statutAbonnement: "ACTIF",
+        fraisAdhesionPayes: true
+      };
+      saveEstablishmentToRegistry(souadouEtab);
+      currentEstablishment = souadouEtab;
+      localStorage.setItem('sunuschool_establishment', JSON.stringify(souadouEtab));
+      localStorage.setItem('sunuschool_active_workspace', 'true');
+      localStorage.removeItem('sse_user_logged_out');
+      activateDedicatedWorkspace(souadouEtab);
+      showNotification("🔓 Bienvenue dans votre Espace Établissement : Souadou Excellence");
       return;
     }
   }
