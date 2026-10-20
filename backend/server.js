@@ -1276,7 +1276,11 @@ app.post('/api/saas/clients/:id/status', (req, res) => {
   saveDatabase(db);
 
   try {
-    supabaseService.updateEtablissementInSupabase(id, { statut, fraisAdhesionPayes: etab.fraisAdhesionPayes });
+    supabaseService.updateEtablissementInSupabase(id, { 
+      statut, 
+      statutAbonnement: statut, 
+      fraisAdhesionPayes: etab.fraisAdhesionPayes 
+    });
   } catch (err) {}
 
   res.json({ success: true, message: `Statut mis à jour : ${statut}`, data: etab });
@@ -1845,6 +1849,14 @@ app.post('/api/admin/etablissements/:id/validate', (req, res) => {
   });
 
   saveDatabase(db);
+  try {
+    supabaseService.updateEtablissementInSupabase(etab.id || etab.code, {
+      statut: 'ACTIF',
+      statutAbonnement: 'ACTIF',
+      fraisAdhesionPayes: true,
+      echeanceAbonnement: etab.echeanceAbonnement
+    });
+  } catch (err) {}
   res.json({ success: true, message: `Établissement ${etab.name} validé et activé !`, etablissement: etab });
 });
 

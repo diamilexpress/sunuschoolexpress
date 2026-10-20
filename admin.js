@@ -445,11 +445,12 @@ function mergeEtabRecords(existing, incoming) {
   if (!incoming) return existing;
 
   // Statut : si l'un des deux a été validé (ACTIF), préserver le statut ACTIF
-  const isExistingActive = existing.statut === 'ACTIF' || existing.statutAbonnement === 'ACTIF';
-  const isIncomingActive = incoming.statut === 'ACTIF' || incoming.statutAbonnement === 'ACTIF';
+  const isExistingActive = existing.statut === 'ACTIF' || existing.statutAbonnement === 'ACTIF' || existing.isApproved === true;
+  const isIncomingActive = incoming.statut === 'ACTIF' || incoming.statutAbonnement === 'ACTIF' || incoming.isApproved === true;
   const mergedStatut = (isExistingActive || isIncomingActive) ? 'ACTIF' : (incoming.statut || existing.statut || 'EN_ATTENTE_VALIDATION');
   const mergedStatutAbo = (isExistingActive || isIncomingActive) ? 'ACTIF' : (incoming.statutAbonnement || existing.statutAbonnement || 'EN_ATTENTE_VALIDATION');
-  const mergedFrais = Boolean(existing.fraisAdhesionPayes || incoming.fraisAdhesionPayes);
+  const mergedFrais = Boolean(existing.fraisAdhesionPayes || incoming.fraisAdhesionPayes || isExistingActive || isIncomingActive);
+  const mergedApproved = Boolean(existing.isApproved || incoming.isApproved || isExistingActive || isIncomingActive);
 
   // Preuve Wave : préférer une référence personnalisée
   let bestWaveRef = incoming.waveTransactionRef || existing.waveTransactionRef;
@@ -482,6 +483,7 @@ function mergeEtabRecords(existing, incoming) {
     statut: mergedStatut,
     statutAbonnement: mergedStatutAbo,
     fraisAdhesionPayes: mergedFrais,
+    isApproved: mergedApproved,
     effectif: mergedEffectif,
     prixMensuel: mergedPrix,
     waveTransactionRef: bestWaveRef,
@@ -1065,6 +1067,12 @@ function isPendingEtab(e) {
   if (!e) return false;
   const st = (e.statut || '').toUpperCase();
   const stAb = (e.statutAbonnement || '').toUpperCase();
+  // Règle d'or : si l'établissement est validé et actif sans demande de surclassement, il n'est JAMAIS en attente
+  if ((st === 'ACTIF' || stAb === 'ACTIF' || e.isApproved === true) && !e.requestedPlan) {
+    if (stAb !== 'EN_ATTENTE_VALIDATION' && st !== 'EN_ATTENTE_VALIDATION') {
+      return false;
+    }
+  }
   if (st === 'EN_ATTENTE_VALIDATION' || stAb === 'EN_ATTENTE_VALIDATION') return true;
   if (st === 'EN_ATTENTE_PAIEMENT' || stAb === 'EN_ATTENTE_PAIEMENT') return true;
   if (st === 'PENDING' || stAb === 'PENDING') return true;
@@ -1460,9 +1468,26 @@ function validateEstablishmentHQ(idOrCode) {
   // Sauvegarder dans tous les stockages locaux pour synchronisation immédiate
   saveAllToStorage(etab);
 
+  // Synchronisation directe et garantie dans Supabase Cloud
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.updateEtablissement === 'function') {
+    try {
+      window.SSE_SUPABASE.updateEtablissement(etab.id || etab.code, {
+        statut: 'ACTIF',
+        statutAbonnement: 'ACTIF',
+        fraisAdhesionPayes: true,
+        isApproved: true,
+        requestedPlan: null,
+        statutChangementFormule: null,
+        echeanceAbonnement: etab.echeanceAbonnement
+      });
+    } catch(errSup) {
+      console.warn('[Admin] Erreur update direct Supabase:', errSup);
+    }
+  }
+
   // Synchroniser avec l'API Cloud (Netlify proxy + Render direct)
   try {
-    sendToCloudBackend(`/api/saas/clients/${encodeURIComponent(etab.id || etab.code)}/status`, { statut: 'ACTIF', fraisAdhesionPayes: true });
+    sendToCloudBackend(`/api/saas/clients/${encodeURIComponent(etab.id || etab.code)}/status`, { statut: 'ACTIF', statutAbonnement: 'ACTIF', fraisAdhesionPayes: true });
     sendToCloudBackend(`/api/admin/etablissements/${encodeURIComponent(etab.id || etab.code)}/validate`, { adminEmail: 'sunuschoolexpress@gmail.com' });
     sendToCloudBackend(`/api/saas/demandes`, etab);
   } catch(e) {}
@@ -1513,6 +1538,23 @@ function validatePlanUpgradeHQ(idOrCode) {
   });
 
   saveAllToStorage(etab);
+  
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.updateEtablissement === 'function') {
+    try {
+      window.SSE_SUPABASE.updateEtablissement(etab.id || etab.code, {
+        plan: targetPlan,
+        prixMensuel: (typeof getMonthlyPriceForPlan === 'function') ? getMonthlyPriceForPlan(targetPlan) : etab.prixMensuel,
+        statut: 'ACTIF',
+        statutAbonnement: 'ACTIF',
+        fraisAdhesionPayes: true,
+        isApproved: true,
+        requestedPlan: null,
+        statutChangementFormule: 'VALIDEE'
+      });
+    } catch(errSup) {
+      console.warn('[Admin] Erreur update direct Supabase upgrade:', errSup);
+    }
+  }
   
   // Synchronisation Cloud immédiate vers Render
   try {

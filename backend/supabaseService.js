@@ -163,21 +163,48 @@ async function saveEtablissementToSupabase(etab) {
 }
 
 async function updateEtablissementInSupabase(idOrCode, updates) {
+  if (!updates || !idOrCode) return false;
   const dbUpdates = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.type !== undefined) dbUpdates.type = updates.type;
   if (updates.city !== undefined) dbUpdates.city = updates.city;
   if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
   if (updates.email !== undefined) dbUpdates.email = updates.email;
-  if (updates.directeurNom !== undefined) dbUpdates.directeur_nom = updates.directeurNom;
+
+  const dirNom = updates.directeurNom !== undefined ? updates.directeurNom : updates.directeur_nom;
+  if (dirNom !== undefined) dbUpdates.directeur_nom = dirNom;
+
+  const secKey = updates.secretKey !== undefined ? updates.secretKey : updates.secret_key;
+  if (secKey !== undefined) dbUpdates.secret_key = secKey;
+
   if (updates.plan !== undefined) dbUpdates.plan = updates.plan;
-  if (updates.requestedPlan !== undefined) dbUpdates.requested_plan = updates.requestedPlan;
-  if (updates.statutChangementFormule !== undefined) dbUpdates.statut_changement_formule = updates.statutChangementFormule;
-  if (updates.prixMensuel !== undefined) dbUpdates.prix_mensuel = Number(updates.prixMensuel) || 0;
+
+  const reqPlan = updates.requestedPlan !== undefined ? updates.requestedPlan : updates.requested_plan;
+  if (reqPlan !== undefined) dbUpdates.requested_plan = reqPlan;
+
+  const stChang = updates.statutChangementFormule !== undefined ? updates.statutChangementFormule : updates.statut_changement_formule;
+  if (stChang !== undefined) dbUpdates.statut_changement_formule = stChang;
+
+  const pxMens = updates.prixMensuel !== undefined ? updates.prixMensuel : updates.prix_mensuel;
+  if (pxMens !== undefined) dbUpdates.prix_mensuel = Number(pxMens) || 0;
+
+  const eff = updates.effectif !== undefined ? updates.effectif : updates.effectif;
+  if (eff !== undefined) dbUpdates.effectif = Number(eff) || 0;
+
   if (updates.statut !== undefined) dbUpdates.statut = updates.statut;
-  if (updates.statutAbonnement !== undefined) dbUpdates.statut_abonnement = updates.statutAbonnement;
-  if (updates.fraisAdhesionPayes !== undefined) dbUpdates.frais_adhesion_payes = Boolean(updates.fraisAdhesionPayes);
-  if (updates.echeanceAbonnement !== undefined) dbUpdates.echeance_abonnement = updates.echeanceAbonnement;
+
+  const stAbo = updates.statutAbonnement !== undefined ? updates.statutAbonnement : updates.statut_abonnement;
+  if (stAbo !== undefined) dbUpdates.statut_abonnement = stAbo;
+
+  const frAdh = updates.fraisAdhesionPayes !== undefined ? updates.fraisAdhesionPayes : updates.frais_adhesion_payes;
+  if (frAdh !== undefined) dbUpdates.frais_adhesion_payes = Boolean(frAdh);
+
+  const echAbo = updates.echeanceAbonnement !== undefined ? updates.echeanceAbonnement : updates.echeance_abonnement;
+  if (echAbo !== undefined) dbUpdates.echeance_abonnement = echAbo;
+
+  const waveRef = updates.waveTransactionRef !== undefined ? updates.waveTransactionRef : updates.wave_transaction_ref;
+  if (waveRef !== undefined) dbUpdates.wave_transaction_ref = waveRef;
+
   dbUpdates.updated_at = new Date().toISOString();
 
   // Chercher par id ou par code
