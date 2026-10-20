@@ -7672,7 +7672,7 @@ async function handleDashboardAuthUnlock(e) {
       id: "etab-ucadschool",
       code: "SSE-SN-6202",
       name: "ucadschool",
-      type: "FORMATION_PRO",
+      type: "ECOLE",
       city: "Dakar",
       phone: "779448155",
       email: "dakar44@gmail.com",
