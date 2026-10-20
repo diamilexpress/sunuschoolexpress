@@ -204,4 +204,22 @@ INSERT INTO public.classes (id, teacher_id, nom, cycle) VALUES
     ('cls-term-l2', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Terminale L2', 'LYCEE')
 ON CONFLICT (id) DO UPDATE SET teacher_id = EXCLUDED.teacher_id, nom = EXCLUDED.nom;
 
+-- ==============================================================================
+-- 8. PERMISSIONS EXPLICITES DATA API (SUPABASE POSTGREST - CONFORME 30 OCTOBRE)
+-- ==============================================================================
+
+-- A. Accès complet pour les utilisateurs authentifiés et le service backend
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
+
+-- B. Accès contrôlé pour le rôle anonyme (anon / frontend public)
+GRANT SELECT, INSERT, UPDATE ON TABLE public.etablissements TO anon;
+GRANT SELECT ON TABLE public.eleves, public.classes, public.teachers TO anon;
+
+-- C. Maintien automatique des privilèges pour TOUTES les futures tables créées
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+
+
 

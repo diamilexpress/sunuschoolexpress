@@ -387,3 +387,18 @@ REVOKE DROP, TRUNCATE, ALTER ON ALL TABLES IN SCHEMA public FROM app_restricted_
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_restricted_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_restricted_user;
 
+-- ==============================================================================
+-- 16. PERMISSIONS EXPLICITES SUPABASE DATA API & POSTGREST (CONFORME 30 OCTOBRE)
+-- ==============================================================================
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
+
+GRANT SELECT, INSERT, UPDATE ON TABLE public.etablissements TO anon;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+
+
