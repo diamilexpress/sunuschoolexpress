@@ -927,37 +927,101 @@ const INSTITUT_CYCLES = [
   { value: "Formation Modulaire", label: "Formation Modulaire" }
 ];
 
+// --- FONCTION SOUVERAINE : DÉTERMINATION STRICTE DU PLAN PAR LA FORMULE SOUSCRITE ---
+// La formule souscrite (plan/formule) est le SEUL critère déterminant les droits, modules, quotas et fonctionnalités.
+// Le nom, le statut ou la catégorie d'origine ne doivent jamais limiter, altérer ni restreindre la formule choisie.
+function getEstablishmentPlanKey(est) {
+  if (!est) return 'starter';
+  const planRaw = String(est.plan || est.formule || est.requestedPlan || '').toLowerCase().trim();
+
+  // 1. FAMILLE INSTITUT / UCAD / FORMATION PROFESSIONNELLE / BTS / SUPÉRIEUR
+  if (
+    planRaw.includes('institut') ||
+    planRaw.includes('bts') ||
+    planRaw.includes('ucad') ||
+    planRaw.includes('supérieur') ||
+    planRaw.includes('superieur') ||
+    planRaw.includes('universitaire') ||
+    planRaw.includes('université') ||
+    planRaw.includes('universite') ||
+    planRaw.includes('formation pro') ||
+    planRaw.includes('formation_pro') ||
+    planRaw.includes('formation professionnelle') ||
+    planRaw.includes('grande école') ||
+    planRaw.includes('grande ecole') ||
+    planRaw.includes('multi-campus') ||
+    planRaw.includes('multicampus')
+  ) {
+    if (planRaw.includes('starter') || planRaw.includes('45')) return 'institut_starter';
+    if (planRaw.includes('grand') || planRaw.includes('campus') || planRaw.includes('150') || planRaw.includes('devis')) return 'grand_institut';
+    return 'institut_pro';
+  }
+
+  // 2. FAMILLE DAARA MODERNE / CORANIQUE / INTERNAT
+  if (
+    planRaw.includes('daara') ||
+    planRaw.includes('coran') ||
+    planRaw.includes('talibé') ||
+    planRaw.includes('talibe') ||
+    planRaw.includes('hizb') ||
+    planRaw.includes('internat promo') ||
+    planRaw.includes('sérénité') ||
+    planRaw.includes('serenite')
+  ) {
+    if (planRaw.includes('promo') || planRaw.includes('pionnier') || planRaw.includes('20')) return 'daara_promo';
+    if (planRaw.includes('annuel') || planRaw.includes('sérénité') || planRaw.includes('serenite') || planRaw.includes('350') || planRaw.includes('700')) return 'daara_annual';
+    return 'daara_standard';
+  }
+
+  // 3. FAMILLE ÉCOLE PRIVÉE / SCOLAIRE
+  if (
+    planRaw.includes('starter') ||
+    planRaw.includes('pro') ||
+    planRaw.includes('école') ||
+    planRaw.includes('ecole') ||
+    planRaw.includes('premium') ||
+    planRaw.includes('enterprise') ||
+    planRaw.includes('entreprise')
+  ) {
+    if (planRaw.includes('premium') || planRaw.includes('85')) return 'premium';
+    if (planRaw.includes('enterprise') || planRaw.includes('entreprise') || planRaw.includes('devis')) return 'enterprise';
+    if (planRaw.includes('starter') || planRaw.includes('20')) return 'starter';
+    return 'pro';
+  }
+
+  // 4. Repli sécurisé UNIQUEMENT si le champ formule est totalement absent ou vide
+  const typeUpper = String(est.type || '').toUpperCase().trim();
+  if (typeUpper === 'DAARA') return 'daara_standard';
+  if (typeUpper === 'FORMATION_PRO' || typeUpper === 'INSTITUT' || typeUpper === 'SUPERIEUR') return 'institut_pro';
+  if (typeUpper === 'PREMIUM') return 'premium';
+
+  return 'pro';
+}
+
 function isInstitutEstablishment(est) {
   if (!est) return false;
-  const typeUpper = String(est.type || '').toUpperCase().trim();
-  if (typeUpper === 'DAARA') return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'institut_starter' || key === 'institut_pro' || key === 'grand_institut';
+}
 
-  const planLower = String(est.plan || est.formule || '').toLowerCase().trim();
-  const typeLower = String(est.type || '').toLowerCase().trim();
-  const nameLower = String(est.name || '').toLowerCase().trim();
+function isDaaraEstablishment(est) {
+  if (!est) return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'daara_promo' || key === 'daara_standard' || key === 'daara_annual';
+}
 
-  // 1. Formules / types explicites de la commande utilisateur :
-  // "Institut Starter", "Institut Pro", "Grande École / Multi-Campus"
-  if (planLower.includes('institut starter') || typeLower.includes('institut starter')) return true;
-  if (planLower.includes('institut pro') || typeLower.includes('institut pro')) return true;
-  if (planLower.includes('grande école') || planLower.includes('grande ecole') || planLower.includes('multi-campus') || planLower.includes('multicampus')) return true;
-  if (typeLower.includes('grande école') || typeLower.includes('grande ecole') || typeLower.includes('multi-campus') || typeLower.includes('multicampus')) return true;
-
-  // 2. Types reconnus
-  if (typeUpper === 'FORMATION_PRO' || typeUpper === 'INSTITUT' || typeUpper === 'INSTITUT_STARTER' || typeUpper === 'INSTITUT_PRO' || typeUpper === 'GRANDE_ECOLE' || typeUpper === 'SUPERIEUR') return true;
-
-  // 3. Plans contenant institut, bts, formation pro
-  if (planLower.includes('institut') || planLower.includes('bts') || planLower.includes('formation pro') || planLower.includes('formation_pro') || planLower.includes('formation professionnelle')) return true;
-
-  // 4. Noms d'instituts si non typé explicitement ECOLE
-  if (typeUpper !== 'ECOLE' && (nameLower.includes('institut') || nameLower.includes('formation pro') || nameLower.includes('centre de formation'))) return true;
-
-  return false;
+function isEcoleEstablishment(est) {
+  if (!est) return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'starter' || key === 'pro' || key === 'premium' || key === 'enterprise';
 }
 
 if (typeof window !== 'undefined') {
   window.INSTITUT_CYCLES = INSTITUT_CYCLES;
+  window.getEstablishmentPlanKey = getEstablishmentPlanKey;
   window.isInstitutEstablishment = isInstitutEstablishment;
+  window.isDaaraEstablishment = isDaaraEstablishment;
+  window.isEcoleEstablishment = isEcoleEstablishment;
 }
 
 const isFakeDemoSchool = (item) => {
@@ -3806,12 +3870,11 @@ async function executeSubscriptionPayment() {
   const planName = (planEl && planEl.textContent.trim()) ? planEl.textContent.trim() : 'Formule École Pro';
   const planPrice = (priceEl && priceEl.textContent.trim()) ? priceEl.textContent.trim() : '55 000 FCFA/mois';
 
-  const isDaaraPlan = planName.toLowerCase().includes('daara') || planName.toLowerCase().includes('internat');
-  const isInstitutPlan = planName.toLowerCase().includes('institut') || planName.toLowerCase().includes('formation') || planName.toLowerCase().includes('bts');
-  const typeVal = (typeEl && typeEl.value) ? typeEl.value.toLowerCase() : '';
-  const isFormationType = typeVal.includes('formation') || typeVal.includes('institut') || isInstitutPlan;
+  const planKey = getEstablishmentPlanKey({ plan: planName });
+  const isInstitutPlan = planKey.startsWith('institut') || planKey === 'grand_institut';
+  const isDaaraPlan = planKey.startsWith('daara');
 
-  const defaultSchoolName = isFormationType ? 'Mon Institut Professionnel' : (isDaaraPlan ? (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement') : 'Nouvel Établissement Partenaire');
+  const defaultSchoolName = isInstitutPlan ? 'Mon Institut Professionnel' : (isDaaraPlan ? 'Mon Daara Moderne' : 'Nouvel Établissement Partenaire');
   const schoolName = rawSchoolName || defaultSchoolName;
 
   let email = (emailEl && emailEl.value.trim()) ? emailEl.value.trim() : '';
@@ -3834,11 +3897,15 @@ async function executeSubscriptionPayment() {
   } else if (selectedPaymentOp === 'FREE_MONEY' && fmPhoneEl && fmPhoneEl.value.trim()) {
     phone = fmPhoneEl.value.trim();
   }
+
+  // La formule souscrite détermine souverainement la catégorie technique par défaut
   let type = 'ECOLE';
-  if (typeVal.includes('daara') || isDaaraPlan) {
-    type = 'DAARA';
-  } else if (isFormationType) {
+  if (isInstitutPlan) {
     type = 'FORMATION_PRO';
+  } else if (isDaaraPlan) {
+    type = 'DAARA';
+  } else {
+    type = 'ECOLE';
   }
 
   // Détection & réutilisation d'un code existant si même école ou même téléphone (évite tout doublon de code)
@@ -4281,27 +4348,7 @@ function submitEnterpriseQuote() {
 }
 
 // --- GESTION & SYNCHRONISATION PRÉCISE DES FORMULES ET MODULES ---
-function getEstablishmentPlanKey(est) {
-  if (!est) return 'starter';
-  const plan = (est.plan || est.formule || '').toLowerCase();
-  const isDaara = est.type === 'DAARA' || plan.includes('daara');
-  const isInstitut = !isDaara && isInstitutEstablishment(est);
-
-  if (isInstitut) {
-    if (plan.includes('starter') || plan.includes('45')) return 'institut_starter';
-    if (plan.includes('grand') || plan.includes('campus') || plan.includes('150') || plan.includes('devis')) return 'grand_institut';
-    return 'institut_pro';
-  } else if (isDaara) {
-    if (plan.includes('promo') || plan.includes('pionnier') || plan.includes('20')) return 'daara_promo';
-    if (plan.includes('annuel') || plan.includes('sérénité') || plan.includes('700')) return 'daara_annual';
-    return 'daara_standard'; // Par défaut 35k
-  } else {
-    if (plan.includes('premium') || plan.includes('85')) return 'premium';
-    if (plan.includes('enterprise') || plan.includes('devis')) return 'enterprise';
-    if (plan.includes('pro') || plan.includes('55')) return 'pro';
-    return 'starter'; // Par défaut 20k
-  }
-}
+// Utilisation directe de la fonction souveraine getEstablishmentPlanKey définie au sommet
 
 function switchPlanDemo(planKey) {
   if (!currentEstablishment) {
@@ -4322,12 +4369,13 @@ function switchPlanDemo(planKey) {
     } catch(e) {}
   }
 
-  const isDaara = currentEstablishment && currentEstablishment.type === 'DAARA';
+  const isDaara = isDaaraEstablishment(currentEstablishment);
 
   const planMap = {
     'starter': 'Formule Starter',
     'pro': 'Formule École Pro',
     'premium': 'Formule Premium',
+    'enterprise': 'Formule Entreprise',
     'daara_promo': 'Pack Internat Promo Daara',
     'daara_standard': 'Formule Standard Daara',
     'daara_annual': 'Option Annuelle Sérénité Daara',
@@ -4337,21 +4385,8 @@ function switchPlanDemo(planKey) {
   };
 
   const newPlanName = planMap[planKey] || planKey;
-
-  let targetPlanName = newPlanName;
-  if (currentEstablishment) {
-    if (currentEstablishment.type === 'ECOLE' && planKey.startsWith('daara')) {
-      if (planKey === 'daara_promo') targetPlanName = 'Formule Starter';
-      else if (planKey === 'daara_standard') targetPlanName = 'Formule École Pro';
-      else targetPlanName = 'Formule Premium';
-    } else if (currentEstablishment.type === 'DAARA' && !planKey.startsWith('daara')) {
-      if (planKey === 'starter') targetPlanName = 'Pack Internat Promo Daara';
-      else if (planKey === 'pro') targetPlanName = 'Formule Standard Daara';
-      else targetPlanName = 'Option Annuelle Sérénité Daara';
-    } else if (isInstitutEstablishment(currentEstablishment) && !planKey.includes('institut') && !planKey.includes('grand')) {
-      targetPlanName = 'Institut Pro';
-    }
-  }
+  // La formule choisie est souveraine : aucune altération ni limitation par le nom ou statut
+  const targetPlanName = newPlanName;
 
   const priceMap = {
     'Formule Starter': 20000,
@@ -4513,7 +4548,8 @@ let pendingUpgradeTarget = 'pro';
 
 function showPlanUpgradeModal(featureKey) {
   const planKey = getEstablishmentPlanKey(currentEstablishment);
-  const isDaara = currentEstablishment && currentEstablishment.type === 'DAARA';
+  const isDaara = isDaaraEstablishment(currentEstablishment);
+  const isInstitut = isInstitutEstablishment(currentEstablishment);
 
   const modal = document.getElementById('planUpgradeModal');
   if (!modal) return;
@@ -5375,10 +5411,11 @@ function activateDedicatedWorkspace(est) {
   ws.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Identification rigoureuse du plan
+  // Identification rigoureuse du plan (La formule souscrite est le seul critère)
   const planKey = getEstablishmentPlanKey(est);
-  const isDaara = est.type === 'DAARA' || planKey.startsWith('daara');
-  const isInstitut = !isDaara && isInstitutEstablishment(est);
+  const isDaara = isDaaraEstablishment(est);
+  const isInstitut = isInstitutEstablishment(est);
+  const isEcole = isEcoleEstablishment(est);
 
   // Mettre à jour les informations d'en-tête
   document.getElementById('wsSchoolTitle').textContent = est.name;
@@ -6175,13 +6212,10 @@ function switchWsTab(tabId, navItem) {
     return;
   }
 
-  // Vérification stricte des permissions par formule
+  // Vérification stricte des permissions exclusivement par formule souscrite
   const planKey = getEstablishmentPlanKey(currentEstablishment);
-  const etabType = (currentEstablishment?.type || '').toUpperCase();
-  const etabPlan = (currentEstablishment?.plan || '').toLowerCase();
-  const isInstitut = etabType === 'FORMATION_PRO' || etabType === 'INSTITUT' || 
-    planKey === 'institut_pro' || planKey === 'grand_institut' ||
-    etabPlan.includes('institut') || etabPlan.includes('bts') || etabPlan.includes('formation');
+  const isInstitut = isInstitutEstablishment(currentEstablishment);
+  const isDaara = isDaaraEstablishment(currentEstablishment);
 
   if (!isInstitut) {
     if (tabId === 'wsAlerts' && planKey === 'starter') {
@@ -6199,17 +6233,17 @@ function switchWsTab(tabId, navItem) {
       return;
     }
 
-    if (tabId === 'wsLib' && planKey !== 'premium' && planKey !== 'enterprise' && planKey !== 'daara_annual') {
+    if (tabId === 'wsLib' && planKey !== 'premium' && planKey !== 'enterprise' && planKey !== 'daara_annual' && planKey !== 'grand_institut') {
       showPlanUpgradeModal('library');
       return;
     }
 
-    if (tabId === 'wsBadges' && planKey !== 'premium' && planKey !== 'enterprise' && planKey !== 'daara_annual') {
+    if (tabId === 'wsBadges' && planKey !== 'premium' && planKey !== 'enterprise' && planKey !== 'daara_annual' && planKey !== 'grand_institut') {
       showPlanUpgradeModal('badges');
       return;
     }
 
-    if (tabId === 'wsAudit' && planKey !== 'premium' && planKey !== 'enterprise' && planKey !== 'daara_annual') {
+    if (tabId === 'wsAudit' && planKey !== 'premium' && planKey !== 'enterprise' && planKey !== 'daara_annual' && planKey !== 'grand_institut') {
       showPlanUpgradeModal('audit');
       return;
     }
@@ -6576,18 +6610,6 @@ const INSTITUT_OFFICIAL_STUDENTS = [
   }
 ];
 
-function isInstitutEstablishment(est) {
-  if (!est) return false;
-  const type = (est.type || '').toUpperCase();
-  const plan = (est.plan || '').toLowerCase();
-  const name = (est.name || '').toLowerCase();
-  const code = (est.code || '').toUpperCase();
-  const email = (est.email || '').toLowerCase();
-  return type === 'FORMATION_PRO' || type === 'INSTITUT' ||
-         plan.includes('institut') || plan.includes('bts') || plan.includes('formation') ||
-         name.includes('institut') || name.includes('centre') || name.includes('metier') || name.includes('formation') ||
-         code.includes('7001') || code.includes('ISFP') || email.includes('isfp');
-}
 
 function isRealRegisteredEstablishment() {
   if (!currentEstablishment && typeof window !== 'undefined' && window.currentEstablishment) {
@@ -16249,25 +16271,27 @@ function openChangePlanModal() {
     } catch(e) {}
   }
 
-  const isDaara = currentEstablishment && currentEstablishment.type === 'DAARA';
+  const isDaara = isDaaraEstablishment(currentEstablishment);
+  const isInstitut = isInstitutEstablishment(currentEstablishment);
 
   const schoolNameEl = document.getElementById('changePlanSchoolName');
   if (schoolNameEl) {
-    schoolNameEl.textContent = currentEstablishment?.name || (isDaara ? 'Mon Daara Moderne' : 'Mon Établissement');
+    schoolNameEl.textContent = currentEstablishment?.name || (isDaara ? 'Mon Daara Moderne' : (isInstitut ? 'Mon Institut Professionnel' : 'Mon Établissement'));
   }
 
   const tabEcole = document.getElementById('tabBtnChangePlanEcole');
   const tabDaara = document.getElementById('tabBtnChangePlanDaara');
+  const tabInstitut = document.getElementById('tabBtnChangePlanInstitut');
 
-  // Si c'est une école, n'afficher QUE l'onglet et les formules école
-  // Si c'est un daara, n'afficher QUE l'onglet et les formules daara
-  if (isDaara) {
-    if (tabDaara) tabDaara.style.display = 'block';
-    if (tabEcole) tabEcole.style.display = 'none';
+  if (tabEcole) tabEcole.style.display = 'block';
+  if (tabDaara) tabDaara.style.display = 'block';
+  if (tabInstitut) tabInstitut.style.display = 'block';
+
+  if (isInstitut) {
+    switchChangePlanTab('institut');
+  } else if (isDaara) {
     switchChangePlanTab('daara');
   } else {
-    if (tabEcole) tabEcole.style.display = 'block';
-    if (tabDaara) tabDaara.style.display = 'none';
     switchChangePlanTab('ecole');
   }
 
@@ -16277,19 +16301,30 @@ function openChangePlanModal() {
 function switchChangePlanTab(type) {
   const btnEcole = document.getElementById('tabBtnChangePlanEcole');
   const btnDaara = document.getElementById('tabBtnChangePlanDaara');
+  const btnInstitut = document.getElementById('tabBtnChangePlanInstitut');
   const viewEcole = document.getElementById('changePlanViewEcole');
   const viewDaara = document.getElementById('changePlanViewDaara');
+  const viewInstitut = document.getElementById('changePlanViewInstitut');
+
+  [btnEcole, btnDaara, btnInstitut].forEach(b => {
+    if (b) {
+      b.style.background = 'transparent';
+      b.style.color = '#FFF';
+    }
+  });
+  if (viewEcole) viewEcole.style.display = 'none';
+  if (viewDaara) viewDaara.style.display = 'none';
+  if (viewInstitut) viewInstitut.style.display = 'none';
 
   if (type === 'daara') {
     if (btnDaara) { btnDaara.style.background = '#00D2B4'; btnDaara.style.color = '#051329'; }
-    if (btnEcole) { btnEcole.style.background = 'transparent'; btnEcole.style.color = '#FFF'; }
     if (viewDaara) viewDaara.style.display = 'grid';
-    if (viewEcole) viewEcole.style.display = 'none';
+  } else if (type === 'institut') {
+    if (btnInstitut) { btnInstitut.style.background = '#3B82F6'; btnInstitut.style.color = '#FFF'; }
+    if (viewInstitut) viewInstitut.style.display = 'grid';
   } else {
     if (btnEcole) { btnEcole.style.background = '#F59E0B'; btnEcole.style.color = '#000'; }
-    if (btnDaara) { btnDaara.style.background = 'transparent'; btnDaara.style.color = '#FFF'; }
     if (viewEcole) viewEcole.style.display = 'grid';
-    if (viewDaara) viewDaara.style.display = 'none';
   }
 }
 

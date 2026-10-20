@@ -23,6 +23,94 @@ let adminState = {
   cloudEleves: []
 };
 
+// --- FONCTION SOUVERAINE : DÉTERMINATION STRICTE DU PLAN PAR LA FORMULE SOUSCRITE ---
+// La formule souscrite détermine exclusivement les droits, modules, accès et icônes d'un établissement
+function getEstablishmentPlanKey(est) {
+  if (!est) return 'starter';
+  const planRaw = String(est.plan || est.formule || est.requestedPlan || '').toLowerCase().trim();
+
+  // 1. FAMILLE INSTITUT / UCAD / FORMATION PROFESSIONNELLE / BTS / SUPÉRIEUR
+  if (
+    planRaw.includes('institut') ||
+    planRaw.includes('bts') ||
+    planRaw.includes('ucad') ||
+    planRaw.includes('supérieur') ||
+    planRaw.includes('superieur') ||
+    planRaw.includes('universitaire') ||
+    planRaw.includes('université') ||
+    planRaw.includes('universite') ||
+    planRaw.includes('formation pro') ||
+    planRaw.includes('formation_pro') ||
+    planRaw.includes('formation professionnelle') ||
+    planRaw.includes('grande école') ||
+    planRaw.includes('grande ecole') ||
+    planRaw.includes('multi-campus') ||
+    planRaw.includes('multicampus')
+  ) {
+    if (planRaw.includes('starter') || planRaw.includes('45')) return 'institut_starter';
+    if (planRaw.includes('grand') || planRaw.includes('campus') || planRaw.includes('150') || planRaw.includes('devis')) return 'grand_institut';
+    return 'institut_pro';
+  }
+
+  // 2. FAMILLE DAARA MODERNE / CORANIQUE / INTERNAT
+  if (
+    planRaw.includes('daara') ||
+    planRaw.includes('coran') ||
+    planRaw.includes('talibé') ||
+    planRaw.includes('talibe') ||
+    planRaw.includes('hizb') ||
+    planRaw.includes('internat promo') ||
+    planRaw.includes('sérénité') ||
+    planRaw.includes('serenite')
+  ) {
+    if (planRaw.includes('promo') || planRaw.includes('pionnier') || planRaw.includes('20')) return 'daara_promo';
+    if (planRaw.includes('annuel') || planRaw.includes('sérénité') || planRaw.includes('serenite') || planRaw.includes('350') || planRaw.includes('700')) return 'daara_annual';
+    return 'daara_standard';
+  }
+
+  // 3. FAMILLE ÉCOLE PRIVÉE / SCOLAIRE
+  if (
+    planRaw.includes('starter') ||
+    planRaw.includes('pro') ||
+    planRaw.includes('école') ||
+    planRaw.includes('ecole') ||
+    planRaw.includes('premium') ||
+    planRaw.includes('enterprise') ||
+    planRaw.includes('entreprise')
+  ) {
+    if (planRaw.includes('premium') || planRaw.includes('85')) return 'premium';
+    if (planRaw.includes('enterprise') || planRaw.includes('entreprise') || planRaw.includes('devis')) return 'enterprise';
+    if (planRaw.includes('starter') || planRaw.includes('20')) return 'starter';
+    return 'pro';
+  }
+
+  // 4. Repli sécurisé si plan vide
+  const typeUpper = String(est.type || '').toUpperCase().trim();
+  if (typeUpper === 'DAARA') return 'daara_standard';
+  if (typeUpper === 'FORMATION_PRO' || typeUpper === 'INSTITUT' || typeUpper === 'SUPERIEUR') return 'institut_pro';
+  if (typeUpper === 'PREMIUM') return 'premium';
+
+  return 'pro';
+}
+
+function isInstitutEstablishment(est) {
+  if (!est) return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'institut_starter' || key === 'institut_pro' || key === 'grand_institut';
+}
+
+function isDaaraEstablishment(est) {
+  if (!est) return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'daara_promo' || key === 'daara_standard' || key === 'daara_annual';
+}
+
+function isEcoleEstablishment(est) {
+  if (!est) return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'starter' || key === 'pro' || key === 'premium' || key === 'enterprise';
+}
+
 let filterState = {
   searchPending: '',
   searchQuotes: '',
@@ -1092,8 +1180,8 @@ function renderPendingTable() {
   tbody.innerHTML = '';
   pending.forEach(e => {
     const tr = document.createElement('tr');
-    const isInstitut = e.type === 'FORMATION_PRO' || e.type === 'INSTITUT' || (e.plan && (e.plan.toLowerCase().includes('institut') || e.plan.toLowerCase().includes('bts') || e.plan.toLowerCase().includes('formation'))) || (e.name && (e.name.toLowerCase().includes('institut') || e.name.toLowerCase().includes('formation') || e.name.toLowerCase().includes('métier') || e.name.toLowerCase().includes('metier')));
-    const isDaara = !isInstitut && (e.type === 'DAARA' || (e.plan && e.plan.toLowerCase().includes('daara')));
+    const isInstitut = isInstitutEstablishment(e);
+    const isDaara = isDaaraEstablishment(e);
     const icon = isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫');
     const cleanTel = (e.phone || '').replace(/[^0-9]/g, '');
 
@@ -1166,15 +1254,16 @@ function renderAllEtabsTable() {
     );
   }
 
-  // 2. Filtrage par Formule d'abonnement
+  // 2. Filtrage par Formule d'abonnement (souveraineté absolue de la formule)
   if (filterState.filterPlan !== 'ALL') {
     list = list.filter(e => {
-      const p = (e.plan || '').toUpperCase();
-      if (filterState.filterPlan === 'ESSAI') return p.includes('ESSAI');
-      if (filterState.filterPlan === 'STARTER') return p.includes('STARTER');
-      if (filterState.filterPlan === 'PRO') return p.includes('PRO');
-      if (filterState.filterPlan === 'DAARA') return p.includes('DAARA') || e.type === 'DAARA';
-      if (filterState.filterPlan === 'ENTERPRISE') return p.includes('ENTERPRISE') || p.includes('CAMPUS');
+      const k = getEstablishmentPlanKey(e);
+      if (filterState.filterPlan === 'ESSAI') return (e.plan || '').toUpperCase().includes('ESSAI') || e.statutAbonnement === 'ESSAI_GRATUIT';
+      if (filterState.filterPlan === 'STARTER') return k === 'starter' || k === 'institut_starter';
+      if (filterState.filterPlan === 'PRO') return k === 'pro' || k === 'institut_pro';
+      if (filterState.filterPlan === 'DAARA') return isDaaraEstablishment(e);
+      if (filterState.filterPlan === 'INSTITUT') return isInstitutEstablishment(e);
+      if (filterState.filterPlan === 'ENTERPRISE') return k === 'enterprise' || k === 'grand_institut';
       return true;
     });
   }
@@ -1206,8 +1295,8 @@ function renderAllEtabsTable() {
   list.forEach(e => {
     const tr = document.createElement('tr');
     const isApproved = (e.statut === 'ACTIF' || e.statutAbonnement === 'ACTIF' || e.statutAbonnement === 'ESSAI_GRATUIT') && e.fraisAdhesionPayes !== false;
-    const isInstitut = e.type === 'FORMATION_PRO' || e.type === 'INSTITUT' || (e.plan && (e.plan.toLowerCase().includes('institut') || e.plan.toLowerCase().includes('bts') || e.plan.toLowerCase().includes('formation'))) || (e.name && (e.name.toLowerCase().includes('institut') || e.name.toLowerCase().includes('formation') || e.name.toLowerCase().includes('métier') || e.name.toLowerCase().includes('metier')));
-    const isDaara = !isInstitut && (e.type === 'DAARA' || (e.plan && e.plan.toLowerCase().includes('daara')));
+    const isInstitut = isInstitutEstablishment(e);
+    const isDaara = isDaaraEstablishment(e);
     const icon = isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫');
     const studentCount = getStudentCountForEtab(e);
 
@@ -2056,9 +2145,8 @@ function generateReceiptHQ(idOrCode) {
   const dateStr = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const recuNum = `SSE-REC-${(etab.code || 'SN').replace(/[^0-9]/g, '') || Math.floor(1000 + Math.random()*9000)}-${now.getFullYear()}`;
-  const waveRef = etab.waveTransactionRef || `WAV-${Math.floor(100000 + Math.random()*900000)}-SN`;
-  const isInstitut = etab.type === 'FORMATION_PRO' || etab.type === 'INSTITUT' || (etab.plan && (etab.plan.toLowerCase().includes('institut') || etab.plan.toLowerCase().includes('bts') || etab.plan.toLowerCase().includes('formation'))) || (etab.name && (etab.name.toLowerCase().includes('institut') || etab.name.toLowerCase().includes('formation') || etab.name.toLowerCase().includes('métier') || etab.name.toLowerCase().includes('metier')));
-  const isDaara = !isInstitut && (etab.type === 'DAARA' || (etab.plan && etab.plan.toLowerCase().includes('daara')));
+  const isInstitut = isInstitutEstablishment(etab);
+  const isDaara = isDaaraEstablishment(etab);
   const typeLabel = isInstitut ? 'Institut Supérieur / Formation Professionnelle & Métiers' : (isDaara ? 'Institut Coranique / Daara Moderne' : 'École Privée / Collège / Lycée');
   const typeIcon = isInstitut ? '🎓' : (isDaara ? '🕌' : '🏫');
 

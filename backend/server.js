@@ -1439,6 +1439,87 @@ async function createPaydunyaInvoice({ schoolName, email, phone, montant, refTx 
   return null;
 }
 
+// --- FONCTION SOUVERAINE : RÉSOLUTION STRICTE DE LA FORMULE ET DU TYPE ---
+// La formule souscrite détermine exclusivement les droits, le type technique et le montant d'un établissement
+function resolvePlanDetails(planStr, fallbackType = 'ECOLE') {
+  const p = String(planStr || '').toLowerCase().trim();
+
+  // 1. FAMILLE INSTITUT / UCAD / FORMATION PROFESSIONNELLE / BTS / SUPÉRIEUR
+  if (
+    p.includes('institut') ||
+    p.includes('bts') ||
+    p.includes('ucad') ||
+    p.includes('supérieur') ||
+    p.includes('superieur') ||
+    p.includes('universitaire') ||
+    p.includes('université') ||
+    p.includes('universite') ||
+    p.includes('formation pro') ||
+    p.includes('formation_pro') ||
+    p.includes('formation professionnelle') ||
+    p.includes('grande école') ||
+    p.includes('grande ecole') ||
+    p.includes('multi-campus') ||
+    p.includes('multicampus')
+  ) {
+    if (p.includes('starter') || p.includes('45')) {
+      return { planKey: 'institut_starter', planName: 'Institut Starter', price: 45000, type: 'FORMATION_PRO' };
+    }
+    if (p.includes('grand') || p.includes('campus') || p.includes('150') || p.includes('devis')) {
+      return { planKey: 'grand_institut', planName: 'Grande École / Multi-Campus', price: 150000, type: 'FORMATION_PRO' };
+    }
+    return { planKey: 'institut_pro', planName: 'Institut Pro', price: 75000, type: 'FORMATION_PRO' };
+  }
+
+  // 2. FAMILLE DAARA MODERNE / CORANIQUE / INTERNAT
+  if (
+    p.includes('daara') ||
+    p.includes('coran') ||
+    p.includes('talibé') ||
+    p.includes('talibe') ||
+    p.includes('hizb') ||
+    p.includes('internat promo') ||
+    p.includes('sérénité') ||
+    p.includes('serenite')
+  ) {
+    if (p.includes('promo') || p.includes('pionnier') || p.includes('20')) {
+      return { planKey: 'daara_promo', planName: 'Pack Internat Promo Daara', price: 20000, type: 'DAARA' };
+    }
+    if (p.includes('annuel') || p.includes('sérénité') || p.includes('serenite') || p.includes('350') || p.includes('700')) {
+      return { planKey: 'daara_annual', planName: 'Option Annuelle Sérénité Daara', price: 55000, type: 'DAARA' };
+    }
+    return { planKey: 'daara_standard', planName: 'Formule Standard Daara', price: 35000, type: 'DAARA' };
+  }
+
+  // 3. FAMILLE ÉCOLE PRIVÉE / SCOLAIRE
+  if (
+    p.includes('starter') ||
+    p.includes('pro') ||
+    p.includes('école') ||
+    p.includes('ecole') ||
+    p.includes('premium') ||
+    p.includes('enterprise') ||
+    p.includes('entreprise')
+  ) {
+    if (p.includes('premium') || p.includes('85')) {
+      return { planKey: 'premium', planName: 'Formule Premium', price: 85000, type: 'ECOLE' };
+    }
+    if (p.includes('enterprise') || p.includes('entreprise') || p.includes('devis')) {
+      return { planKey: 'enterprise', planName: 'Formule Entreprise', price: 150000, type: 'ECOLE' };
+    }
+    if (p.includes('starter') || p.includes('20')) {
+      return { planKey: 'starter', planName: 'Formule Starter', price: 20000, type: 'ECOLE' };
+    }
+    return { planKey: 'pro', planName: 'Formule École Pro', price: 55000, type: 'ECOLE' };
+  }
+
+  // 4. Repli sécurisé si plan non spécifié
+  const t = String(fallbackType || '').toUpperCase().trim();
+  if (t === 'DAARA') return { planKey: 'daara_standard', planName: 'Formule Standard Daara', price: 35000, type: 'DAARA' };
+  if (t === 'FORMATION_PRO' || t === 'INSTITUT' || t === 'SUPERIEUR') return { planKey: 'institut_pro', planName: 'Institut Pro', price: 75000, type: 'FORMATION_PRO' };
+  return { planKey: 'pro', planName: 'Formule École Pro', price: 55000, type: 'ECOLE' };
+}
+
 // Étape 1 : Initialisation de la session de paiement de souscription
 app.post('/api/subscriptions/checkout', async (req, res) => {
   const { schoolName, email, phone, city, type, planName, planPrice, operator, payeurTel, code, id } = req.body;
@@ -1455,16 +1536,17 @@ app.post('/api/subscriptions/checkout', async (req, res) => {
   let etab = existingIdx >= 0 ? db.etablissements[existingIdx] : null;
 
   if (!etab) {
+    const resolved = resolvePlanDetails(planName, type);
     etab = {
       id: id || `etab-${cleanSchool.toLowerCase().replace(/[^a-z0-9]/g, '') || Date.now()}`,
       code: code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: cleanSchool,
-      type: type || 'ECOLE',
+      type: resolved.type,
       city: city || 'Dakar',
       phone: phone || '+221 77 123 45 67',
       email: cleanEmail,
-      plan: planName || 'Formule École Pro',
-      prixMensuel: planPrice || '55 000 FCFA/mois',
+      plan: planName || resolved.planName,
+      prixMensuel: planPrice || resolved.price,
       statut: 'EN_ATTENTE_VALIDATION',
       statutAbonnement: 'EN_ATTENTE_VALIDATION',
       dateDemande: new Date().toISOString(),
@@ -1539,19 +1621,16 @@ app.post('/api/subscriptions/confirm', (req, res) => {
 
   if (!etab) {
     const defaultName = cleanSchool || 'Nouvel Établissement Partenaire';
+    const resolved = resolvePlanDetails(planName, type);
     etab = {
       id: id || `etab-${Date.now()}`,
       code: code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: defaultName,
-      type: type || (
-        (defaultName + ' ' + (planName || '')).toLowerCase().includes('daara') 
-          ? 'DAARA' 
-          : ((defaultName + ' ' + (planName || '')).toLowerCase().includes('institut') || (defaultName + ' ' + (planName || '')).toLowerCase().includes('formation') || (defaultName + ' ' + (planName || '')).toLowerCase().includes('campus') ? 'FORMATION_PRO' : 'ECOLE')
-      ),
+      type: resolved.type,
       city: city || 'Dakar',
       phone: phone || '+221 77 123 45 67',
       email: cleanEmail || `direction@${defaultName.toLowerCase().replace(/[^a-z0-9]/g, '')}.sn`,
-      plan: planName || 'Formule École Pro',
+      plan: planName || resolved.planName,
       statut: 'EN_ATTENTE_VALIDATION',
       statutAbonnement: 'EN_ATTENTE_VALIDATION',
       fraisAdhesionPayes: false,
@@ -1663,36 +1742,18 @@ app.post('/api/saas/demandes', (req, res) => {
   let etab = existingIdx >= 0 ? db.etablissements[existingIdx] : null;
 
   if (!etab) {
-    const pLow = (body.plan || '').toLowerCase();
-    const sLow = (cleanSchool + ' ' + (body.type || '') + ' ' + pLow).toLowerCase();
-    let autoType = 'ECOLE';
-    if (sLow.includes('daara') || sLow.includes('coran')) autoType = 'DAARA';
-    else if (sLow.includes('institut') || sLow.includes('formation') || sLow.includes('bts') || sLow.includes('cfpt') || sLow.includes('cqp') || sLow.includes('campus')) autoType = 'FORMATION_PRO';
-    if (body.type && ['DAARA', 'FORMATION_PRO', 'ECOLE'].includes(body.type.toUpperCase())) autoType = body.type.toUpperCase();
-
-    let autoPrice = Number(body.prixMensuel) || 0;
-    if (!autoPrice) {
-      if (pLow.includes('150') || pLow.includes('multi-campus') || pLow.includes('grande école') || pLow.includes('grande ecole') || sLow.includes('multi-campus') || sLow.includes('grande école')) autoPrice = 150000;
-      else if (pLow.includes('85') || pLow.includes('premium')) autoPrice = 85000;
-      else if (pLow.includes('starter')) autoPrice = (pLow.includes('institut') || sLow.includes('institut')) ? 45000 : 20000;
-      else if (pLow.includes('pro')) autoPrice = (pLow.includes('institut') || sLow.includes('institut')) ? 75000 : 55000;
-      else if (sLow.includes('45')) autoPrice = 45000;
-      else if (sLow.includes('75')) autoPrice = 75000;
-      else if (sLow.includes('35') || sLow.includes('daara')) autoPrice = 35000;
-      else if (sLow.includes('20')) autoPrice = 20000;
-      else if (autoType === 'FORMATION_PRO') autoPrice = 75000;
-      else autoPrice = 55000;
-    }
+    const resolved = resolvePlanDetails(body.plan, body.type);
+    const autoPrice = Number(body.prixMensuel) || resolved.price;
 
     etab = {
       id: body.id || `etab-${Date.now()}`,
       code: body.code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: cleanSchool,
-      type: autoType,
+      type: resolved.type,
       city: body.city || 'Dakar',
       phone: body.phone || '+221 77 123 45 67',
       email: body.email || `direction@${cleanSchool.toLowerCase().replace(/[^a-z0-9]/g, '')}.sn`,
-      plan: body.plan || (autoType === 'FORMATION_PRO' ? 'Institut Pro' : 'Formule Pro'),
+      plan: body.plan || resolved.planName,
       prixMensuel: autoPrice,
       statut: body.statut || 'EN_ATTENTE_VALIDATION',
       statutAbonnement: body.statutAbonnement || 'EN_ATTENTE_VALIDATION',

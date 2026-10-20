@@ -17,37 +17,100 @@ const INSTITUT_CYCLES = [
   { value: "Formation Modulaire", label: "Formation Modulaire" }
 ];
 
+// --- FONCTION SOUVERAINE : DÉTERMINATION STRICTE DU PLAN PAR LA FORMULE SOUSCRITE ---
+// La formule souscrite détermine exclusivement les droits, modules, accès et icônes d'un établissement
+function getEstablishmentPlanKey(est) {
+  if (!est) return 'starter';
+  const planRaw = String(est.plan || est.formule || est.requestedPlan || '').toLowerCase().trim();
+
+  // 1. FAMILLE INSTITUT / UCAD / FORMATION PROFESSIONNELLE / BTS / SUPÉRIEUR
+  if (
+    planRaw.includes('institut') ||
+    planRaw.includes('bts') ||
+    planRaw.includes('ucad') ||
+    planRaw.includes('supérieur') ||
+    planRaw.includes('superieur') ||
+    planRaw.includes('universitaire') ||
+    planRaw.includes('université') ||
+    planRaw.includes('universite') ||
+    planRaw.includes('formation pro') ||
+    planRaw.includes('formation_pro') ||
+    planRaw.includes('formation professionnelle') ||
+    planRaw.includes('grande école') ||
+    planRaw.includes('grande ecole') ||
+    planRaw.includes('multi-campus') ||
+    planRaw.includes('multicampus')
+  ) {
+    if (planRaw.includes('starter') || planRaw.includes('45')) return 'institut_starter';
+    if (planRaw.includes('grand') || planRaw.includes('campus') || planRaw.includes('150') || planRaw.includes('devis')) return 'grand_institut';
+    return 'institut_pro';
+  }
+
+  // 2. FAMILLE DAARA MODERNE / CORANIQUE / INTERNAT
+  if (
+    planRaw.includes('daara') ||
+    planRaw.includes('coran') ||
+    planRaw.includes('talibé') ||
+    planRaw.includes('talibe') ||
+    planRaw.includes('hizb') ||
+    planRaw.includes('internat promo') ||
+    planRaw.includes('sérénité') ||
+    planRaw.includes('serenite')
+  ) {
+    if (planRaw.includes('promo') || planRaw.includes('pionnier') || planRaw.includes('20')) return 'daara_promo';
+    if (planRaw.includes('annuel') || planRaw.includes('sérénité') || planRaw.includes('serenite') || planRaw.includes('350') || planRaw.includes('700')) return 'daara_annual';
+    return 'daara_standard';
+  }
+
+  // 3. FAMILLE ÉCOLE PRIVÉE / SCOLAIRE
+  if (
+    planRaw.includes('starter') ||
+    planRaw.includes('pro') ||
+    planRaw.includes('école') ||
+    planRaw.includes('ecole') ||
+    planRaw.includes('premium') ||
+    planRaw.includes('enterprise') ||
+    planRaw.includes('entreprise')
+  ) {
+    if (planRaw.includes('premium') || planRaw.includes('85')) return 'premium';
+    if (planRaw.includes('enterprise') || planRaw.includes('entreprise') || planRaw.includes('devis')) return 'enterprise';
+    if (planRaw.includes('starter') || planRaw.includes('20')) return 'starter';
+    return 'pro';
+  }
+
+  // 4. Repli sécurisé si plan vide
+  const typeUpper = String(est.type || '').toUpperCase().trim();
+  if (typeUpper === 'DAARA') return 'daara_standard';
+  if (typeUpper === 'FORMATION_PRO' || typeUpper === 'INSTITUT' || typeUpper === 'SUPERIEUR') return 'institut_pro';
+  if (typeUpper === 'PREMIUM') return 'premium';
+
+  return 'pro';
+}
+
 function isInstitutEstablishment(est) {
   if (!est) return false;
-  const typeUpper = String(est.type || '').toUpperCase().trim();
-  if (typeUpper === 'DAARA') return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'institut_starter' || key === 'institut_pro' || key === 'grand_institut';
+}
 
-  const planLower = String(est.plan || est.formule || '').toLowerCase().trim();
-  const typeLower = String(est.type || '').toLowerCase().trim();
-  const nameLower = String(est.name || est.nom || '').toLowerCase().trim();
+function isDaaraEstablishment(est) {
+  if (!est) return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'daara_promo' || key === 'daara_standard' || key === 'daara_annual';
+}
 
-  // 1. Formules / types explicites de la commande utilisateur :
-  // "Institut Starter", "Institut Pro", "Grande École / Multi-Campus"
-  if (planLower.includes('institut starter') || typeLower.includes('institut starter')) return true;
-  if (planLower.includes('institut pro') || typeLower.includes('institut pro')) return true;
-  if (planLower.includes('grande école') || planLower.includes('grande ecole') || planLower.includes('multi-campus') || planLower.includes('multicampus')) return true;
-  if (typeLower.includes('grande école') || typeLower.includes('grande ecole') || typeLower.includes('multi-campus') || typeLower.includes('multicampus')) return true;
-
-  // 2. Types reconnus
-  if (typeUpper === 'FORMATION_PRO' || typeUpper === 'INSTITUT' || typeUpper === 'INSTITUT_STARTER' || typeUpper === 'INSTITUT_PRO' || typeUpper === 'GRANDE_ECOLE' || typeUpper === 'SUPERIEUR') return true;
-
-  // 3. Plans contenant institut, bts, formation pro
-  if (planLower.includes('institut') || planLower.includes('bts') || planLower.includes('formation pro') || planLower.includes('formation_pro') || planLower.includes('formation professionnelle')) return true;
-
-  // 4. Noms d'instituts si non typé explicitement ECOLE
-  if (typeUpper !== 'ECOLE' && (nameLower.includes('institut') || nameLower.includes('formation pro') || nameLower.includes('centre de formation'))) return true;
-
-  return false;
+function isEcoleEstablishment(est) {
+  if (!est) return false;
+  const key = getEstablishmentPlanKey(est);
+  return key === 'starter' || key === 'pro' || key === 'premium' || key === 'enterprise';
 }
 
 if (typeof window !== 'undefined') {
   window.INSTITUT_CYCLES = INSTITUT_CYCLES;
+  window.getEstablishmentPlanKey = getEstablishmentPlanKey;
   window.isInstitutEstablishment = isInstitutEstablishment;
+  window.isDaaraEstablishment = isDaaraEstablishment;
+  window.isEcoleEstablishment = isEcoleEstablishment;
 }
 
 // Initial Seed data pour mode autonome / fallback immédiat
