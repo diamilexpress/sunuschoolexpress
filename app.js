@@ -5278,13 +5278,26 @@ function checkUrlDirectLogin() {
     const qCode = urlParams.get('code') || urlParams.get('etab') || urlParams.get('ecole');
     const qKey = urlParams.get('key') || urlParams.get('cle') || urlParams.get('pass');
     if (qCode && qKey) {
-      setTimeout(() => {
+      const runLogin = () => {
         const codeInput = document.getElementById('authGateCodeInput');
         const keyInput = document.getElementById('authGateKeyInput');
         if (codeInput) codeInput.value = qCode;
         if (keyInput) keyInput.value = qKey;
         handleAuthGateLoginSubmit();
-      }, 250);
+      };
+      if (document.readyState === 'complete') {
+        runLogin();
+      } else {
+        setTimeout(runLogin, 100);
+      }
+    } else if (qCode) {
+      setTimeout(() => {
+        openAuthGateModal();
+        const codeInput = document.getElementById('authGateCodeInput');
+        if (codeInput) codeInput.value = qCode;
+        const keyInput = document.getElementById('authGateKeyInput');
+        if (keyInput) keyInput.focus();
+      }, 150);
     }
   } catch(e) {}
 }

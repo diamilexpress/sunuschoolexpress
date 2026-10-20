@@ -8,4 +8,4 @@
 
 # Réécriture propre des URL
 /admin       /admin.html      200
-/dashboard   /dashboard.html  200
+/dashboard   /index.html      200

@@ -4116,7 +4116,7 @@ function sendAccessLinkWhatsApp(etabId) {
   const baseUrl = (window.location.protocol === 'file:') ? window.location.href.split('dashboard.html')[0] : (window.location.origin + '/');
   const rawDigits = (etab.code || '').replace(/[^0-9]/g, '') || '2026';
   const secretKey = etab.secretKey || etab.password || `ADM-${rawDigits}`;
-  const directLink = `${baseUrl}dashboard.html?code=${encodeURIComponent(etab.code || '')}&key=${encodeURIComponent(secretKey)}`;
+  const directLink = `${baseUrl}index.html?code=${encodeURIComponent(etab.code || '')}&key=${encodeURIComponent(secretKey)}`;
   
   const msg = encodeURIComponent(
     `🎉 Bonjour ${etab.directeurNom || 'Monsieur le Directeur'},\n\n` +

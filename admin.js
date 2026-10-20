@@ -1463,7 +1463,7 @@ function sendWhatsAppAccessHQ(idOrCode) {
   
   const rawDigits = (etab.code || '').replace(/[^0-9]/g, '') || '2026';
   const secretKey = etab.secretKey || etab.password || `ADM-${rawDigits}`;
-  const directLoginUrl = `${baseUrl}dashboard.html?code=${encodeURIComponent(etab.code || '')}&key=${encodeURIComponent(secretKey)}`;
+  const directLoginUrl = `${baseUrl}index.html?code=${encodeURIComponent(etab.code || '')}&key=${encodeURIComponent(secretKey)}`;
 
   const msg = encodeURIComponent(
     `🎉 Bonjour ${etab.directeurNom || 'Monsieur le Directeur'},\n\n` +
@@ -1737,7 +1737,9 @@ function inspectSchoolInSupportMode(idOrCode) {
     localStorage.setItem('sunuschool_active_workspace', 'true');
   } catch(e) {}
 
-  window.open(`dashboard.html`, '_blank');
+  const rawDigits = (etab.code || '').replace(/[^0-9]/g, '') || '2026';
+  const secretKey = etab.secretKey || etab.password || `ADM-${rawDigits}`;
+  window.open(`index.html?code=${encodeURIComponent(etab.code || '')}&key=${encodeURIComponent(secretKey)}`, '_blank');
 }
 
 function saveAllToStorage(updatedEtab) {

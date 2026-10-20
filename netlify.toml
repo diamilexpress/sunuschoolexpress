@@ -40,7 +40,7 @@
 
 [[redirects]]
   from = "/dashboard"
-  to = "/dashboard.html"
+  to = "/index.html"
   status = 200
 
 # 3. En-têtes de sécurité HTTP (Conformité ISO 27001)

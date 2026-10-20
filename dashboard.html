@@ -3,6 +3,17 @@
 
 <head>
   <meta charset="UTF-8">
+  <script>
+    // Unification immédiate vers l'espace de travail officiel élégant
+    (function() {
+      try {
+        var search = window.location.search || '';
+        window.location.replace('./index.html' + search);
+      } catch(e) {
+        window.location.href = './index.html' + (window.location.search || '');
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SunuSchoolExpress - Espace de Gestion Établissement & Daara Moderne (SaaS Pro)</title>
   <meta name="description"
