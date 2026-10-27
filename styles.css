@@ -231,29 +231,62 @@ html[data-theme="light"] p {
   color: #334155 !important;
 }
 
-/* Barre de Navigation en Mode Clair */
-html[data-theme="light"] .header-nav {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-bottom: 1px solid rgba(10, 25, 47, 0.1) !important;
-  box-shadow: 0 4px 20px rgba(10, 25, 47, 0.04) !important;
-}
-
+/* Barre de Navigation Institutionnelle (Header) - Haute Lisibilité en Mode Sombre & Clair */
+.main-header .nav-link,
+html[data-theme="light"] .main-header .nav-link,
 html[data-theme="light"] .nav-link {
-  color: #334155 !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-weight: 600 !important;
+  font-size: 0.92rem !important;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  padding: 0.45rem 0.4rem;
+  transition: color var(--transition-fast);
 }
 
+.main-header .nav-link:hover,
+html[data-theme="light"] .main-header .nav-link:hover,
 html[data-theme="light"] .nav-link:hover {
-  color: #008B7A !important;
+  color: #10B981 !important;
+}
+
+.main-header .nav-link.active,
+html[data-theme="light"] .main-header .nav-link.active,
+html[data-theme="light"] .nav-link.active {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+.main-header .nav-link.active::after,
+html[data-theme="light"] .main-header .nav-link.active::after,
+html[data-theme="light"] .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background: #10B981 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7) !important;
+  border-radius: 2px;
 }
 
 html[data-theme="light"] .brand-logo-text-group .brand-name {
-  color: #0A192F !important;
+  color: #FFFFFF !important;
 }
 
+html[data-theme="light"] .main-header .lang-switch-btn,
 html[data-theme="light"] .lang-switch-btn {
-  background: #FFFFFF !important;
-  border-color: rgba(10, 25, 47, 0.2) !important;
-  color: #0A192F !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+html[data-theme="light"] .main-header .lang-switch-btn:hover,
+html[data-theme="light"] .lang-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: #10B981 !important;
+  color: #10B981 !important;
 }
 
 /* Bandeau de Reprise de Session */
@@ -463,32 +496,48 @@ html[data-theme="light"] .mobile-nav-link:hover {
 
 /* ==========================================================================
    AMÉLIORATION DE LA VISIBILITÉ EN MODE CLAIR (HIGH CONTRAST & READABILITY)
+   Palette 2 Couleurs : Bleu Marine (#0F2942) + Vert Émeraude (#10B981)
    ========================================================================== */
 
 /* 1. Titres, Accents & Badges du Hero */
+.text-emerald {
+  color: #10B981 !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme="light"] .hero-title {
+  color: #0F2942 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+}
+
+html[data-theme="light"] .hero-title span.text-emerald {
+  color: #10B981 !important;
+  -webkit-text-fill-color: #10B981 !important;
+  background: none !important;
+}
+
 html[data-theme="light"] .hero-title span.highlight-turq {
-  background: linear-gradient(135deg, #008B7A, #0284C7) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  color: #008B7A !important;
+  color: #10B981 !important;
+  -webkit-text-fill-color: #10B981 !important;
+  background: none !important;
 }
 
 html[data-theme="light"] .hero-title span.highlight-gold {
-  background: linear-gradient(135deg, #D97706, #B45309) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  color: #B45309 !important;
+  color: #0F2942 !important;
+  -webkit-text-fill-color: #0F2942 !important;
+  background: none !important;
 }
 
 html[data-theme="light"] .hero-badge-tag {
-  background: rgba(0, 168, 144, 0.12) !important;
-  border: 1px solid rgba(0, 168, 144, 0.4) !important;
-  color: #007A6B !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #059669 !important;
   font-weight: 700 !important;
 }
 
 html[data-theme="light"] .hero-badges-row {
-  border-top: 1px solid rgba(10, 25, 47, 0.1) !important;
+  border-top: 1px solid #E2E8F0 !important;
 }
 
 html[data-theme="light"] .hero-badge-item {
@@ -497,18 +546,68 @@ html[data-theme="light"] .hero-badge-item {
 }
 
 html[data-theme="light"] .hero-badge-item svg {
-  color: #008B7A !important;
+  color: #10B981 !important;
+}
+
+/* Boutons Dédiés Palette 2 Couleurs */
+.btn-emerald-hero {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 0.98rem !important;
+  padding: 0.85rem 1.6rem !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid #059669 !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.28) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.55rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+}
+
+.btn-emerald-hero:hover {
+  background: #059669 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.38) !important;
+  color: #FFFFFF !important;
+}
+
+.btn-navy-hero {
+  background: #FFFFFF !important;
+  color: #0F2942 !important;
+  font-weight: 700 !important;
+  font-size: 0.96rem !important;
+  padding: 0.85rem 1.5rem !important;
+  border-radius: var(--radius-md) !important;
+  border: 1.5px solid #0F2942 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.55rem !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-navy-hero:hover {
+  background: #F1F5F9 !important;
+  color: #0F2942 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(15, 41, 66, 0.08) !important;
 }
 
 /* 2. Carte Démo interactive Hero (.hero-preview-card) */
 html[data-theme="light"] .hero-preview-card {
   background: #FFFFFF !important;
-  border: 1px solid rgba(10, 25, 47, 0.12) !important;
-  box-shadow: 0 16px 40px rgba(10, 25, 47, 0.08) !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 16px 40px rgba(15, 41, 66, 0.08) !important;
 }
 
 html[data-theme="light"] .hero-preview-card::before {
-  background: radial-gradient(circle, rgba(217, 119, 6, 0.1) 0%, transparent 70%) !important;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%) !important;
 }
 
 html[data-theme="light"] .preview-card-header {
@@ -516,7 +615,7 @@ html[data-theme="light"] .preview-card-header {
 }
 
 html[data-theme="light"] .preview-school-info div:first-child {
-  color: #0A192F !important;
+  color: #0F2942 !important;
 }
 
 html[data-theme="light"] .preview-school-info div:last-child {
@@ -557,17 +656,18 @@ html[data-theme="light"] .mini-stat-card .value .trend {
 }
 
 html[data-theme="light"] .hizb-teaser-box {
-  background: #FFFDF5 !important;
-  border: 1px solid rgba(217, 119, 6, 0.25) !important;
+  background: rgba(16, 185, 129, 0.05) !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
 }
 
 html[data-theme="light"] .hizb-teaser-title {
-  color: #92400E !important;
+  color: #059669 !important;
   font-weight: 700 !important;
 }
 
 html[data-theme="light"] .hizb-teaser-header span:last-child {
-  color: #B45309 !important;
+  color: #0F2942 !important;
+  font-weight: 700 !important;
 }
 
 html[data-theme="light"] .progress-bar-container {
@@ -687,6 +787,75 @@ html[data-theme="light"] .text-turquoise {
 
 html[data-theme="light"] .text-note {
   color: #0A192F !important;
+}
+
+/* Exceptions pour Conteneurs Sombres Institutionnels en Mode Clair (Header, Footer, Démo Vidéo) */
+html[data-theme="light"] .main-footer,
+html[data-theme="light"] .main-footer [style*="color: var(--blanc-pur)"],
+html[data-theme="light"] .main-footer [style*="color:var(--blanc-pur)"],
+html[data-theme="light"] .main-footer [style*="color: #FFF"],
+html[data-theme="light"] .main-footer [style*="color:#FFF"],
+html[data-theme="light"] .main-footer h4 {
+  color: #FFFFFF !important;
+}
+
+html[data-theme="light"] .main-footer [style*="color: var(--gris-300)"],
+html[data-theme="light"] .main-footer [style*="color:var(--gris-300)"],
+html[data-theme="light"] .main-footer p,
+html[data-theme="light"] .main-footer ul li {
+  color: #CBD5E1 !important;
+}
+
+html[data-theme="light"] .main-footer [style*="color: var(--gris-500)"],
+html[data-theme="light"] .main-footer [style*="color:var(--gris-500)"],
+html[data-theme="light"] .main-footer .footer-bottom {
+  color: #94A3B8 !important;
+}
+
+html[data-theme="light"] .main-footer a {
+  color: inherit;
+}
+
+html[data-theme="light"] .demo-chapters-playlist-card [style*="color: #FFF"],
+html[data-theme="light"] .demo-chapters-playlist-card [style*="color:#FFF"],
+html[data-theme="light"] .demo-chapters-playlist-card h4 {
+  color: #FFFFFF !important;
+}
+
+html[data-theme="light"] .demo-chapters-playlist-card [style*="color: var(--gris-400)"],
+html[data-theme="light"] .demo-chapters-playlist-card p {
+  color: #94A3B8 !important;
+}
+
+/* Bandeau Clé d'Accès Sécurisé en Mode Clair (Haute Lisibilité) */
+html[data-theme="light"] .access-key-banner,
+.access-key-banner {
+  background: linear-gradient(135deg, #0F2942 0%, #0A192F 100%) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.45) !important;
+}
+
+html[data-theme="light"] .access-key-banner h4,
+html[data-theme="light"] .access-key-banner .access-key-title,
+html[data-theme="light"] .access-key-banner [style*="color: var(--blanc-pur)"],
+html[data-theme="light"] .access-key-banner [style*="color:var(--blanc-pur)"] {
+  color: #FFFFFF !important;
+}
+
+html[data-theme="light"] .access-key-banner p,
+html[data-theme="light"] .access-key-banner .access-key-desc,
+html[data-theme="light"] .access-key-banner [style*="color: var(--gris-400)"],
+html[data-theme="light"] .access-key-banner [style*="color:var(--gris-400)"] {
+  color: #E2E8F0 !important;
+}
+
+html[data-theme="light"] .access-key-banner .access-key-icon-bubble {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #10B981 !important;
+  color: #10B981 !important;
+}
+
+html[data-theme="light"] .access-key-banner .access-key-icon-bubble svg {
+  stroke: #10B981 !important;
 }
 
 /* 5. Cantine & Dortoirs / Lits Internat */
@@ -1794,12 +1963,23 @@ html[data-theme="light"] .p-item-desc {
    ESPACE DÉMO : LECTEUR VIDÉO BIMODAL & CONTRÔLES INTERACTIFS
    ========================================================================== */
 
-/* Sélecteur Bimodal : Daaras VS Écoles Privées */
+/* Sélecteur Multimodal : Spot Vidéo Officiel & Simulations */
 .demo-video-mode-nav {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.2rem;
   margin-bottom: 2rem;
+}
+
+.demo-real-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: #000;
+  transition: opacity 0.3s ease;
 }
 
 .demo-mode-tab-btn {
@@ -7285,8 +7465,8 @@ html[data-theme="light"] .ws-etab-selector {
 .access-key-banner {
   margin: 2.5rem auto 0;
   max-width: 1100px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(10, 25, 47, 0.98));
-  border: 1px solid rgba(0, 210, 180, 0.35);
+  background: linear-gradient(135deg, #0F2942 0%, #0A192F 100%) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.45) !important;
   border-radius: var(--radius-lg);
   padding: 1.4rem 1.8rem;
   display: flex;
@@ -7294,7 +7474,7 @@ html[data-theme="light"] .ws-etab-selector {
   justify-content: space-between;
   gap: 1.5rem;
   flex-wrap: wrap;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 20px rgba(0, 210, 180, 0.08);
+  box-shadow: 0 10px 32px rgba(15, 41, 66, 0.22), 0 0 20px rgba(16, 185, 129, 0.12);
 }
 
 .access-key-banner-content {
@@ -7309,13 +7489,33 @@ html[data-theme="light"] .ws-etab-selector {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: rgba(0, 210, 180, 0.15);
-  border: 1px solid rgba(0, 210, 180, 0.4);
+  background: rgba(16, 185, 129, 0.2) !important;
+  border: 1.5px solid #10B981 !important;
+  color: #10B981 !important;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
   flex-shrink: 0;
+}
+
+.access-key-icon-bubble svg {
+  stroke: #10B981 !important;
+}
+
+.access-key-title {
+  font-size: 1.18rem !important;
+  font-weight: 700 !important;
+  color: #FFFFFF !important;
+  margin: 0 0 0.35rem 0 !important;
+  letter-spacing: -0.2px;
+}
+
+.access-key-desc {
+  font-size: 0.94rem !important;
+  color: #E2E8F0 !important;
+  line-height: 1.55 !important;
+  margin: 0 !important;
 }
 
 .access-key-banner-actions {

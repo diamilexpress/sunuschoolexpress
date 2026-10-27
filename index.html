@@ -51,25 +51,30 @@
       </nav>
 
       <div class="header-actions">
-        <!-- Commutateur de Thème 🌞 / 🌙 -->
+        <!-- Commutateur de Thème -->
         <button class="theme-toggle-btn" id="headerThemeToggleBtn" onclick="toggleTheme()" aria-label="Basculer Mode Clair / Sombre" title="Basculer entre Mode Sombre et Mode Clair">
-          <span class="theme-icon sun-icon">🌞</span>
+          <span class="theme-icon sun-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </span>
           <span class="theme-switch-slider">
             <span class="theme-switch-knob"></span>
           </span>
-          <span class="theme-icon moon-icon">🌙</span>
+          <span class="theme-icon moon-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </span>
         </button>
 
-        <!-- Commutateur de Langue Bilingue (Format plein sur Desktop, compact sur Mobile) -->
-        <button id="langSwitchBtn" class="lang-switch-btn" title="Changer de langue / Soppi lakk bi">
-          <span class="lang-text-desktop">🇸🇳 Wolof</span>
-          <span class="lang-text-mobile">🇸🇳 WO</span>
+        <!-- Commutateur de Langue Bilingue -->
+        <button id="langSwitchBtn" class="lang-switch-btn" title="Changer de langue / Soppi lakk bi" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span class="lang-text-desktop">Wolof</span>
+          <span class="lang-text-mobile">WO</span>
         </button>
 
         <!-- Menu Déroulant Portails Dédiés (Masqué) -->
         <div class="portals-dropdown desktop-only" id="portalsDropdown" style="display: none !important;">
           <button type="button" class="btn btn-outline portals-dropdown-btn" onclick="togglePortalsDropdown(event)" id="portalsDropdownBtn" aria-haspopup="true" aria-expanded="false">
-            <span>🎓 Portails Dédiés</span>
+            <span>Portails Dédiés</span>
             <span class="dropdown-arrow">▾</span>
           </button>
           <div class="portals-dropdown-menu" id="portalsDropdownMenu"></div>
@@ -81,8 +86,9 @@
         </button>
 
         <!-- Accès Direct Espace / Connexion -->
-        <button id="navWorkspaceBtn" class="btn btn-gold desktop-only" style="padding: 0.45rem 1.05rem; font-size: 0.86rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem;" onclick="openWorkspaceDirect()" title="Se Connecter à l'Espace Établissement">
-          <span>🔑</span> <span>Se Connecter</span>
+        <button id="navWorkspaceBtn" class="btn btn-emerald-hero desktop-only" style="padding: 0.5rem 1.25rem; font-size: 0.88rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem;" onclick="openWorkspaceDirect()" title="Se Connecter à l'Espace Établissement">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span>Connexion</span>
         </button>
 
         <!-- Bouton Hamburger Menu Mobile -->
@@ -97,20 +103,43 @@
     <!-- Tiroir Mobile Responsive (Slide-down Menu) -->
     <div id="mobileNavDrawer" class="mobile-nav-drawer">
       <ul class="mobile-nav-links">
-        <li><a href="#hero" onclick="closeMobileMenu()" class="mobile-nav-link">🏠 Présentation</a></li>
-        <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect();" class="mobile-nav-link" style="color: #FBBF24; font-weight: 700;">🔑 Se Connecter</a></li>
-        <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect('DAARA');" class="mobile-nav-link" style="color: #00D2B4; font-weight: 700;">🕌 Espace Daara (Talibés &amp; Dortoirs)</a></li>
-        <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect('FORMATION_PRO');" class="mobile-nav-link" style="color: #38BDF8; font-weight: 700;">🎓 Espace Institut Pro (BTS &amp; Métiers)</a></li>
-        <li><a href="#portal" onclick="closeMobileMenu()" class="mobile-nav-link">💻 Fonctionnalités &amp; Démo</a></li>
-        <li><a href="#tarifs" onclick="closeMobileMenu()" class="mobile-nav-link">🏷️ Tarifs &amp; Offres</a></li>
-        <li><a href="#contact" onclick="closeMobileMenu()" class="mobile-nav-link">📞 Contact &amp; Assistance</a></li>
+        <li><a href="#hero" onclick="closeMobileMenu()" class="mobile-nav-link" style="display: flex; align-items: center; gap: 0.65rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Présentation</span>
+        </a></li>
+        <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect();" class="mobile-nav-link" style="color: #10B981; font-weight: 700; display: flex; align-items: center; gap: 0.65rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span>Se Connecter</span>
+        </a></li>
+        <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect('DAARA');" class="mobile-nav-link" style="font-weight: 700; display: flex; align-items: center; gap: 0.65rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Espace Daara (Talibés &amp; Dortoirs)</span>
+        </a></li>
+        <li><a href="javascript:void(0)" onclick="closeMobileMenu(); openWorkspaceDirect('FORMATION_PRO');" class="mobile-nav-link" style="font-weight: 700; display: flex; align-items: center; gap: 0.65rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>Espace Institut Pro (BTS &amp; Métiers)</span>
+        </a></li>
+        <li><a href="#portal" onclick="closeMobileMenu()" class="mobile-nav-link" style="display: flex; align-items: center; gap: 0.65rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span>Fonctionnalités &amp; Démo</span>
+        </a></li>
+        <li><a href="#tarifs" onclick="closeMobileMenu()" class="mobile-nav-link" style="display: flex; align-items: center; gap: 0.65rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <span>Tarifs &amp; Offres</span>
+        </a></li>
+        <li><a href="#contact" onclick="closeMobileMenu()" class="mobile-nav-link" style="display: flex; align-items: center; gap: 0.65rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Contact &amp; Assistance</span>
+        </a></li>
       </ul>
       <div class="mobile-drawer-actions">
-        <button id="mobNavWorkspaceBtn" class="btn btn-gold" style="width: 100%; justify-content: center; font-size: 0.85rem; margin-bottom: 0.6rem;" onclick="closeMobileMenu(); openWorkspaceDirect();">
-          <span>🔑</span> <span>Se Connecter</span>
+        <button id="mobNavWorkspaceBtn" class="btn btn-emerald-hero" style="width: 100%; justify-content: center; font-size: 0.9rem; margin-bottom: 0.6rem; min-height: 48px;" onclick="closeMobileMenu(); openWorkspaceDirect();">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span>Accéder à mon Espace</span>
         </button>
-        <button class="btn btn-primary" onclick="closeMobileMenu(); triggerMobileAppInstall();" style="width: 100%; justify-content: center; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #00D2B4, #00897B); color: #051329; box-shadow: 0 4px 15px rgba(0,210,180,0.3);">
-          <span>📲</span> <span>Télécharger l'App sur mon Téléphone</span>
+        <button class="btn btn-navy-hero" onclick="closeMobileMenu(); triggerMobileAppInstall();" style="width: 100%; justify-content: center; font-size: 0.88rem; min-height: 48px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <span>Installer l'App Téléphone</span>
         </button>
       </div>
     </div>
@@ -120,12 +149,13 @@
   <div id="offlineReconnectBanner" style="display: none; background: linear-gradient(90deg, #991B1B, #B91C1C); color: #FFF; padding: 0.65rem 1.2rem; font-size: 0.85rem; position: sticky; top: 72px; z-index: 998; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
     <div class="container" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
       <div style="display: flex; align-items: center; gap: 0.6rem;">
-        <span style="font-size: 1.2rem; animation: pulse 1.5s infinite;">⚠️</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span><strong>Connexion Internet interrompue ou instable.</strong> Vos données locales sont protégées.</span>
       </div>
       <div style="display: flex; gap: 0.6rem; align-items: center;">
-        <button class="btn btn-gold" style="padding: 0.35rem 0.85rem; font-size: 0.78rem; font-weight: 800;" onclick="triggerMfaSimulation()">
-          🔑 Se Reconnecter avec l'E-mail Établissement
+        <button class="btn btn-gold" style="padding: 0.35rem 0.85rem; font-size: 0.78rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.4rem;" onclick="triggerMfaSimulation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span>Se Reconnecter avec l'E-mail Établissement</span>
         </button>
         <button style="background: transparent; border: none; color: #FFF; font-size: 1.1rem; cursor: pointer;" onclick="document.getElementById('offlineReconnectBanner').style.display='none'" title="Ignorer">✕</button>
       </div>
@@ -141,7 +171,9 @@
         <!-- Bandeau de Reprise de Session (Masqué par défaut, affiché uniquement après sortie explicite vers la vitrine) -->
         <div id="activeSessionRecoveryBanner" style="background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 0.85rem 1.2rem; margin-bottom: 1.4rem; display: none; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 0.85rem;">
-            <div style="font-size: 1.8rem; line-height: 1;" id="sessionBannerIcon">🏫</div>
+            <div style="font-size: 1.8rem; line-height: 1; display: flex; align-items: center;" id="sessionBannerIcon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
             <div>
               <div style="font-size: 0.75rem; color: #D4AF37; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Session Établissement Active Détectée</div>
               <div style="font-size: 1.05rem; font-weight: 800;" id="sessionBannerSchoolName">Mon Établissement</div>
@@ -149,54 +181,52 @@
             </div>
           </div>
           <button class="btn btn-gold" id="sessionBannerActionBtn" style="padding: 0.45rem 1.1rem; font-size: 0.85rem; font-weight: 800;" onclick="reenterWorkspaceDirectly()">
-            ⚡ Reprendre ma Session →
+            Reprendre ma Session →
           </button>
         </div>
 
-        <div class="hero-badge-tag" data-i18n="hero_badge">
-          ✨ N°1 de la Transformation Numérique Scolaire au Sénégal
+        <div class="hero-badge-tag" data-i18n="hero_badge" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Plateforme Scolaire, Daaras &amp; Instituts Pro • Sénégal</span>
         </div>
         <h1 class="hero-title" data-i18n="hero_title">
-          L'écosystème numérique au service de <span class="highlight-turq">l'innovation</span> et de <span class="highlight-gold">la réussite éducative</span>.
+          La gestion scolaire moderne, simplifiée pour <span class="text-emerald">le Sénégal</span>.
         </h1>
         <p class="hero-subtitle" data-i18n="hero_subtitle" style="margin-bottom: 0.85rem; line-height: 1.65;">
-          Simplifiez la gestion de votre école ou daara, encaissez vos paiements en toute sécurité, et valorisez vos élèves avec des bulletins conformes MEN et un suivi coranique d’exception.
+          Inscriptions, scolarités Wave &amp; Orange Money, bulletins officiels MEN et suivi coranique pour Écoles Privées, Daaras et Instituts Pro.
         </p>
-        <p class="hero-tagline" data-i18n="hero_tagline" style="margin-top: 0; margin-bottom: 2.2rem; color: var(--turquoise-400); font-weight: 600; font-size: 0.96rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span>🚀</span> <span>L’éducation sénégalaise entre dans une nouvelle ère — simple, fluide et 100% numérique.</span>
+        <p class="hero-tagline" data-i18n="hero_tagline" style="margin-top: 0; margin-bottom: 2rem; color: #10B981; font-weight: 600; font-size: 0.96rem; display: flex; align-items: center; gap: 0.55rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Une plateforme claire, rapide et 100% accessible sur smartphone.</span>
         </p>
 
         <div class="hero-actions">
-          <button type="button" class="btn btn-gold" onclick="openWorkspaceDirect()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; padding: 0.75rem 1.4rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
-            <span>🔑</span> <span>Se Connecter</span>
+          <button type="button" class="btn btn-emerald-hero" onclick="openWorkspaceDirect()" title="Accéder à l'espace de gestion scolaire">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <span>Accéder à mon Espace</span>
           </button>
-          <button type="button" class="btn" onclick="triggerMobileAppInstall()" style="background: linear-gradient(135deg, rgba(0, 210, 180, 0.18), rgba(0, 210, 180, 0.05)); border: 1.5px solid #00D2B4; color: #00D2B4; font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.92rem; padding: 0.75rem 1.3rem; box-shadow: 0 4px 15px rgba(0, 210, 180, 0.2);" title="Installer l'application SunuSchool sur votre smartphone Android ou iPhone">
-            <span>📲</span> <span>Télécharger l'App Téléphone</span>
-          </button>
-          <button type="button" class="btn btn-outline" onclick="openWorkspaceDirect('DAARA')" style="color: var(--turquoise-400); border-color: rgba(0, 210, 180, 0.5); font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.9rem; padding: 0.75rem 1.25rem;">
-            <span>🕌</span> <span>Espace Daara (Talibés &amp; Dortoirs)</span>
-          </button>
-          <a href="#portal" class="btn btn-outline" data-i18n="btn_explore_demo" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; padding: 0.75rem 1.1rem;">
-            <span>💻</span> <span>Démo Vidéo</span>
+          <a href="#portal" class="btn btn-navy-hero" data-i18n="btn_explore_demo" title="Découvrir les fonctionnalités et voir la démo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            <span>Découvrir la Démo</span>
           </a>
         </div>
 
         <div class="hero-badges-row">
           <div class="hero-badge-item">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
             <span data-i18n="badge_wave">Paiement Wave &amp; OM certifié</span>
           </div>
           <div class="hero-badge-item">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
             <span data-i18n="badge_syscohada">Conforme SYSCOHADA</span>
           </div>
           <div class="hero-badge-item">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
             <span data-i18n="badge_bilingual">100% Bilingue Wolof - Français</span>
           </div>
@@ -206,15 +236,18 @@
       <!-- Hero Interactive Teaser Card avec Bascule Trimodale École Privée / Daara Moderne / Institut Pro -->
       <div class="hero-preview-card" id="heroPreviewCard">
         <!-- Switcher Type d'Établissement -->
-        <div style="display: flex; gap: 0.35rem; background: rgba(0,0,0,0.25); padding: 0.3rem; border-radius: 999px; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.08);">
-          <button type="button" id="heroSwitchSchoolBtn" onclick="switchHeroPreview('school')" style="flex: 1; border: none; background: var(--turquoise-500); color: #060D17; font-weight: 800; font-size: 0.78rem; padding: 0.4rem 0.4rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
-            🏫 École Privée
+        <div class="hero-switcher-wrap" style="display: flex; gap: 0.35rem; background: #F1F5F9; padding: 0.35rem; border-radius: 999px; margin-bottom: 1.2rem; border: 1px solid #E2E8F0;">
+          <button type="button" id="heroSwitchSchoolBtn" onclick="switchHeroPreview('school')" style="flex: 1; border: none; background: #10B981; color: #FFFFFF; font-weight: 700; font-size: 0.82rem; padding: 0.5rem 0.5rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>École Privée</span>
           </button>
-          <button type="button" id="heroSwitchDaaraBtn" onclick="switchHeroPreview('daara')" style="flex: 1; border: none; background: transparent; color: var(--gris-300); font-weight: 700; font-size: 0.78rem; padding: 0.4rem 0.4rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
-            🕌 Daara Moderne
+          <button type="button" id="heroSwitchDaaraBtn" onclick="switchHeroPreview('daara')" style="flex: 1; border: none; background: transparent; color: #0F2942; font-weight: 600; font-size: 0.82rem; padding: 0.5rem 0.5rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Daara Moderne</span>
           </button>
-          <button type="button" id="heroSwitchInstitutBtn" onclick="switchHeroPreview('institut')" style="flex: 1; border: none; background: transparent; color: var(--gris-300); font-weight: 700; font-size: 0.78rem; padding: 0.4rem 0.4rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;">
-            🎓 Institut Pro (Thiès)
+          <button type="button" id="heroSwitchInstitutBtn" onclick="switchHeroPreview('institut')" style="flex: 1; border: none; background: transparent; color: #0F2942; font-weight: 600; font-size: 0.82rem; padding: 0.5rem 0.5rem; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Institut Pro</span>
           </button>
         </div>
 
@@ -222,7 +255,9 @@
         <div id="heroPreviewSchool">
           <div class="preview-card-header">
             <div class="preview-school-info">
-              <div class="preview-avatar-icon" style="background: rgba(0,210,180,0.15); color: #00D2B4;">🏫</div>
+              <div class="preview-avatar-icon" style="background: rgba(16,185,129,0.12); color: #059669; display: flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </div>
               <div>
                 <div style="font-weight: 700; font-size: 1.05rem;">Mon Établissement</div>
                 <div style="font-size: 0.8rem; color: var(--gris-500);">Dakar / Thiès • Maternelle, Élémentaire, Moyen</div>
@@ -242,25 +277,27 @@
             </div>
           </div>
 
-          <div class="hizb-teaser-box" style="border-color: rgba(0,210,180,0.25); background: rgba(0,210,180,0.04);">
+          <div class="hizb-teaser-box">
             <div class="hizb-teaser-header">
-              <div class="hizb-teaser-title" style="color: var(--turquoise-400);">
-                <span>📑</span> Bulletins &amp; Notes Trimestriels MEN
+              <div class="hizb-teaser-title" style="display: flex; align-items: center; gap: 0.45rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span>Bulletins &amp; Notes Trimestriels MEN</span>
               </div>
-              <span style="font-weight: 700; color: var(--turquoise-400); font-size: 0.85rem;">Moy. Générale: 14.6 / 20</span>
+              <span style="font-weight: 700; color: #0F2942; font-size: 0.85rem;">Moy. Générale: 14.6 / 20</span>
             </div>
             <div class="progress-bar-container">
-              <div class="progress-bar-fill" style="width: 100%; background: linear-gradient(90deg, #00D2B4, #3B82F6);"></div>
+              <div class="progress-bar-fill" style="width: 100%; background: #10B981;"></div>
             </div>
             <div class="progress-bar-text">
               <span>Génération des Bulletins PDF Officiels</span>
-              <span style="color: var(--turquoise-400);">100% Conforme MEN Sénégal</span>
+              <span style="color: #059669; font-weight: 600;">100% Conforme MEN Sénégal</span>
             </div>
           </div>
 
-          <div style="display: flex; gap: 0.8rem;">
-            <button class="btn btn-primary" style="flex: 1; padding: 0.75rem; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;" onclick="openWorkspaceDirect('ECOLE')">
-              <span>🏫</span> <span>Se Connecter à l'Espace École</span>
+          <div style="display: flex; gap: 0.8rem; margin-top: 1.2rem;">
+            <button class="btn btn-emerald-hero" style="width: 100%; justify-content: center; padding: 0.8rem; font-size: 0.92rem;" onclick="openWorkspaceDirect('ECOLE')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              <span>Se Connecter à l'Espace École</span>
             </button>
           </div>
         </div>
@@ -269,7 +306,9 @@
         <div id="heroPreviewDaara" style="display: none;">
           <div class="preview-card-header">
             <div class="preview-school-info">
-              <div class="preview-avatar-icon">🕌</div>
+              <div class="preview-avatar-icon" style="background: rgba(16,185,129,0.12); color: #059669; display: flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
               <div>
                 <div style="font-weight: 700; font-size: 1.05rem;">Mon Établissement Partenaire</div>
                 <div style="font-size: 0.8rem; color: var(--gris-500);">Dakar - Campus Keur Massar</div>
@@ -291,23 +330,25 @@
 
           <div class="hizb-teaser-box">
             <div class="hizb-teaser-header">
-              <div class="hizb-teaser-title">
-                <span>📖</span> Mémorisation Coranique Globale
+              <div class="hizb-teaser-title" style="display: flex; align-items: center; gap: 0.45rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span>Mémorisation Coranique Globale</span>
               </div>
-              <span style="font-weight: 700; color: var(--dore-400); font-size: 0.85rem;">Moyenne: Hizb 42</span>
+              <span style="font-weight: 700; color: #0F2942; font-size: 0.85rem;">Moyenne: Hizb 42</span>
             </div>
             <div class="progress-bar-container">
-              <div class="progress-bar-fill" style="width: 70%;"></div>
+              <div class="progress-bar-fill" style="width: 70%; background: #10B981;"></div>
             </div>
             <div class="progress-bar-text">
               <span>Progression du Daara</span>
-              <span style="color: var(--turquoise-400);">70% du Saint Coran</span>
+              <span style="color: #059669; font-weight: 600;">70% du Saint Coran</span>
             </div>
           </div>
 
-          <div style="display: flex; gap: 0.8rem;">
-            <button class="btn btn-gold" style="flex: 1; padding: 0.75rem; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;" onclick="openWorkspaceDirect('DAARA')">
-              <span>🕌</span> <span>Se Connecter à l'Espace Daara</span>
+          <div style="display: flex; gap: 0.8rem; margin-top: 1.2rem;">
+            <button class="btn btn-emerald-hero" style="width: 100%; justify-content: center; padding: 0.8rem; font-size: 0.92rem;" onclick="openWorkspaceDirect('DAARA')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              <span>Se Connecter à l'Espace Daara</span>
             </button>
           </div>
         </div>
@@ -316,19 +357,21 @@
         <div id="heroPreviewInstitut" style="display: none;">
           <div class="preview-card-header">
             <div class="preview-school-info">
-              <div class="preview-avatar-icon" style="background: rgba(56,189,248,0.15); color: #38BDF8;">🎓</div>
+              <div class="preview-avatar-icon" style="background: rgba(16,185,129,0.12); color: #059669; display: flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
               <div>
                 <div style="font-weight: 700; font-size: 1.05rem;">Institut Supérieur Pro (ISFP Thiès)</div>
                 <div style="font-size: 0.8rem; color: var(--gris-500);">Thiès Cité Malick Sy • BTS, CAP, CQP &amp; Métiers</div>
               </div>
             </div>
-            <span class="preview-status-pill" style="border-color: #38BDF8; color: #38BDF8;">● EN DIRECT</span>
+            <span class="preview-status-pill">● EN DIRECT</span>
           </div>
 
           <div class="preview-stats-grid">
             <div class="mini-stat-card">
               <div class="label">Scolarités &amp; Examens Wave / OM</div>
-              <div class="value" style="color: #38BDF8;">98.4% <span class="trend" style="color: #34D399;">↑ En temps réel</span></div>
+              <div class="value">98.4% <span class="trend">↑ En temps réel</span></div>
             </div>
             <div class="mini-stat-card">
               <div class="label">Effectif Étudiants &amp; Stagiaires</div>
@@ -336,25 +379,27 @@
             </div>
           </div>
 
-          <div class="hizb-teaser-box" style="border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.05);">
+          <div class="hizb-teaser-box">
             <div class="hizb-teaser-header">
-              <div class="hizb-teaser-title" style="color: #38BDF8;">
-                <span>🏛️</span> Relevés LMD, Crédits &amp; Stages Thiès
+              <div class="hizb-teaser-title" style="display: flex; align-items: center; gap: 0.45rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                <span>Relevés LMD, Crédits &amp; Stages Thiès</span>
               </div>
-              <span style="font-weight: 700; color: #38BDF8; font-size: 0.85rem;">6 Filières Actives</span>
+              <span style="font-weight: 700; color: #0F2942; font-size: 0.85rem;">6 Filières Actives</span>
             </div>
             <div class="progress-bar-container">
-              <div class="progress-bar-fill" style="width: 100%; background: linear-gradient(90deg, #38BDF8, #6366F1);"></div>
+              <div class="progress-bar-fill" style="width: 100%; background: #10B981;"></div>
             </div>
             <div class="progress-bar-text">
               <span>Gestion Modulaire LMD &amp; Conventions</span>
-              <span style="color: #38BDF8;">100% Conforme Formation Pro Sénégal</span>
+              <span style="color: #059669; font-weight: 600;">100% Conforme Formation Pro Sénégal</span>
             </div>
           </div>
 
-          <div style="display: flex; gap: 0.8rem;">
-            <button class="btn btn-primary" style="flex: 1; padding: 0.75rem; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; background: linear-gradient(135deg, #0284C7, #2563EB); border: none;" onclick="openWorkspaceDirect('FORMATION_PRO')">
-              <span>🎓</span> <span>Se Connecter à l'Espace Institut (Thiès)</span>
+          <div style="display: flex; gap: 0.8rem; margin-top: 1.2rem;">
+            <button class="btn btn-emerald-hero" style="width: 100%; justify-content: center; padding: 0.8rem; font-size: 0.92rem;" onclick="openWorkspaceDirect('FORMATION_PRO')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              <span>Se Connecter à l'Espace Institut (Thiès)</span>
             </button>
           </div>
         </div>
@@ -371,7 +416,9 @@
       <!-- Bannière Mise en avant : 10 000 FCFA + 1er mois gratuit -->
       <div class="engagement-offer-banner">
         <div class="engagement-offer-left">
-          <div class="engagement-icon-wrap">🤝</div>
+          <div class="engagement-icon-wrap" style="display: flex; align-items: center; justify-content: center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </div>
           <div class="engagement-offer-text">
             <h4 data-i18n="engagement_title">Frais d'Adhésion &amp; Symbole d'Engagement</h4>
             <p data-i18n="engagement_desc">
@@ -396,14 +443,17 @@
       <!-- Commutateur Écoles Privées / Daaras Modernes -->
       <div class="pricing-tabs-wrapper">
         <div class="pricing-tabs-nav">
-          <button id="pricingTabSchools" class="pricing-tab-btn active" data-i18n="tab_schools">
-            🏫 Écoles Privées
+          <button id="pricingTabSchools" class="pricing-tab-btn active" data-i18n="tab_schools" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>Écoles Privées</span>
           </button>
-          <button id="pricingTabDaaras" class="pricing-tab-btn" data-i18n="tab_daaras">
-            🕌 Daaras Modernes &amp; Internats
+          <button id="pricingTabDaaras" class="pricing-tab-btn" data-i18n="tab_daaras" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Daaras Modernes &amp; Internats</span>
           </button>
-          <button id="pricingTabInstituts" class="pricing-tab-btn">
-            🎓 Instituts &amp; Formation Pro
+          <button id="pricingTabInstituts" class="pricing-tab-btn" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Instituts &amp; Formation Pro</span>
           </button>
         </div>
       </div>
@@ -422,27 +472,27 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Jusqu'à 150 élèves</strong> (Petite école &amp; préscolaire)
+              <strong>Jusqu'à 150 élèves</strong> (Petite école &amp; préscolaire)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💳 Caisse Wave &amp; OM</strong> (reçus &amp; encaissements)
+              <strong>Caisse Wave &amp; OM</strong> (reçus &amp; encaissements)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📑 Bulletins &amp; Notes</strong> (génération PDF officielle)
+              <strong>Bulletins &amp; Notes</strong> (génération PDF officielle)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🔑 Clés d'Accès Enseignants &amp; Parents</strong> (génération auto)
+              <strong>Clés d'Accès Enseignants &amp; Parents</strong> (génération auto)
             </li>
             <li class="pricing-feature-item text-muted" style="opacity: 0.55;">
               <span style="color: #F87171; font-weight: 700; margin-right: 4px;">✕</span>
-              <span>💬 Notifications WhatsApp (Inclus en Pro)</span>
+              <span>Notifications WhatsApp (Inclus en Pro)</span>
             </li>
             <li class="pricing-feature-item text-muted" style="opacity: 0.55;">
               <span style="color: #F87171; font-weight: 700; margin-right: 4px;">✕</span>
-              <span>📊 Comptabilité SYSCOHADA (Inclus en Pro)</span>
+              <span>Comptabilité SYSCOHADA (Inclus en Pro)</span>
             </li>
           </ul>
           <button class="btn btn-outline" onclick="openRegistrationModal('Starter', '20 000 FCFA/mois')">Choisir Starter</button>
@@ -461,27 +511,27 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Effectif étendu</strong> (jusqu'à 600 élèves)
+              <strong>Effectif étendu</strong> (jusqu'à 600 élèves)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💳 Caisse Wave/OM</strong> + <strong>📑 Bulletins officiels</strong>
+              <strong>Caisse Wave/OM</strong> + <strong>Bulletins officiels</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💬 Alertes WhatsApp &amp; SMS</strong> (recouvrement &amp; bulletins)
+              <strong>Alertes WhatsApp &amp; SMS</strong> (recouvrement &amp; bulletins)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📊 Comptabilité SYSCOHADA</strong> (Bilan &amp; Balance)
+              <strong>Comptabilité SYSCOHADA</strong> (Bilan &amp; Balance)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Gestion RH, Emplois du Temps &amp; 2FA Direction</strong>
+              <strong>Gestion RH, Emplois du Temps &amp; 2FA Direction</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🔗 Envoi groupé des liens &amp; clés d'accès</strong> (WhatsApp/SMS)
+              <strong>Envoi groupé des liens &amp; clés d'accès</strong> (WhatsApp/SMS)
             </li>
           </ul>
           <button class="btn btn-gold" onclick="openRegistrationModal('Pro', '55 000 FCFA/mois')">Choisir l'Offre Pro</button>
@@ -499,23 +549,23 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Élèves &amp; Effectifs Illimités</strong>
+              <strong>Élèves &amp; Effectifs Illimités</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>✨ Tous les Modules Pro Inclus</strong> (Caisse, Notes, WhatsApp, SYSCOHADA, RH)
+              <strong>Tous les Modules Pro Inclus</strong> (Caisse, Notes, WhatsApp, SYSCOHADA, RH)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📚 Bibliothèque Numérique Interactive</strong> (Manuels, Quiz, Vidéos)
+              <strong>Bibliothèque Numérique Interactive</strong> (Manuels, Quiz, Vidéos)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🛡️ Sécurité 2FA &amp; Journal d'Audit Avancé</strong>
+              <strong>Sécurité 2FA &amp; Journal d'Audit Avancé</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👑 Formation sur site &amp; Accompagnement VIP 24/7</strong>
+              <strong>Formation sur site &amp; Accompagnement VIP 24/7</strong>
             </li>
           </ul>
           <button class="btn btn-outline" onclick="openRegistrationModal('Premium', '85 000 FCFA/mois')">Choisir Premium</button>
@@ -532,19 +582,19 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🏛️ Multi-établissements &amp; Campus consolidés</strong>
+              <strong>Multi-établissements &amp; Campus consolidés</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🔗 Intégrations ERP sur mesure &amp; API REST Dédiée</strong>
+              <strong>Intégrations ERP sur mesure &amp; API REST Dédiée</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>☁️ Serveur Cloud Dédié Souverain Sénégal</strong>
+              <strong>Serveur Cloud Dédié Souverain Sénégal</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📋 Devis &amp; Cadrage sous 24h ouvrées</strong>
+              <strong>Devis &amp; Cadrage sous 24h ouvrées</strong>
             </li>
           </ul>
           <button class="btn btn-outline" onclick="openQuoteModal()">Demander un Devis</button>
@@ -555,7 +605,7 @@
       <div id="pricingViewDaaras" class="pricing-cards-grid" style="display: none;">
         <!-- Pack Pionnier Internat (Réservé aux 5 premiers inscrits) -->
         <div class="pricing-card featured" data-plan="internat">
-          <span class="pricing-badge-popular">🔥 Offre 5 Premiers Inscrits (Mêmes Fonctions Standard)</span>
+          <span class="pricing-badge-popular">Offre Spéciale 5 Premiers Inscrits (Mêmes Fonctions Standard)</span>
           <h3 class="pricing-plan-name text-gold">Pack Internat Promo</h3>
           <p class="pricing-plan-desc">Toutes les fonctionnalités de la Formule Standard réservées aux <strong>5 premiers Daaras inscrits</strong>.</p>
           <div class="pricing-price-wrap">
@@ -566,31 +616,31 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Talibés &amp; Pensionnaires Illimités</strong>
+              <strong>Talibés &amp; Pensionnaires Illimités</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🛏️ Internat, Dortoirs &amp; Cantine</strong> (Gestion complète)
+              <strong>Internat, Dortoirs &amp; Cantine</strong> (Gestion complète)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📖 Suivi Mémorisation Coran</strong> (Hizb 1-60 &amp; Tajwîd)
+              <strong>Suivi Mémorisation Coran</strong> (Hizb 1-60 &amp; Tajwîd)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💳 Caisse Wave / OM</strong> (Paiements, pensions &amp; reçus)
+              <strong>Caisse Wave / OM</strong> (Paiements, pensions &amp; reçus)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📊 Comptabilité SYSCOHADA Daara certifiée</strong>
+              <strong>Comptabilité SYSCOHADA Daara certifiée</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 RH Oustazs, Salaires &amp; Plannings</strong>
+              <strong>RH Oustazs, Salaires &amp; Plannings</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💬 Alertes WhatsApp Automatiques aux Parents</strong>
+              <strong>Alertes WhatsApp Automatiques aux Parents</strong>
             </li>
           </ul>
           <button class="btn btn-gold" onclick="openRegistrationModal('Pack Internat Promo Daara', '20 000 FCFA/mois')">Réserver le Tarif 5 Premiers Inscrits</button>
@@ -608,31 +658,31 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Talibés &amp; Pensionnaires Illimités</strong>
+              <strong>Talibés &amp; Pensionnaires Illimités</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🛏️ Internat, Dortoirs &amp; Cantine</strong> (Gestion complète)
+              <strong>Internat, Dortoirs &amp; Cantine</strong> (Gestion complète)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📖 Suivi Mémorisation Coran</strong> (Hizb 1-60 &amp; Tajwîd)
+              <strong>Suivi Mémorisation Coran</strong> (Hizb 1-60 &amp; Tajwîd)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💳 Caisse Wave / OM</strong> (Paiements, pensions &amp; reçus)
+              <strong>Caisse Wave / OM</strong> (Paiements, pensions &amp; reçus)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📊 Comptabilité SYSCOHADA Daara certifiée</strong>
+              <strong>Comptabilité SYSCOHADA Daara certifiée</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 RH Oustazs, Salaires &amp; Plannings</strong>
+              <strong>RH Oustazs, Salaires &amp; Plannings</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💬 Alertes WhatsApp Automatiques aux Parents</strong>
+              <strong>Alertes WhatsApp Automatiques aux Parents</strong>
             </li>
           </ul>
           <button class="btn btn-outline" onclick="openRegistrationModal('Standard Daara', '35 000 FCFA/mois')">Souscrire au Tarif Standard</button>
@@ -640,7 +690,7 @@
 
         <!-- Option Annuelle Sérénité -->
         <div class="pricing-card" data-plan="annuel_daara">
-          <div class="pricing-badge" style="background: linear-gradient(135deg, #10B981, #059669); color: #FFF; font-weight: 800; font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 12px; display: inline-block; margin-bottom: 0.5rem;">🎉 2 MOIS OFFERTS (70 000 FCFA ÉCONOMISÉS)</div>
+          <div class="pricing-badge" style="background: linear-gradient(135deg, #10B981, #059669); color: #FFF; font-weight: 800; font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 12px; display: inline-block; margin-bottom: 0.5rem;">2 MOIS OFFERTS (70 000 FCFA ÉCONOMISÉS)</div>
           <h3 class="pricing-plan-name">Option Annuelle Sérénité</h3>
           <p class="pricing-plan-desc">Paiement en une fois pour l'année entière avec tranquillité totale (10 mois facturés au lieu de 12).</p>
           <div class="pricing-price-wrap">
@@ -651,19 +701,19 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👑 Tous les modules Daara en illimité</strong> (SYSCOHADA &amp; RH inclus)
+              <strong>Tous les modules Daara en illimité</strong> (SYSCOHADA &amp; RH inclus)
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📚 Bibliothèque Islamique &amp; Tajwîd Numérique</strong>
+              <strong>Bibliothèque Islamique &amp; Tajwîd Numérique</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🪪 Matériel de badgeage des talibés offert</strong>
+              <strong>Matériel de badgeage des talibés offert</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🤝 Accompagnement sur site</strong>
+              <strong>Accompagnement sur site</strong>
             </li>
           </ul>
           <button class="btn btn-outline" onclick="openRegistrationModal('Option Annuelle Sérénité Daara', '350 000 FCFA/an')">Choisir l'Annuel</button>
@@ -684,31 +734,31 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Jusqu'à 300 étudiants</strong>
+              <strong>Jusqu'à 300 étudiants</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📋 Gestion des inscriptions et admissions</strong>
+              <strong>Gestion des inscriptions et admissions</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🎓 Gestion des filières et promotions</strong>
+              <strong>Gestion des filières et promotions</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💳 Paiement Wave &amp; Orange Money</strong>
+              <strong>Paiement Wave &amp; Orange Money</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📑 Relevés de notes et bulletins</strong>
+              <strong>Relevés de notes et bulletins</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💬 Alertes WhatsApp</strong>
+              <strong>Alertes WhatsApp</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🔑 Accès étudiants et formateurs</strong>
+              <strong>Accès étudiants et formateurs</strong>
             </li>
           </ul>
           <button class="btn btn-outline" style="border-color: rgba(56, 189, 248, 0.4); color: #38BDF8;" onclick="openRegistrationModal('Institut Starter', '45 000 FCFA/mois')">Choisir Institut Starter</button>
@@ -727,35 +777,35 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🎓 Étudiants et filières illimités</strong>
+              <strong>Étudiants et filières illimités</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🏢 Gestion des stages et conventions</strong>
+              <strong>Gestion des stages et conventions</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📊 Comptabilité SYSCOHADA</strong>
+              <strong>Comptabilité SYSCOHADA</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🗓️ Gestion des emplois du temps</strong>
+              <strong>Gestion des emplois du temps</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👨‍🏫 Gestion des formateurs et vacations</strong>
+              <strong>Gestion des formateurs et vacations</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📜 Génération des certificats et attestations</strong>
+              <strong>Génération des certificats et attestations</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>💬 Alertes WhatsApp automatiques</strong>
+              <strong>Alertes WhatsApp automatiques</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📈 Tableaux de bord avancés</strong>
+              <strong>Tableaux de bord avancés</strong>
             </li>
           </ul>
           <button class="btn btn-primary" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); border: none; font-weight: 800; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onclick="openRegistrationModal('Institut Pro', '75 000 FCFA/mois')">Choisir Institut Pro</button>
@@ -779,35 +829,35 @@
           <ul class="pricing-features-list">
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🏛️ Gestion multi-campus</strong>
+              <strong>Gestion multi-campus</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🏢 Gestion multi-établissements</strong>
+              <strong>Gestion multi-établissements</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🎯 Direction centralisée</strong>
+              <strong>Direction centralisée</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>📈 Rapports consolidés en temps réel</strong>
+              <strong>Rapports consolidés en temps réel</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>🔗 API &amp; intégrations sur mesure</strong>
+              <strong>API &amp; intégrations sur mesure</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>☁️ Serveur Cloud dédié</strong>
+              <strong>Serveur Cloud dédié</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👥 Formation des équipes sur site</strong>
+              <strong>Formation des équipes sur site</strong>
             </li>
             <li class="pricing-feature-item">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-              <strong>👑 Support VIP 24h/24 et 7j/7</strong>
+              <strong>Support VIP 24h/24 et 7j/7</strong>
             </li>
           </ul>
           <button class="btn btn-outline" onclick="openQuoteModal('Grande École / Multi-Campus')">Demander un devis</button>
@@ -817,19 +867,22 @@
       <!-- Bandeau Clé d'Accès Sécurisé pour Enseignants, Parents et Élèves -->
       <div class="access-key-banner">
         <div class="access-key-banner-content">
-          <div class="access-key-icon-bubble">🔑</div>
+          <div class="access-key-icon-bubble" style="display: flex; align-items: center; justify-content: center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5M19 4l-4 4-2-2-4 4a5.5 5.5 0 1 0 7.78 7.78l6.22-6.22V4h-3.5z"/></svg>
+          </div>
           <div>
-            <h4 style="font-size: 1.15rem; margin-bottom: 0.25rem; color: var(--blanc-pur);">
+            <h4 class="access-key-title">
               Déjà inscrit dans un établissement partenaire ?
             </h4>
-            <p style="font-size: 0.88rem; color: var(--gris-400); margin: 0;">
+            <p class="access-key-desc">
               Enseignants, Parents, Élèves : accédez directement à vos notes, bulletins et reçus grâce à votre clé d'accès reçue par SMS/WhatsApp.
             </p>
           </div>
         </div>
         <div class="access-key-banner-actions">
-          <button type="button" class="btn btn-primary" onclick="openAccessKeyModal()">
-            🔑 Entrer ma Clé d'Accès
+          <button type="button" class="btn btn-primary" onclick="openAccessKeyModal()" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5M19 4l-4 4-2-2-4 4a5.5 5.5 0 1 0 7.78 7.78l6.22-6.22V4h-3.5z"/></svg>
+            <span>Entrer ma Clé d'Accès</span>
           </button>
         </div>
       </div>
@@ -846,7 +899,7 @@
       <!-- En-tête de l'Espace Démonstration Vidéo -->
       <div class="section-header-center" style="margin-bottom: 2rem;">
         <span class="section-tag" style="background: rgba(0, 210, 180, 0.12); color: #00D2B4; border-color: rgba(0, 210, 180, 0.35);">
-          🎬 Visite Guidée en Vidéo • Tout Comprendre en Images
+          Visite Guidée en Vidéo • Tout Comprendre en Images
         </span>
         <h2 class="section-title">Démonstration Vidéo Interactive</h2>
         <p class="section-description">
@@ -854,24 +907,39 @@
         </p>
       </div>
 
-      <!-- Sélecteur Bimodal : Écoles Privées VS Daaras Modernes -->
+      <!-- Sélecteur Multimodal : Spot Vidéo Officiel & Simulations Logicielles -->
       <div class="demo-video-mode-nav">
-        <button type="button" class="demo-mode-tab-btn active" id="demoModeSchoolBtn" onclick="switchDemoVideoMode('school')">
-          <span class="mode-tab-icon">🏫</span>
+        <button type="button" class="demo-mode-tab-btn active" id="demoModeSpotBtn" onclick="switchDemoVideoMode('spot')">
+          <span class="mode-tab-icon" style="display: flex; align-items: center; justify-content: center; color: #10B981;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </span>
           <div class="mode-tab-text">
-            <span class="mode-tab-title">Démo Vidéo : Écoles Privées</span>
+            <span class="mode-tab-title">Spot Vidéo Officiel (46s)</span>
+            <span class="mode-tab-desc">Présentation globale Écoles, Daaras, Wave &amp; Bulletins (HD)</span>
+          </div>
+          <span class="mode-tab-badge" style="background: rgba(16,185,129,0.2); color: #10B981; font-weight: 800;">● VIDÉO OFFICIELLE</span>
+        </button>
+
+        <button type="button" class="demo-mode-tab-btn" id="demoModeSchoolBtn" onclick="switchDemoVideoMode('school')">
+          <span class="mode-tab-icon" style="display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </span>
+          <div class="mode-tab-text">
+            <span class="mode-tab-title">Simulation : Écoles Privées</span>
             <span class="mode-tab-desc">Bulletins PDF, Notes, SYSCOHADA, WhatsApp &amp; Accès Parents</span>
           </div>
-          <span class="mode-tab-badge">⚡ 6 Chapitres Auto (~1 min 12)</span>
+          <span class="mode-tab-badge">6 Chapitres Logiciel</span>
         </button>
 
         <button type="button" class="demo-mode-tab-btn" id="demoModeDaaraBtn" onclick="switchDemoVideoMode('daara')">
-          <span class="mode-tab-icon">🕌</span>
+          <span class="mode-tab-icon" style="display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </span>
           <div class="mode-tab-text">
-            <span class="mode-tab-title">Démo Vidéo : Daaras Modernes</span>
+            <span class="mode-tab-title">Simulation : Daaras Modernes</span>
             <span class="mode-tab-desc">Coran (Hizb), Internat, Badges Talibés &amp; Caisse Wave</span>
           </div>
-          <span class="mode-tab-badge">⚡ 6 Chapitres Auto (~1 min 12)</span>
+          <span class="mode-tab-badge">6 Chapitres Logiciel</span>
         </button>
       </div>
 
@@ -881,29 +949,35 @@
         <div class="demo-video-player-card" id="demoVideoPlayerCard">
           <div class="demo-video-top-bar">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
-              <span class="demo-live-pill">● DÉMO VIDÉO</span>
+              <span class="demo-live-pill">● VIDÉO OFFICIELLE</span>
               <span id="demoVideoCurrentBadge" class="badge-tag badge-excellent" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
-                🏫 Écoles Privées
+                Spot Officiel SunuSchool (46s)
               </span>
             </div>
           </div>
 
-          <!-- Écran Vidéo Évolutif avec Scène Animée -->
+          <!-- Écran Vidéo Évolutif avec Vidéo Réelle MP4 & Scène Animée -->
           <div class="demo-video-screen" id="demoVideoScreen" onclick="toggleDemoVideo()">
-            <div class="demo-video-scene" id="demoVideoScene">
-              <!-- Rendu dynamique par app.js (visuels du logiciel, graphiques, reçus, Coran, bulletins) -->
+            <!-- Vrai lecteur vidéo MP4 HD -->
+            <video id="demoRealVideo" class="demo-real-video" playsinline preload="metadata" poster="assets/videos/demo-poster.jpg">
+              <source src="assets/videos/demo.mp4" type="video/mp4">
+              Votre navigateur ne supporte pas la lecture vidéo HTML5.
+            </video>
+
+            <div class="demo-video-scene" id="demoVideoScene" style="display: none;">
+              <!-- Rendu dynamique par app.js lors des modes de simulation logicielle -->
             </div>
 
             <!-- Overlay Play/Pause au centre -->
             <div class="demo-play-overlay" id="demoPlayOverlay">
-              <div class="demo-play-circle">
-                <span class="demo-play-icon" id="demoCenterPlayIcon">▶</span>
+              <div class="demo-play-circle" style="background: rgba(15, 41, 66, 0.9); border: 2.5px solid #10B981; box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#10B981" stroke="#10B981" stroke-width="1.5" style="margin-left: 3px;" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </div>
-              <div class="demo-play-label" id="demoCenterPlayLabel">▶ Cliquez pour lancer la démonstration</div>
+              <div class="demo-play-label" id="demoCenterPlayLabel" style="font-weight: 700; color: #FFFFFF; font-size: 0.95rem;">Lancer la Vidéo Démo (46s)</div>
             </div>
 
             <!-- Sous-titres dynamiques synchronisés au bas de l'écran -->
-            <div class="demo-video-subtitles-bar">
+            <div class="demo-video-subtitles-bar" id="demoSubtitlesBar" style="display: none;">
               <span id="demoVideoSubtitleText">Bienvenue sur la démonstration interactive de SunuSchoolExpress.</span>
             </div>
           </div>
@@ -946,7 +1020,9 @@
         <!-- Colonne Droite : Sommaire & Chapitres Cliquables Synchronisés -->
         <div class="demo-chapters-playlist-card">
           <div class="demo-playlist-header">
-            <div style="font-size: 1.1rem;">⚡</div>
+            <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10B981;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
             <div>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <h4 style="margin: 0; font-size: 0.95rem; color: #FFF;">Chapitres en Lecture Automatique</h4>
@@ -963,11 +1039,13 @@
 
           <!-- Bouton d'action rapide sous les chapitres -->
           <div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 0.5rem;">
-            <button class="btn btn-gold" style="width: 100%; justify-content: center; font-size: 0.84rem; padding: 0.55rem;" onclick="openRegistrationModal('Option Annuelle Sérénité', '350 000 FCFA/an')">
-              🚀 Démarrer l'Essai 30j Gratuit
+            <button class="btn btn-gold btn-emerald-hero" style="width: 100%; justify-content: center; font-size: 0.84rem; padding: 0.55rem;" onclick="openRegistrationModal('Option Annuelle Sérénité', '350 000 FCFA/an')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.4rem;" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Démarrer l'Essai 30j Gratuit
             </button>
-            <a href="javascript:void(0)" class="btn btn-primary" onclick="openWorkspaceDirect(); return false;" style="width: 100%; justify-content: center; font-size: 0.82rem; padding: 0.55rem; text-decoration: none;">
-              🏫 Accéder à Mon Espace Établissement
+            <a href="javascript:void(0)" class="btn btn-primary btn-navy-hero" onclick="openWorkspaceDirect(); return false;" style="width: 100%; justify-content: center; font-size: 0.82rem; padding: 0.55rem; text-decoration: none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.4rem;" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              Accéder à Mon Espace Établissement
             </a>
           </div>
         </div>
@@ -1065,7 +1143,7 @@
       <button class="ws-mob-tab" onclick="switchWsTab('wsFinance', this)">💳 Caisse Wave</button>
       <button class="ws-mob-tab" id="wsMobNavPayConfig" onclick="switchWsTab('wsPayConfig', this)">⚙️ Comptes Wave</button>
       <button class="ws-mob-tab" id="wsMobNavWhatsApp" onclick="switchWsTab('wsAlerts', this)">
-        <span>💬 WhatsApp</span>
+        <span>WhatsApp</span>
         <span class="ws-nav-lock-badge" id="wsMobLockWhatsApp" style="display: none;">Pro</span>
       </button>
       <button class="ws-mob-tab" onclick="switchWsTab('wsStudents', this)">👥 Effectif</button>
@@ -1079,7 +1157,7 @@
       </button>
       <button class="ws-mob-tab" id="wsMobNavCertificates" onclick="switchWsTab('wsCertificates', this)" style="display: none;">📜 Certificats</button>
       <button class="ws-mob-tab" id="wsMobNavAccounting" onclick="switchWsTab('wsAccounting', this)">
-        <span>📊 SYSCOHADA</span>
+        <span>SYSCOHADA</span>
         <span class="ws-nav-lock-badge" id="wsMobLockAccounting" style="display: none;">Pro</span>
       </button>
       <button class="ws-mob-tab" id="wsMobNavLib" onclick="switchWsTab('wsLib', this)">
@@ -4371,8 +4449,22 @@
           Effectuez votre virement de <strong>10 000 FCFA</strong> vers le compte marchand ci-dessous pour débloquer votre établissement.
         </p>
 
+        <!-- Guichet Interactif Moneriz Liveframe (Wave & OM Automatique) -->
+        <div id="monerizCheckoutCard" style="display: none; background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 1.2rem; max-width: 620px; margin: 0 auto 1.5rem; text-align: left; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.2rem;">🔒</span>
+              <strong style="color: #FFFFFF; font-size: 0.95rem;">Guichet Sécurisé Moneriz (Wave &amp; Mobile Money)</strong>
+            </div>
+            <span class="badge-tag" style="background: rgba(16,185,129,0.2); color: #10B981; font-weight: 700; font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 999px;">
+              ● Activation 100% Automatique
+            </span>
+          </div>
+          <div id="monerizCheckoutTarget" style="min-height: 480px; width: 100%;"></div>
+        </div>
+
         <!-- Carte Résumé Paiement & QR Code -->
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.2rem; max-width: 440px; margin: 0 auto 1.2rem; text-align: left;">
+        <div id="manualOperatorCard" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.2rem; max-width: 440px; margin: 0 auto 1.2rem; text-align: left;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.12); padding-bottom: 0.6rem; margin-bottom: 0.6rem;">
             <span style="font-size: 0.78rem; color: var(--gris-400);">Bénéficiaire Officiel :</span>
             <strong style="font-size: 0.85rem; color: var(--blanc-pur);">SunuSchool Express SARL</strong>
@@ -4473,7 +4565,7 @@
               ← Changer d'opérateur
             </button>
             <a href="https://wa.me/221761503938?text=Bonjour%20SunuSchoolExpress%2C%20j%27ai%20une%20question%20sur%20mon%20paiement%20d%27adh%C3%A9sion%20de%2010%20000%20FCFA" target="_blank" style="color: #00D2B4; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;">
-              <span>💬 Assistance WhatsApp direct</span>
+              <span>Assistance WhatsApp direct</span>
             </a>
           </div>
         </div>
@@ -5115,7 +5207,7 @@
           </div>
           <div class="share-role-actions">
             <button type="button" class="btn-share-channel whatsapp" onclick="sendAccessLinkWhatsApp('teacher')">
-              <span>💬 WhatsApp</span>
+              <span>WhatsApp</span>
             </button>
             <button type="button" class="btn-share-channel sms" onclick="sendAccessLinkSMS('teacher')">
               <span>📱 SMS</span>
@@ -5141,7 +5233,7 @@
           </div>
           <div class="share-role-actions">
             <button type="button" class="btn-share-channel whatsapp" onclick="sendAccessLinkWhatsApp('parent')">
-              <span>💬 WhatsApp</span>
+              <span>WhatsApp</span>
             </button>
             <button type="button" class="btn-share-channel sms" onclick="sendAccessLinkSMS('parent')">
               <span>📱 SMS</span>
@@ -5167,7 +5259,7 @@
           </div>
           <div class="share-role-actions">
             <button type="button" class="btn-share-channel whatsapp" onclick="sendAccessLinkWhatsApp('student')">
-              <span>💬 WhatsApp</span>
+              <span>WhatsApp</span>
             </button>
             <button type="button" class="btn-share-channel sms" onclick="sendAccessLinkSMS('student')">
               <span>📱 SMS</span>
@@ -5353,6 +5445,9 @@
           </button>
           <button type="button" id="parentSwitchBtnDaara" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.35rem 0.85rem;" onclick="switchParentPortalContext('DAARA')">
             🕌 Mode Daara Moderne
+          </button>
+          <button type="button" id="parentSwitchBtnInstitut" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.35rem 0.85rem;" onclick="switchParentPortalContext('INSTITUT')">
+            🎓 Mode Institut Supérieur
           </button>
         </div>
       </div>

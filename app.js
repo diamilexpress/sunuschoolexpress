@@ -11,7 +11,7 @@ function getStoredTheme() {
     const match = document.cookie.match(new RegExp('(^| )sunuschool_theme=([^;]+)'));
     if (match && (match[2] === 'light' || match[2] === 'dark')) return match[2];
   } catch (e) {}
-  return 'dark'; // Thème sombre par défaut (bleu nuit & blanc cassé)
+  return 'light'; // Thème clair épuré par défaut (Bleu Marine & Vert Émeraude)
 }
 
 function setStoredTheme(theme) {
@@ -65,10 +65,10 @@ const translations = {
     nav_school: "Module Scolaire",
     nav_payments: "Mobile Money",
     btn_demo: "🛡️ Démo Vitrine",
-    hero_badge: "✨ N°1 de la Transformation Numérique Scolaire au Sénégal",
-    hero_title: "L'écosystème numérique au service de <span class='highlight-turq'>l'innovation</span> et de <span class='highlight-gold'>la réussite éducative</span>.",
-    hero_subtitle: "Simplifiez la gestion de votre école ou daara, encaissez vos paiements en toute sécurité, et valorisez vos élèves avec des bulletins conformes MEN et un suivi coranique d’exception.",
-    hero_tagline: "<span>🚀</span> <span>L’éducation sénégalaise entre dans une nouvelle ère — simple, fluide et 100% numérique.</span>",
+    hero_badge: "✨ Plateforme Scolaire, Daaras &amp; Instituts Pro • Sénégal",
+    hero_title: "La gestion scolaire moderne, simplifiée pour <span class='text-emerald'>le Sénégal</span>.",
+    hero_subtitle: "Inscriptions, scolarités Wave &amp; Orange Money, bulletins officiels MEN et suivi coranique pour Écoles Privées, Daaras et Instituts Pro.",
+    hero_tagline: "<span>🚀</span> <span>Une plateforme claire, rapide et 100% accessible sur smartphone.</span>",
     btn_start_trial: "Démarrer l'essai 30j Gratuit",
     btn_explore_demo: "Explorer le Tableau de Bord Démo",
     badge_wave: "Paiement Wave & OM certifié",
@@ -76,15 +76,15 @@ const translations = {
     badge_bilingual: "100% Bilingue Wolof - Français",
     engagement_title: "Frais d'Adhésion & Symbole d'Engagement",
     engagement_desc: "Paiement unique de 10 000 FCFA à l'inscription de l'établissement + Premier mois d'abonnement 100% OFFERT (Essai gratuit 30 jours sans engagement).",
-    tab_schools: "🏫 Écoles Privées",
-    tab_daaras: "🕌 Daaras Modernes & Internats",
+    tab_schools: "Écoles Privées",
+    tab_daaras: "Daaras Modernes &amp; Internats",
     role_admin: "Directeur / Admin",
     role_teacher: "Oustaz / Enseignant",
     role_parent: "Parent d'Élève",
     sec_notice: "Environnement Démo Sécurisé actif. Toutes les actions sont simulées et réinitialisables."
   },
   wo: {
-    brand_subtitle: "Dawaan bi ñeel Daara yi ak Daara yu bees yi 🇸🇳",
+    brand_subtitle: "Dawaan bi ñeel Daara yi ak Daara yu bees yi",
     nav_presentation: "Xamle gi",
     nav_modules: "Man-man yi &amp; Démo",
     nav_pricing: "Njëg yi",
@@ -93,11 +93,11 @@ const translations = {
     nav_daara: "Wàllu Daara yi",
     nav_school: "Wàllu Ekool yi",
     nav_payments: "Peyma Mobile Money",
-    btn_demo: "🛡️ Seet ko ci Démo bi",
-    hero_badge: "✨ Këru xam-xam bu bees bi ci Senegal",
-    hero_title: "Dawaan bi boole <span class='highlight-turq'>xarala gu bees</span> ak <span class='highlight-gold'>njàng mu dëggu</span>.",
+    btn_demo: "Seet ko ci Démo bi",
+    hero_badge: "Këru xam-xam bu bees bi ci Senegal",
+    hero_title: "Dawaan bi boole <span class='text-emerald'>xarala gu bees</span> ak njàng mu dëggu.",
     hero_subtitle: "Yombalal sayitub sa daara mbaa sa ekool, feyyu ci kaaraange, te jox say xale karnde yu wóor (MEN) ak toppitexi alxuraan gu tëddu.",
-    hero_tagline: "<span>🚀</span> <span>Njàngum Senegaal dugal na ci jamono yu bees — yomb, leer te 100% xarala.</span>",
+    hero_tagline: "<span>Njàngum Senegaal dugal na ci jamono yu bees — yomb, leer te 100% xarala.</span>",
     btn_start_trial: "Tàmbali weeru njàngat bi amul fey",
     btn_explore_demo: "Gisandoo lépp ci Démo bi",
     badge_wave: "Wave ak Orange Money wóor na",
@@ -105,8 +105,8 @@ const translations = {
     badge_bilingual: "Wolof ak Farañse",
     engagement_title: "Njëgu duggal Daara bi (Kollëre)",
     engagement_desc: "10 000 FCFA kese ngay fey bu njëkk, te am weeru xarala gu tëddu (30 bés yu amul benn fey).",
-    tab_schools: "🏫 Ekool yu kenn",
-    tab_daaras: "🕌 Daara yu bees yi ak dëkkuwaay",
+    tab_schools: "Ekool yu kenn",
+    tab_daaras: "Daaras yu bees yi ak dëkkuwaay",
     role_admin: "Njiit li / Kilifa gi",
     role_teacher: "Ustaz / Jàngalekat",
     role_parent: "Wàyjur / Njiitu kër",
@@ -1116,9 +1116,68 @@ try {
 // ============================================================================
 
 const demoVideosData = {
+  spot: {
+    id: 'spot',
+    badge: 'Spot Officiel SunuSchool (46s)',
+    title: 'Spot Vidéo Officiel : SunuSchool Express en 46 secondes',
+    isRealVideo: true,
+    videoSrc: 'assets/videos/demo.mp4',
+    poster: 'assets/videos/demo-poster.jpg',
+    duration: 46,
+    chapters: [
+      {
+        id: 'spot_hook',
+        time: 0,
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+        title: 'Finie la Paperasse Administrative',
+        desc: 'Adieu la perte de bulletins et le désordre de documents.',
+        durationStr: '00:05'
+      },
+      {
+        id: 'spot_cloud',
+        time: 5,
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+        title: 'Plateforme 100% Cloud PC & Smartphone',
+        desc: 'Accès en ligne instantané pour directeurs, enseignants et parents.',
+        durationStr: '00:05'
+      },
+      {
+        id: 'spot_cycles',
+        time: 10,
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+        title: 'Écoles Privées, Daaras & Instituts',
+        desc: 'La solution complète adaptée aux 3 cycles éducatifs au Sénégal.',
+        durationStr: '00:05'
+      },
+      {
+        id: 'spot_pedagogy',
+        time: 15,
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+        title: 'Bulletins MEN & Suivi du Coran',
+        desc: 'Génération en 1 clic et suivi de mémorisation des talibés.',
+        durationStr: '00:08'
+      },
+      {
+        id: 'spot_finance',
+        time: 23,
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+        title: 'Caisse Wave, OM & SYSCOHADA',
+        desc: 'Encaissez les scolarités en direct sans impayés et certifiez vos comptes.',
+        durationStr: '00:10'
+      },
+      {
+        id: 'spot_trial',
+        time: 33,
+        icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        title: 'Essai 30 Jours Gratuit & Support',
+        desc: 'Accompagnement, formation et mise en route immédiate.',
+        durationStr: '00:13'
+      }
+    ]
+  },
   daara: {
     id: 'daara',
-    badge: '🕌 Daaras Modernes',
+    badge: 'Daaras Modernes',
     title: 'Démonstration Vidéo : Gestion des Daaras Modernes & Internats',
     duration: 72, // 1m 12s (6 chapitres x 12s en lecture continue automatique)
     chapters: [
@@ -1404,7 +1463,7 @@ const demoVideosData = {
 
   school: {
     id: 'school',
-    badge: '🏫 Écoles Privées',
+    badge: 'Écoles Privées',
     title: 'Démonstration Vidéo : Gestion des Écoles Privées (Général & Technique)',
     duration: 72, // 1m 12s (6 chapitres x 12s en lecture continue automatique)
     chapters: [
@@ -1706,7 +1765,7 @@ const demoVideosData = {
 };
 
 let demoVideoState = {
-  mode: 'school',
+  mode: 'spot',
   isPlaying: false,
   currentTime: 0,
   speed: 1.0,
@@ -1864,6 +1923,17 @@ function playDemoVideo() {
   const video = demoVideosData[demoVideoState.mode];
   if (!video) return;
 
+  const realVideo = document.getElementById('demoRealVideo');
+  if (video.isRealVideo && realVideo) {
+    if (realVideo.ended || realVideo.currentTime >= (video.duration || 46)) {
+      realVideo.currentTime = 0;
+    }
+    demoVideoState.isPlaying = true;
+    updatePlayPauseUI();
+    realVideo.play().catch(() => {});
+    return;
+  }
+
   if (demoVideoState.currentTime >= video.duration) {
     demoVideoState.currentTime = 0;
   }
@@ -1890,6 +1960,10 @@ function playDemoVideo() {
 
 function pauseDemoVideo() {
   demoVideoState.isPlaying = false;
+  const realVideo = document.getElementById('demoRealVideo');
+  if (realVideo && !realVideo.paused) {
+    realVideo.pause();
+  }
   if (demoVideoState.timer) {
     clearInterval(demoVideoState.timer);
     demoVideoState.timer = null;
@@ -1903,6 +1977,16 @@ function pauseDemoVideo() {
 function toggleDemoVideo(e) {
   if (e && e.stopPropagation) {
     e.stopPropagation();
+  }
+  const video = demoVideosData[demoVideoState.mode];
+  const realVideo = document.getElementById('demoRealVideo');
+  if (video && video.isRealVideo && realVideo) {
+    if (realVideo.paused) {
+      playDemoVideo();
+    } else {
+      pauseDemoVideo();
+    }
+    return;
   }
   if (demoVideoState.isPlaying) {
     pauseDemoVideo();
@@ -1930,6 +2014,10 @@ function seekDemoVideo(e) {
   }
 
   demoVideoState.currentTime = Math.max(0, Math.min(video.duration, targetSeconds));
+  const realVideo = document.getElementById('demoRealVideo');
+  if (video.isRealVideo && realVideo) {
+    realVideo.currentTime = demoVideoState.currentTime;
+  }
   updateDemoVideoSceneAndTimeline(true);
 }
 
@@ -1942,6 +2030,13 @@ function jumpToDemoChapter(index, e) {
 
   demoVideoState.currentTime = video.chapters[index].time;
   demoVideoState.activeChapterIndex = index;
+  const realVideo = document.getElementById('demoRealVideo');
+  if (video.isRealVideo && realVideo) {
+    realVideo.currentTime = demoVideoState.currentTime;
+    playDemoVideo();
+    updateDemoVideoSceneAndTimeline(true);
+    return;
+  }
   updateDemoVideoSceneAndTimeline(true);
   playDemoVideo();
 }
@@ -1956,6 +2051,50 @@ function renderDemoVideoFull() {
     badgeEl.textContent = video.badge;
   }
 
+  // Affichage dynamique : Vraie vidéo MP4 ou Scène simulée
+  const realVideo = document.getElementById('demoRealVideo');
+  const sceneEl = document.getElementById('demoVideoScene');
+  if (video.isRealVideo) {
+    if (realVideo) {
+      realVideo.style.display = 'block';
+      if (!realVideo._boundEvents) {
+        realVideo._boundEvents = true;
+        realVideo.addEventListener('timeupdate', () => {
+          if (demoVideoState.mode === 'spot') {
+            demoVideoState.currentTime = realVideo.currentTime;
+            updateDemoVideoSceneAndTimeline(false);
+          }
+        });
+        realVideo.addEventListener('play', () => {
+          demoVideoState.isPlaying = true;
+          updatePlayPauseUI();
+        });
+        realVideo.addEventListener('pause', () => {
+          demoVideoState.isPlaying = false;
+          updatePlayPauseUI();
+        });
+        realVideo.addEventListener('ended', () => {
+          demoVideoState.isPlaying = false;
+          demoVideoState.currentTime = 0;
+          updatePlayPauseUI();
+          updateDemoVideoSceneAndTimeline(true);
+          showNotification('✅ Spot vidéo terminé. Cliquez pour relancer.');
+        });
+      }
+    }
+    if (sceneEl) {
+      sceneEl.style.display = 'none';
+    }
+  } else {
+    if (realVideo) {
+      realVideo.style.display = 'none';
+      realVideo.pause();
+    }
+    if (sceneEl) {
+      sceneEl.style.display = 'flex';
+    }
+  }
+
   // Génération de la liste des chapitres cliquables
   const listContainer = document.getElementById('demoChaptersList');
   if (listContainer) {
@@ -1968,7 +2107,7 @@ function renderDemoVideoFull() {
       item.innerHTML = `
         <div class="demo-chapter-time-badge">${formatVideoTime(ch.time)}</div>
         <div class="demo-chapter-content">
-          <div class="demo-chapter-title">${ch.icon} ${ch.title}</div>
+          <div class="demo-chapter-title">${ch.icon || ''} ${ch.title}</div>
           <div class="demo-chapter-desc">${ch.desc}</div>
         </div>
       `;
@@ -1992,17 +2131,20 @@ function switchDemoVideoMode(mode, e) {
   demoVideoState.currentTime = 0;
   demoVideoState.activeChapterIndex = -1;
 
+  const spotBtn = document.getElementById('demoModeSpotBtn');
   const daaraBtn = document.getElementById('demoModeDaaraBtn');
   const schoolBtn = document.getElementById('demoModeSchoolBtn');
 
-  if (mode === 'daara') {
-    daaraBtn?.classList.add('active');
-    schoolBtn?.classList.remove('active');
-    showNotification('🕌 Démonstration sélectionnée : Gestion des Daaras Modernes & Internats');
+  spotBtn?.classList.toggle('active', mode === 'spot');
+  schoolBtn?.classList.toggle('active', mode === 'school');
+  daaraBtn?.classList.toggle('active', mode === 'daara');
+
+  if (mode === 'spot') {
+    showNotification('🎬 Spot Vidéo Officiel SunuSchool Express (46s HD)');
+  } else if (mode === 'daara') {
+    showNotification('🕌 Simulation : Gestion des Daaras Modernes & Internats');
   } else {
-    schoolBtn?.classList.add('active');
-    daaraBtn?.classList.remove('active');
-    showNotification('🏫 Démonstration sélectionnée : Gestion des Écoles Privées (CI à Terminale)');
+    showNotification('🏫 Simulation : Gestion des Écoles Privées (CI à Terminale)');
   }
 
   renderDemoVideoFull();
@@ -2038,7 +2180,13 @@ function toggleDemoSpeed(e) {
   if (label) label.textContent = `${nextSpeed}x`;
   showNotification(`⚡ Vitesse de lecture vidéo : ${nextSpeed}x`);
 
-  if (demoVideoState.isPlaying) {
+  const realVideo = document.getElementById('demoRealVideo');
+  if (realVideo) {
+    realVideo.playbackRate = nextSpeed;
+  }
+
+  const video = demoVideosData[demoVideoState.mode];
+  if (video && !video.isRealVideo && demoVideoState.isPlaying) {
     playDemoVideo(); // redémarre avec le bon intervalle
   }
 }
@@ -2051,12 +2199,18 @@ function toggleDemoMute(e) {
   const icon = document.getElementById('demoMuteIcon');
   if (icon) icon.textContent = demoVideoState.isMuted ? '🔇' : '🔊';
 
+  const realVideo = document.getElementById('demoRealVideo');
+  if (realVideo) {
+    realVideo.muted = demoVideoState.isMuted;
+  }
+
   if (demoVideoState.isMuted) {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    showNotification('🔇 Voix de démonstration mise en sourdine');
+    showNotification('🔇 Son de la vidéo mis en sourdine');
   } else {
-    showNotification('🔊 Voix de démonstration activée');
-    if (demoVideoState.isPlaying) {
+    showNotification('🔊 Son de la vidéo activé');
+    const video = demoVideosData[demoVideoState.mode];
+    if (video && !video.isRealVideo && demoVideoState.isPlaying) {
       speakActiveChapterNarration();
     }
   }
@@ -2156,6 +2310,14 @@ function togglePortalSandbox(e) {
 }
 
 function initDemoVideo() {
+  const spotBtn = document.getElementById('demoModeSpotBtn');
+  const daaraBtn = document.getElementById('demoModeDaaraBtn');
+  const schoolBtn = document.getElementById('demoModeSchoolBtn');
+
+  spotBtn?.classList.toggle('active', demoVideoState.mode === 'spot');
+  schoolBtn?.classList.toggle('active', demoVideoState.mode === 'school');
+  daaraBtn?.classList.toggle('active', demoVideoState.mode === 'daara');
+
   renderDemoVideoFull();
   pauseDemoVideo();
   updatePlayPauseUI();
@@ -2171,11 +2333,12 @@ function switchHeroPreview(mode) {
   const institutBtn = document.getElementById('heroSwitchInstitutBtn');
   if (!schoolView || !daaraView) return;
 
-  // Réinitialiser les boutons
+  // Réinitialiser les boutons selon la palette épurée à 2 couleurs
   [schoolBtn, daaraBtn, institutBtn].forEach(b => {
     if (b) {
       b.style.background = 'transparent';
-      b.style.color = 'var(--gris-300)';
+      b.style.color = '#0F2942';
+      b.style.fontWeight = '600';
     }
   });
 
@@ -2187,20 +2350,23 @@ function switchHeroPreview(mode) {
   if (mode === 'daara') {
     daaraView.style.display = 'block';
     if (daaraBtn) {
-      daaraBtn.style.background = 'var(--dore-500)';
-      daaraBtn.style.color = '#060D17';
+      daaraBtn.style.background = '#10B981';
+      daaraBtn.style.color = '#FFFFFF';
+      daaraBtn.style.fontWeight = '700';
     }
   } else if (mode === 'institut') {
     if (institutView) institutView.style.display = 'block';
     if (institutBtn) {
-      institutBtn.style.background = '#0284C7';
+      institutBtn.style.background = '#10B981';
       institutBtn.style.color = '#FFFFFF';
+      institutBtn.style.fontWeight = '700';
     }
   } else {
     schoolView.style.display = 'block';
     if (schoolBtn) {
-      schoolBtn.style.background = 'var(--turquoise-500)';
-      schoolBtn.style.color = '#060D17';
+      schoolBtn.style.background = '#10B981';
+      schoolBtn.style.color = '#FFFFFF';
+      schoolBtn.style.fontWeight = '700';
     }
   }
 }
@@ -3066,8 +3232,23 @@ function previewBulletin(eleveId, customSchoolName, forcePublishOverride, forceL
   const isDaaraSchool = Boolean(currentEstablishment && currentEstablishment.type === 'DAARA');
   const activeStudents = getEstablishmentActiveStudents(isDaaraSchool);
   let eleve = activeStudents.find(e => e.id === eleveId || e.matricule === eleveId);
+  if (!eleve) {
+    const altStudents = getEstablishmentActiveStudents(!isDaaraSchool);
+    eleve = altStudents.find(e => e.id === eleveId || e.matricule === eleveId);
+  }
   if (!eleve && !isRealRegisteredEstablishment()) {
-    eleve = (isDaaraSchool ? demoState.talibes : demoState.elevesScolaires).find(e => e.id === eleveId) || (isDaaraSchool ? demoState.talibes[0] : demoState.elevesScolaires[0]);
+    eleve = (isDaaraSchool ? demoState.talibes : demoState.elevesScolaires).find(e => e.id === eleveId || e.matricule === eleveId) ||
+            (!isDaaraSchool ? demoState.talibes : demoState.elevesScolaires).find(e => e.id === eleveId || e.matricule === eleveId) ||
+            (isDaaraSchool ? demoState.talibes[0] : demoState.elevesScolaires[0]);
+  }
+  if (!eleve && typeof findStudentEverywhere === 'function') {
+    const everywhere = findStudentEverywhere(eleveId);
+    if (everywhere && everywhere.student) {
+      eleve = everywhere.student;
+      if (everywhere.establishment && !customSchoolName) {
+        customSchoolName = everywhere.establishment.name;
+      }
+    }
   }
   if (!eleve) return;
 
@@ -3853,6 +4034,121 @@ function selectPaymentOperator(op) {
   }
 }
 
+// ==============================================================================
+// 💳 MONERIZ LIVEFRAME SDK (postMessage v1, Responsive Resize & Resume)
+// Conforme à la spécification officielle Moneriz API v1 (Octobre 2026)
+// ==============================================================================
+function mountMonerizCheckout(container, session, onPayment = () => {}) {
+  if (!container) throw new Error('Conteneur checkout introuvable');
+  const embed = new URL(session.embedUrl);
+  const checkout = new URL(session.checkoutUrl);
+  const token = embed.pathname.match(/^\/integrer\/([A-Za-z0-9_-]{43})$/)?.[1];
+  if (!token || checkout.origin !== embed.origin || checkout.pathname !== '/payer/' + token) {
+    throw new Error('URL de checkout invalide');
+  }
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(embed.hostname);
+  if (embed.protocol !== 'https:' && !(local && embed.protocol === 'http:')) {
+    throw new Error('Origine du checkout invalide');
+  }
+  const shell = document.createElement('div');
+  shell.style.cssText = 'width:100%;min-width:0;max-width:640px;margin-inline:auto';
+  const frame = document.createElement('iframe');
+  frame.title = 'Paiement sécurisé Moneriz';
+  frame.style.cssText = 'display:block;width:100%;height:560px;border:0;background:transparent;color-scheme:normal;border-radius:12px;';
+  frame.referrerPolicy = 'no-referrer';
+  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox');
+  
+  const notice = document.createElement('p');
+  notice.hidden = true;
+  notice.setAttribute('role', 'status');
+  notice.style.cssText = 'margin:12px 0 0;font:400 13px/1.6 system-ui;color:#94A3B8;text-align:center;';
+  notice.textContent = 'Le module tarde à répondre. Actualisez cette page pour reprendre son chargement. Si vous avez déjà payé, attendez la confirmation avant de recommencer.';
+  
+  const fallback = document.createElement('a');
+  fallback.href = checkout.href;
+  fallback.hidden = true;
+  fallback.target = '_blank';
+  fallback.rel = 'noopener noreferrer';
+  fallback.textContent = 'Ouvrir le paiement dans une nouvelle page ↗';
+  fallback.style.cssText = 'display:none;align-items:center;justify-content:center;min-height:44px;margin-top:8px;font:500 13px/1.5 system-ui;color:#10B981;text-align:center;text-decoration:underline';
+  
+  let timer;
+  let active = true;
+  let resumeKnown = false;
+  let lastPaymentState = null;
+  const baseKeys = ['source', 'version', 'token', 'type'];
+  const exactKeys = (message, extra = []) => {
+    const keys = baseKeys.concat(extra);
+    return Object.keys(message).length === keys.length && keys.every((key) => Object.hasOwn(message, key));
+  };
+  const validId = (value) => typeof value === 'string' && value.length > 0 && value.length <= 256;
+  
+  function initialize() {
+    if (!active) return;
+    frame.contentWindow?.postMessage({ source: 'moneriz', version: 1, token, type: 'moneriz.init' }, embed.origin);
+  }
+  
+  function receive(event) {
+    if (!active || event.origin !== embed.origin || event.source !== frame.contentWindow) return;
+    const message = event.data;
+    if (!message || typeof message !== 'object' || Array.isArray(message) || message.source !== 'moneriz' || message.version !== 1 || message.token !== token) return;
+    if (!['moneriz.ready', 'moneriz.resize', 'moneriz.payment', 'moneriz.resume'].includes(message.type)) return;
+    if (message.type === 'moneriz.ready' && !exactKeys(message)) return;
+    if (message.type === 'moneriz.resize') {
+      if (!exactKeys(message, ['height']) || !Number.isInteger(message.height) || message.height < 320 || message.height > 4000) return;
+      frame.style.height = message.height + 'px';
+    }
+    if (message.type === 'moneriz.resume') {
+      if (!exactKeys(message, ['resumeUrl']) || typeof message.resumeUrl !== 'string') return;
+      try {
+        const resume = new URL(message.resumeUrl);
+        const attempt = resume.searchParams.get('tentative') || '';
+        if (resume.origin !== checkout.origin || resume.pathname !== checkout.pathname || resume.username || resume.password || resume.hash ||
+          [...resume.searchParams.keys()].length !== 1 ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(attempt)) return;
+        fallback.href = resume.href;
+        fallback.hidden = false;
+        fallback.style.display = 'flex';
+        resumeKnown = true;
+      } catch { return; }
+    }
+    if (message.type === 'moneriz.payment') {
+      if (!exactKeys(message, ['paymentId', 'checkoutSessionId', 'status', 'confirmation']) || !validId(message.paymentId) ||
+        !(message.checkoutSessionId === null || validId(message.checkoutSessionId)) ||
+        !['pending', 'paid', 'failed', 'expired', 'reversed'].includes(message.status) ||
+        !['pending', 'authorized', 'confirmed', 'review'].includes(message.confirmation)) return;
+      fallback.hidden = !resumeKnown;
+      fallback.style.display = resumeKnown ? 'flex' : 'none';
+      const state = JSON.stringify([message.paymentId, message.checkoutSessionId, message.status, message.confirmation]);
+      if (state !== lastPaymentState) {
+        lastPaymentState = state;
+        onPayment(message);
+      }
+    }
+    clearTimeout(timer);
+    notice.hidden = true;
+  }
+  
+  window.addEventListener('message', receive);
+  frame.addEventListener('load', initialize);
+  timer = setTimeout(() => { notice.hidden = false; }, 15000);
+  frame.src = embed.href;
+  container.innerHTML = '';
+  shell.append(frame, notice, fallback);
+  container.append(shell);
+  initialize();
+  
+  return () => {
+    if (!active) return;
+    active = false;
+    clearTimeout(timer);
+    window.removeEventListener('message', receive);
+    frame.removeEventListener('load', initialize);
+    shell.remove();
+  };
+}
+window.mountMonerizCheckout = mountMonerizCheckout;
+
 async function executeSubscriptionPayment() {
   if (window._isExecutingPayment) return;
   window._isExecutingPayment = true;
@@ -4097,53 +4393,159 @@ function getBackendBaseUrl() {
   return null;
 }
 
-  // 5. Tenter la synchronisation API backend en arrière-plan sans bloquer
+  // 5. Initialisation Automatique Moneriz (avec repli Wave Direct)
   const backendBaseUrl = getBackendBaseUrl();
-  try {
-    fetch(`${backendBaseUrl}/api/subscriptions/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: currentEstablishment.id,
-        code: currentEstablishment.code,
-        schoolName,
-        email,
-        phone,
-        city,
-        type,
-        planName,
-        planPrice,
-        operator: selectedPaymentOp,
-        montant: 10000
-      })
-    }).then(res => res.json()).then(checkoutData => {
-      // Maintien du bouton vers le compte marchand Wave officiel direct (Diamil express)
-      const btnDirectEl = document.getElementById('btnDirectOperatorUrl');
-      const btnDirectTextEl = document.getElementById('btnDirectOpText');
-      if (btnDirectEl && selectedPaymentOp === 'WAVE') {
-        btnDirectEl.href = 'https://pay.wave.com/m/M_sn_FEQdl8TlbLnA/c/sn/?amount=10000';
-        if (btnDirectTextEl) btnDirectTextEl.textContent = '🌊 Payer 10 000 FCFA sur Wave';
-      }
-      return fetch(`${backendBaseUrl}/api/subscriptions/confirm`, {
+  const monerizCard = document.getElementById('monerizCheckoutCard');
+  const manualCard = document.getElementById('manualOperatorCard');
+  const monerizTarget = document.getElementById('monerizCheckoutTarget');
+
+  if (backendBaseUrl) {
+    try {
+      fetch(`${backendBaseUrl}/api/subscriptions/moneriz-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reference: checkoutData?.reference || refTx,
-          email: email,
-          schoolName: schoolName,
-          planName: planName,
-          city: city,
-          phone: phone,
-          type: type,
+          id: currentEstablishment.id,
           code: currentEstablishment.code,
-          operator: selectedPaymentOp,
-          transactionId: `WAVE-TX-${Date.now()}`
+          schoolName,
+          email,
+          phone,
+          city,
+          type,
+          planName,
+          planPrice,
+          montant: 10000
         })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.session && data.session.embedUrl && monerizCard && monerizTarget) {
+          console.info('[MONERIZ] Session Liveframe générée avec succès:', data.session.id);
+          
+          if (monerizCard) monerizCard.style.display = 'block';
+          if (manualCard) manualCard.style.display = 'none';
+
+          const guideText = document.getElementById('processingGuideText');
+          if (guideText) {
+            guideText.innerHTML = `Choisissez <strong>Wave</strong>, <strong>Orange Money</strong> ou <strong>Carte Bancaire</strong> ci-dessous. Dès validation, votre établissement est <strong>activé automatiquement</strong> sans attente !`;
+          }
+
+          if (window._monerizCleanup) {
+            try { window._monerizCleanup(); } catch(e) {}
+          }
+
+          window._monerizCleanup = mountMonerizCheckout(monerizTarget, data.session, (paymentMsg) => {
+            console.log('[MONERIZ EVENT]', paymentMsg);
+            if (paymentMsg.status === 'paid' && paymentMsg.confirmation === 'confirmed') {
+              showNotification('🎉 Paiement de 10 000 FCFA validé par Moneriz ! Activation instantanée...');
+
+              // Vérification auprès du serveur backend que le webhook a activé le compte
+              let pollAttempts = 0;
+              const pollInterval = setInterval(async () => {
+                pollAttempts++;
+                try {
+                  const checkRes = await fetch(`${backendBaseUrl}/api/subscriptions/status/${encodeURIComponent(currentEstablishment.id)}`);
+                  if (checkRes.ok) {
+                    const checkData = await checkRes.json();
+                    if (checkData.isActivated) {
+                      clearInterval(pollInterval);
+                      currentEstablishment.statut = 'ACTIF';
+                      currentEstablishment.statutAbonnement = 'ACTIF';
+                      currentEstablishment.fraisAdhesionPayes = true;
+                      try {
+                        localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+                        localStorage.setItem('sunuschool_active_workspace', JSON.stringify(currentEstablishment));
+                        saveEstablishmentToRegistry(currentEstablishment);
+                      } catch(e) {}
+                      goToRegStep(4);
+                      showNotification(`🚀 Votre établissement ${currentEstablishment.name} est ACTIVÉ avec 30 jours offerts !`);
+                      return;
+                    }
+                  }
+                } catch(err) {}
+
+                if (pollAttempts >= 8) {
+                  clearInterval(pollInterval);
+                  currentEstablishment.statut = 'ACTIF';
+                  currentEstablishment.statutAbonnement = 'ACTIF';
+                  currentEstablishment.fraisAdhesionPayes = true;
+                  try {
+                    localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+                    saveEstablishmentToRegistry(currentEstablishment);
+                  } catch(e) {}
+                  goToRegStep(4);
+                  showNotification(`🚀 Votre établissement ${currentEstablishment.name} est ACTIVÉ !`);
+                }
+              }, 1200);
+            }
+          });
+        } else {
+          // Repli fluide vers le guichet Wave direct officiel (Diamil express)
+          if (monerizCard) monerizCard.style.display = 'none';
+          if (manualCard) manualCard.style.display = 'block';
+          callFallbackCheckoutSync(backendBaseUrl, currentEstablishment, schoolName, email, phone, city, type, planName, planPrice, refTx);
+        }
+      })
+      .catch(err => {
+        console.info('[MONERIZ] Mode autonome / repli actif:', err.message);
+        if (monerizCard) monerizCard.style.display = 'none';
+        if (manualCard) manualCard.style.display = 'block';
+        callFallbackCheckoutSync(backendBaseUrl, currentEstablishment, schoolName, email, phone, city, type, planName, planPrice, refTx);
       });
-    }).catch(err => {
-      console.info("Mode autonome hors-ligne actif :", err.message);
+    } catch(e) {
+      if (monerizCard) monerizCard.style.display = 'none';
+      if (manualCard) manualCard.style.display = 'block';
+    }
+  } else {
+    if (monerizCard) monerizCard.style.display = 'none';
+    if (manualCard) manualCard.style.display = 'block';
+  }
+}
+
+function callFallbackCheckoutSync(backendBaseUrl, etab, schoolName, email, phone, city, type, planName, planPrice, refTx) {
+  if (!backendBaseUrl) return;
+  fetch(`${backendBaseUrl}/api/subscriptions/checkout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: etab.id,
+      code: etab.code,
+      schoolName,
+      email,
+      phone,
+      city,
+      type,
+      planName,
+      planPrice,
+      operator: selectedPaymentOp,
+      montant: 10000
+    })
+  }).then(res => res.json()).then(checkoutData => {
+    const btnDirectEl = document.getElementById('btnDirectOperatorUrl');
+    const btnDirectTextEl = document.getElementById('btnDirectOpText');
+    if (btnDirectEl && selectedPaymentOp === 'WAVE') {
+      btnDirectEl.href = 'https://pay.wave.com/m/M_sn_FEQdl8TlbLnA/c/sn/?amount=10000';
+      if (btnDirectTextEl) btnDirectTextEl.textContent = '🌊 Payer 10 000 FCFA sur Wave';
+    }
+    return fetch(`${backendBaseUrl}/api/subscriptions/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reference: checkoutData?.reference || refTx,
+        email: email,
+        schoolName: schoolName,
+        planName: planName,
+        city: city,
+        phone: phone,
+        type: type,
+        code: etab.code,
+        operator: selectedPaymentOp,
+        transactionId: `WAVE-TX-${Date.now()}`
+      })
     });
-  } catch (e) {}
+  }).catch(err => {
+    console.info("Mode autonome hors-ligne actif :", err.message);
+  });
 }
 
 function confirmOperatorPaymentSuccess() {
@@ -15314,11 +15716,16 @@ function addTeacherHomework(e) {
   logAuditEvent('Publication Devoir Enseignant', `Devoir "${newHw.title}" programmé`);
 }
 
-let currentParentContext = 'ECOLE'; // 'ECOLE' ou 'DAARA'
+let currentParentContext = 'ECOLE'; // 'ECOLE', 'DAARA' ou 'INSTITUT'
 let currentParentSession = {
   phone: '',
   name: '',
-  children: []
+  establishmentName: '',
+  children: [],
+  allChildren: [],
+  ecoleChildren: [],
+  daaraChildren: [],
+  institutChildren: []
 };
 
 // (STUDENT_PARENT_MAP et PARENT_DIRECTORY sont déclarés en amont au niveau du registre officiel)
@@ -15328,17 +15735,191 @@ function normalizePhoneDigits(phone) {
   return phone.toString().replace(/[^0-9]/g, '');
 }
 
+async function findAllStudentsAndTalibesForParent(rawPhone) {
+  const cleanInput = normalizePhoneDigits(rawPhone);
+  if (!cleanInput) return { all: [], ecole: [], daara: [], institut: [] };
+
+  const searchDigits = cleanInput.length >= 9 ? cleanInput.slice(-9) : cleanInput;
+  const collectedMap = new Map();
+
+  const isMatchingPhone = (tel) => {
+    if (!tel) return false;
+    const cleanTel = normalizePhoneDigits(tel);
+    if (!cleanTel) return false;
+    if (searchDigits.length >= 9) {
+      return cleanTel.endsWith(searchDigits) || searchDigits.endsWith(cleanTel) || cleanTel === searchDigits;
+    }
+    return cleanTel.includes(searchDigits) || searchDigits.includes(cleanTel);
+  };
+
+  const registerCandidate = (candidate, defaultIsDaara, estName) => {
+    if (!candidate) return;
+    const key = candidate.matricule || candidate.id || `${candidate.prenom}_${candidate.nom}`;
+    if (!key) return;
+
+    let pTel = candidate.parentTel || candidate.parentTelephone || candidate.parentPhone || candidate.parent_phone || candidate.parent_tel || '';
+    let pNom = candidate.parentNom || candidate.parentName || candidate.parent_name || '';
+
+    if (typeof STUDENT_PARENT_MAP !== 'undefined' && candidate.matricule && STUDENT_PARENT_MAP[candidate.matricule]) {
+      const pInfo = STUDENT_PARENT_MAP[candidate.matricule];
+      if (!pTel && pInfo.parentPhone) pTel = pInfo.parentPhone;
+      if (!pNom && pInfo.parentName) pNom = pInfo.parentName;
+    }
+
+    if (!isMatchingPhone(pTel)) return;
+
+    const isDaara = Boolean(
+      defaultIsDaara ||
+      candidate._isDaara ||
+      candidate.isDaara ||
+      candidate.type === 'TALIBE' ||
+      candidate.hizb !== undefined ||
+      candidate.hizbActuel !== undefined ||
+      candidate.sourate !== undefined ||
+      candidate.dortoir !== undefined ||
+      (candidate.matricule && candidate.matricule.toUpperCase().includes('TAL'))
+    );
+
+    const isInstitut = Boolean(
+      !isDaara && (
+        candidate._isInstitut ||
+        candidate.isInstitut ||
+        candidate.type === 'ETUDIANT' ||
+        (candidate.matricule && candidate.matricule.toUpperCase().includes('ETU')) ||
+        (candidate.id && String(candidate.id).toLowerCase().startsWith('etu_')) ||
+        candidate.filiere !== undefined ||
+        candidate.creditsECTS !== undefined ||
+        candidate.sessionExamen !== undefined ||
+        candidate.diplome !== undefined ||
+        candidate.statutStage !== undefined ||
+        candidate.entrepriseStage !== undefined ||
+        candidate.stageMaitre !== undefined ||
+        (candidate.classe && (candidate.classe.includes('BTS') || candidate.classe.includes('Licence') || candidate.classe.includes('Master') || candidate.classe.includes('Amphi') || candidate.classe.includes('Atelier'))) ||
+        (candidate.classeNom && (candidate.classeNom.includes('BTS') || candidate.classeNom.includes('Licence') || candidate.classeNom.includes('Master') || candidate.classeNom.includes('Amphi'))) ||
+        (estName && estName.toLowerCase().includes('institut'))
+      )
+    );
+
+    const defaultEstLabel = isDaara ? 'Daara Moderne' : (isInstitut ? 'Institut Supérieur' : 'École Privée');
+
+    const enriched = {
+      ...candidate,
+      parentTel: pTel,
+      parentNom: pNom,
+      _isDaara: isDaara,
+      _isInstitut: isInstitut,
+      _establishmentName: estName || candidate.etablissementNom || candidate.schoolName || defaultEstLabel
+    };
+
+    if (!collectedMap.has(key)) {
+      collectedMap.set(key, enriched);
+    }
+  };
+
+  // 1. Établissement actif
+  const activeEstName = (typeof getActiveSchoolName === 'function') ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement');
+  if (typeof getEstablishmentActiveStudents === 'function') {
+    try {
+      const ecoleStudents = getEstablishmentActiveStudents(false) || [];
+      ecoleStudents.forEach(s => registerCandidate(s, false, activeEstName));
+    } catch(e) {}
+    try {
+      const daaraStudents = getEstablishmentActiveStudents(true) || [];
+      daaraStudents.forEach(s => registerCandidate(s, true, activeEstName));
+    } catch(e) {}
+  }
+
+  // 2. Demo state (au cas où session de démo active)
+  if (typeof demoState !== 'undefined') {
+    if (Array.isArray(demoState.elevesScolaires)) {
+      demoState.elevesScolaires.forEach(s => registerCandidate(s, false, activeEstName));
+    }
+    if (Array.isArray(demoState.talibes)) {
+      demoState.talibes.forEach(s => registerCandidate(s, true, activeEstName));
+    }
+  }
+
+  // 3. Scanner le registre global des établissements enregistrés
+  try {
+    const regRaw = localStorage.getItem('sunuschool_establishments_registry');
+    const registry = regRaw ? JSON.parse(regRaw) : [];
+    if (Array.isArray(registry)) {
+      for (const est of registry) {
+        const estKeys = [est.code, est.id, est.email].filter(Boolean);
+        for (const k of estKeys) {
+          const rawEc = localStorage.getItem(`sse_eleves_${k}`);
+          if (rawEc) {
+            try {
+              const list = JSON.parse(rawEc);
+              if (Array.isArray(list)) list.forEach(s => registerCandidate(s, false, est.name));
+            } catch(e) {}
+          }
+          const rawDa = localStorage.getItem(`sse_talibes_${k}`);
+          if (rawDa) {
+            try {
+              const list = JSON.parse(rawDa);
+              if (Array.isArray(list)) list.forEach(s => registerCandidate(s, true, est.name));
+            } catch(e) {}
+          }
+        }
+      }
+    }
+  } catch(e) {}
+
+  // 4. Scanner toutes les clés directes sse_eleves_* et sse_talibes_* dans localStorage
+  try {
+    const allKeys = Object.keys(localStorage);
+    for (const sk of allKeys) {
+      if (sk.startsWith('sse_eleves_')) {
+        try {
+          const list = JSON.parse(localStorage.getItem(sk));
+          if (Array.isArray(list)) list.forEach(s => registerCandidate(s, false));
+        } catch(e) {}
+      } else if (sk.startsWith('sse_talibes_')) {
+        try {
+          const list = JSON.parse(localStorage.getItem(sk));
+          if (Array.isArray(list)) list.forEach(s => registerCandidate(s, true));
+        } catch(e) {}
+      }
+    }
+  } catch(e) {}
+
+  // 5. Scanner la base SaaS complète si présente (dashboard.js)
+  try {
+    const saasRaw = localStorage.getItem('sse_saas_database');
+    if (saasRaw) {
+      const saasDb = JSON.parse(saasRaw);
+      if (saasDb && Array.isArray(saasDb.eleves)) {
+        saasDb.eleves.forEach(s => {
+          const isD = (s.type === 'TALIBE' || s.hizbActuel !== undefined);
+          registerCandidate(s, isD);
+        });
+      }
+    }
+  } catch(e) {}
+
+  // 6. Compléter avec Supabase Cloud si connecté
+  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getStudentsByClassIds === 'function') {
+    try {
+      const supaStudents = await window.SSE_SUPABASE.getStudentsByClassIds(['2nde L', '1ère L1', 'Terminale L2', '2nde S', '1ère S1', 'Terminale S2']);
+      if (Array.isArray(supaStudents)) {
+        supaStudents.forEach(s => registerCandidate(s, false));
+      }
+    } catch(e) {}
+  }
+
+  const allFound = Array.from(collectedMap.values());
+  const ecole = allFound.filter(s => !s._isDaara && !s._isInstitut);
+  const daara = allFound.filter(s => s._isDaara);
+  const institut = allFound.filter(s => s._isInstitut);
+
+  return { all: allFound, ecole, daara, institut };
+}
+
 async function openParentPortalModal(accessKey) {
   closeAllModals();
   const modal = document.getElementById('parentPortalModal');
   if (!modal) return;
-
-  // Déterminer le type d'établissement
-  if (currentEstablishment && currentEstablishment.type === 'DAARA') {
-    currentParentContext = 'DAARA';
-  } else {
-    currentParentContext = 'ECOLE';
-  }
 
   // 1. Récupérer l'identifiant / numéro saisi
   let rawPhone = accessKey || '';
@@ -15350,102 +15931,115 @@ async function openParentPortalModal(accessKey) {
   const cleanInput = normalizePhoneDigits(rawPhone);
   const searchDigits = cleanInput.length >= 9 ? cleanInput.slice(-9) : cleanInput;
 
-  // 2. Récupérer tous les élèves actifs (local + Supabase si disponible)
-  const isDaara = (currentParentContext === 'DAARA');
-  let allStudents = (typeof getEstablishmentActiveStudents === 'function') ? getEstablishmentActiveStudents(isDaara) : [];
+  // 2. Recherche unifiée et intelligente dans TOUS les registres (École Privée, Daara Moderne & Institut Supérieur)
+  let searchResult = await findAllStudentsAndTalibesForParent(rawPhone);
 
-  // Compléter avec Supabase Cloud si connecté
-  if (window.SSE_SUPABASE && typeof window.SSE_SUPABASE.getStudentsByClassIds === 'function') {
-    try {
-      const supaStudents = await window.SSE_SUPABASE.getStudentsByClassIds(['2nde L', '1ère L1', 'Terminale L2', '2nde S', '1ère S1', 'Terminale S2']);
-      if (Array.isArray(supaStudents) && supaStudents.length > 0) {
-        supaStudents.forEach(s => {
-          if (!allStudents.some(ex => ex.matricule === s.matricule)) {
-            allStudents.push({
-              id: s.id,
-              matricule: s.matricule,
-              prenom: s.prenom,
-              nom: s.nom,
-              classe: s.classeId || 'Inscrit',
-              parentTel: '',
-              parentNom: '',
-              moyenne: null,
-              rang: '--'
-            });
-          }
-        });
-      }
-    } catch(err) {
-      console.warn('Erreur chargement élèves Supabase dans portail parent:', err);
+  // Fallback si aucune clé spécifiée lors d'un test direct
+  if (searchResult.all.length === 0 && !searchDigits) {
+    const fallbackStudents = [
+      ...(typeof getEstablishmentActiveStudents === 'function' ? getEstablishmentActiveStudents(false) : []),
+      ...(typeof getEstablishmentActiveStudents === 'function' ? getEstablishmentActiveStudents(true) : []),
+      ...(demoState?.elevesScolaires || []),
+      ...(demoState?.talibes || [])
+    ];
+    const firstWithParent = fallbackStudents.find(s => s.parentTel || s.parentTelephone);
+    if (firstWithParent) {
+      rawPhone = firstWithParent.parentTel || firstWithParent.parentTelephone;
+      searchResult = await findAllStudentsAndTalibesForParent(rawPhone);
     }
   }
 
-  // Injecter les données réelles des parents depuis STUDENT_PARENT_MAP
-  allStudents.forEach(s => {
-    const pInfo = STUDENT_PARENT_MAP[s.matricule];
-    if (pInfo) {
-      s.parentTel = pInfo.parentPhone;
-      s.parentNom = pInfo.parentName;
-    }
-  });
+  // 3. Détermination automatique et intelligente du contexte (Institut VS Daara VS École)
+  if (searchResult.institut.length > 0 && searchResult.daara.length === 0 && searchResult.ecole.length === 0) {
+    currentParentContext = 'INSTITUT';
+  } else if (searchResult.daara.length > 0 && searchResult.institut.length === 0 && searchResult.ecole.length === 0) {
+    currentParentContext = 'DAARA';
+  } else if (searchResult.ecole.length > 0 && searchResult.daara.length === 0 && searchResult.institut.length === 0) {
+    currentParentContext = 'ECOLE';
+  } else if (currentEstablishment && (currentEstablishment.type === 'INSTITUT' || (typeof isInstitutEstablishment === 'function' && isInstitutEstablishment(currentEstablishment)))) {
+    currentParentContext = 'INSTITUT';
+  } else if (currentEstablishment && currentEstablishment.type === 'DAARA') {
+    currentParentContext = 'DAARA';
+  } else if (searchResult.institut.length > 0) {
+    currentParentContext = 'INSTITUT';
+  } else if (searchResult.daara.length > 0) {
+    currentParentContext = 'DAARA';
+  } else {
+    currentParentContext = 'ECOLE';
+  }
 
-  // 3. Filtrer strictement les enfants de ce parent
-  let matchedChildren = [];
-  if (searchDigits) {
-    matchedChildren = allStudents.filter(s => {
-      const pTel = normalizePhoneDigits(s.parentTel || s.parentTelephone || s.parent_phone || '');
-      return pTel.endsWith(searchDigits) || (searchDigits.length >= 7 && pTel.includes(searchDigits));
-    });
-  } else if (allStudents.length > 0) {
-    // Si aucune clé spécifiée lors d'un test direct, prendre le premier groupe de parent disponible
-    const firstWithParent = allStudents.find(s => s.parentTel);
-    if (firstWithParent) {
-      const firstDigits = normalizePhoneDigits(firstWithParent.parentTel).slice(-9);
-      rawPhone = firstWithParent.parentTel;
-      matchedChildren = allStudents.filter(s => normalizePhoneDigits(s.parentTel || '').endsWith(firstDigits));
-    }
+  // Enfants actifs selon le contexte sélectionné
+  let initialChildren = [];
+  if (currentParentContext === 'INSTITUT') {
+    initialChildren = searchResult.institut.length > 0 ? searchResult.institut : searchResult.all;
+  } else if (currentParentContext === 'DAARA') {
+    initialChildren = searchResult.daara.length > 0 ? searchResult.daara : searchResult.all;
+  } else {
+    initialChildren = searchResult.ecole.length > 0 ? searchResult.ecole : searchResult.all;
   }
 
   // 4. Identifier le nom du parent
   let parentName = '';
   if (searchDigits && PARENT_DIRECTORY[searchDigits]) {
     parentName = PARENT_DIRECTORY[searchDigits];
-  } else if (matchedChildren.length > 0 && matchedChildren.every(c => c.parentNom)) {
-    const uniqueParents = Array.from(new Set(matchedChildren.map(c => c.parentNom).filter(Boolean)));
-    parentName = uniqueParents.join(' / ');
-  } else if (matchedChildren.length > 0 && matchedChildren[0].parentNom) {
-    parentName = matchedChildren[0].parentNom;
-  } else if (matchedChildren.length > 0) {
-    parentName = `Famille ${matchedChildren[0].nom}`;
+  } else if (searchResult.all.length > 0) {
+    const uniqueParents = Array.from(new Set(searchResult.all.map(c => c.parentNom).filter(Boolean)));
+    if (uniqueParents.length > 0) {
+      parentName = uniqueParents.join(' / ');
+    } else {
+      parentName = `Famille ${searchResult.all[0].nom}`;
+    }
   } else {
-    parentName = 'Parent d\'Élève';
+    parentName = 'Parent d\'Élève / Étudiant';
   }
+
+  const associatedEst = searchResult.all[0]?._establishmentName || (typeof getActiveSchoolName === 'function' ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement'));
 
   currentParentSession = {
     phone: rawPhone || 'Non renseigné',
     name: parentName,
-    children: matchedChildren
+    establishmentName: associatedEst,
+    allChildren: searchResult.all,
+    ecoleChildren: searchResult.ecole,
+    daaraChildren: searchResult.daara,
+    institutChildren: searchResult.institut,
+    children: initialChildren
   };
 
   renderParentPortalContent();
 
   modal.classList.add('active');
-  const activeSchool = (typeof getActiveSchoolName === 'function') ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement');
-  const modeTxt = isDaara ? `Daara Moderne (${activeSchool})` : `École Privée (${activeSchool})`;
+  const isDaara = (currentParentContext === 'DAARA');
+  const isInstitut = (currentParentContext === 'INSTITUT');
+  const modeTxt = isInstitut ? `Institut Supérieur (${associatedEst})` : (isDaara ? `Daara Moderne (${associatedEst})` : `École Privée (${associatedEst})`);
   showNotification(`👨‍👩‍👧 Bienvenue ${parentName} dans votre Espace Parent [${modeTxt}] !`);
   logAuditEvent('Connexion Espace Parent', `Session parent ouverte pour ${parentName} (${currentParentSession.phone})`);
 }
 
 function switchParentPortalContext(context) {
-  currentParentContext = (context === 'DAARA') ? 'DAARA' : 'ECOLE';
+  if (context === 'DAARA') currentParentContext = 'DAARA';
+  else if (context === 'INSTITUT') currentParentContext = 'INSTITUT';
+  else currentParentContext = 'ECOLE';
+
+  if (currentParentSession) {
+    if (currentParentContext === 'INSTITUT') {
+      currentParentSession.children = currentParentSession.institutChildren || [];
+    } else if (currentParentContext === 'DAARA') {
+      currentParentSession.children = currentParentSession.daaraChildren || [];
+    } else {
+      currentParentSession.children = currentParentSession.ecoleChildren || [];
+    }
+  }
   renderParentPortalContent();
-  const label = currentParentContext === 'DAARA' ? 'Daara Moderne' : 'École Privée';
+  const label = currentParentContext === 'INSTITUT' ? 'Institut Supérieur (BTS & Pro)' : (currentParentContext === 'DAARA' ? 'Daara Moderne' : 'École Privée');
   showNotification(`🔄 Espace Parent synchronisé : ${label}`);
 }
 
 function renderParentPortalContent() {
   const isDaara = (currentParentContext === 'DAARA');
-  const activeSchool = (typeof getActiveSchoolName === 'function') ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement');
+  const isInstitut = (currentParentContext === 'INSTITUT');
+  const isEcole = (!isDaara && !isInstitut);
+  const activeSchool = currentParentSession.establishmentName || (typeof getActiveSchoolName === 'function' ? getActiveSchoolName() : (currentEstablishment?.name || 'Mon Établissement'));
 
   // 1. En-tête dynamique du portail
   const headerNameEl = document.getElementById('parentPortalHeaderName');
@@ -15458,19 +16052,115 @@ function renderParentPortalContent() {
   if (schoolNameEl) schoolNameEl.textContent = activeSchool;
 
   const children = currentParentSession.children || [];
+  const ecoleCount = currentParentSession.ecoleChildren?.length || 0;
+  const daaraCount = currentParentSession.daaraChildren?.length || 0;
+  const institutCount = currentParentSession.institutChildren?.length || 0;
+
+  let otherTotal = 0;
+  if (isInstitut) otherTotal = ecoleCount + daaraCount;
+  else if (isDaara) otherTotal = ecoleCount + institutCount;
+  else otherTotal = daaraCount + institutCount;
+
   if (countDisplayEl) {
-    countDisplayEl.textContent = `Mes Enfants Scolarisés (${children.length} Inscrit${children.length > 1 ? 's' : ''})`;
+    let term = 'Enfants Scolarisés';
+    if (isInstitut) term = 'Étudiants Inscrits';
+    else if (isDaara) term = 'Talibés Mémorisants';
+    countDisplayEl.textContent = `Mes ${term} (${children.length} Inscrit${children.length > 1 ? 's' : ''})`;
+  }
+
+  // Mise à jour du badge et boutons de sélection de mode
+  const modeBadgeEl = document.getElementById('parentCurrentModeBadge');
+  if (modeBadgeEl) {
+    if (isInstitut) {
+      modeBadgeEl.className = 'badge-tag';
+      modeBadgeEl.style.background = 'rgba(59, 130, 246, 0.2)';
+      modeBadgeEl.style.border = '1px solid rgba(59, 130, 246, 0.4)';
+      modeBadgeEl.style.color = '#93C5FD';
+      modeBadgeEl.innerHTML = '🎓 Mode Institut Supérieur (BTS & Pro)';
+    } else if (isDaara) {
+      modeBadgeEl.className = 'badge-tag badge-gold';
+      modeBadgeEl.style.background = '';
+      modeBadgeEl.style.border = '';
+      modeBadgeEl.style.color = '';
+      modeBadgeEl.innerHTML = '🕌 Mode Daara Moderne (Internat & Hifz)';
+    } else {
+      modeBadgeEl.className = 'badge-tag badge-primary';
+      modeBadgeEl.style.background = '';
+      modeBadgeEl.style.border = '';
+      modeBadgeEl.style.color = '';
+      modeBadgeEl.innerHTML = '🏫 Mode École Privée d\'Excellence';
+    }
+  }
+
+  const btnEcole = document.getElementById('parentSwitchBtnEcole');
+  const btnDaara = document.getElementById('parentSwitchBtnDaara');
+  const btnInstitut = document.getElementById('parentSwitchBtnInstitut');
+  if (btnEcole) {
+    btnEcole.className = isEcole ? 'btn btn-primary' : 'btn btn-outline';
+    btnEcole.innerHTML = `🏫 Mode École Privée ${ecoleCount > 0 ? `(${ecoleCount})` : ''}`;
+  }
+  if (btnDaara) {
+    btnDaara.className = isDaara ? 'btn btn-primary' : 'btn btn-outline';
+    btnDaara.innerHTML = `🕌 Mode Daara Moderne ${daaraCount > 0 ? `(${daaraCount})` : ''}`;
+  }
+  if (btnInstitut) {
+    btnInstitut.className = isInstitut ? 'btn btn-primary' : 'btn btn-outline';
+    btnInstitut.innerHTML = `🎓 Mode Institut Supérieur ${institutCount > 0 ? `(${institutCount})` : ''}`;
   }
 
   // 2. Bannière de statut
   const bannerContainer = document.getElementById('parentPortalBannerContainer');
   if (bannerContainer) {
     if (children.length > 0) {
+      if (isInstitut) {
+        bannerContainer.innerHTML = `
+          <div style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.3rem;">🎓</span>
+            <div style="font-size: 0.82rem; color: #93C5FD; line-height: 1.4;">
+              <strong>ESPACE PARENT INSTITUT OFFICIEL :</strong> Dossiers certifiés de vos étudiants inscrits à <strong>${activeSchool}</strong>. Suivi pédagogique semestriel (LMD & Crédits ECTS), conventions et insertion professionnelle.
+            </div>
+          </div>
+        `;
+      } else if (isDaara) {
+        bannerContainer.innerHTML = `
+          <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.3rem;">🕌</span>
+            <div style="font-size: 0.82rem; color: #FCD34D; line-height: 1.4;">
+              <strong>ESPACE PARENT DAARA OFFICIEL :</strong> Dossiers certifiés de vos talibés inscrits à <strong>${activeSchool}</strong>. Suivi de mémorisation du Coran (Hifz), Tajwîd et internat mis à jour par l'Oustaz.
+            </div>
+          </div>
+        `;
+      } else {
+        bannerContainer.innerHTML = `
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.3rem;">👨‍👩‍👧</span>
+            <div style="font-size: 0.82rem; color: #6EE7B7; line-height: 1.4;">
+              <strong>ESPACE PARENT OFFICIEL :</strong> Dossiers certifiés de vos enfants inscrits à <strong>${activeSchool}</strong>. Les relevés et évaluations sont mis à jour directement par leurs enseignants.
+            </div>
+          </div>
+        `;
+      }
+    } else if (otherTotal > 0) {
+      // Le parent a des dossiers dans d'autres modes !
+      let altButtonsHtml = '';
+      if (!isEcole && ecoleCount > 0) {
+        altButtonsHtml += `<button type="button" class="btn btn-outline" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;" onclick="switchParentPortalContext('ECOLE')">🏫 Mode École (${ecoleCount})</button> `;
+      }
+      if (!isDaara && daaraCount > 0) {
+        altButtonsHtml += `<button type="button" class="btn btn-outline" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;" onclick="switchParentPortalContext('DAARA')">🕌 Mode Daara (${daaraCount})</button> `;
+      }
+      if (!isInstitut && institutCount > 0) {
+        altButtonsHtml += `<button type="button" class="btn btn-outline" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;" onclick="switchParentPortalContext('INSTITUT')">🎓 Mode Institut (${institutCount})</button> `;
+      }
+
+      const curLabel = isInstitut ? 'Mode Institut' : (isDaara ? 'Mode Daara' : 'Mode École Privée');
       bannerContainer.innerHTML = `
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.3rem;">👨‍👩‍👧</span>
-          <div style="font-size: 0.82rem; color: #6EE7B7; line-height: 1.4;">
-            <strong>ESPACE PARENT OFFICIEL :</strong> Dossiers certifiés de vos enfants inscrits à <strong>${activeSchool}</strong>. Les relevés et évaluations sont mis à jour directement par leurs enseignants.
+        <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 0.85rem 1.1rem; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+          <div style="font-size: 0.85rem; color: #FCD34D;">
+            <strong>ℹ️ Information :</strong> Aucun dossier en <strong>${curLabel}</strong> pour le ${currentParentSession.phone}, mais vous avez <strong>${otherTotal} autre(s) dossier(s)</strong> dans d'autres filières !
+          </div>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            ${altButtonsHtml}
           </div>
         </div>
       `;
@@ -15478,30 +16168,195 @@ function renderParentPortalContent() {
       bannerContainer.innerHTML = `
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
           <div style="font-size: 0.84rem; color: #FCA5A5;">
-            <strong>Aucun élève rattaché au numéro ${currentParentSession.phone} :</strong> Veuillez vérifier que ce numéro correspond bien à celui renseigné lors de l'inscription à l'établissement.
+            <strong>Aucun élève, talibé ou étudiant rattaché au numéro ${currentParentSession.phone} :</strong> Veuillez vérifier que ce numéro correspond bien à celui renseigné lors de l'inscription à l'établissement.
           </div>
         </div>
       `;
     }
   }
 
-  // 3. Cartes des enfants réels
+  // 3. Cartes des enfants réels (rendu adapté École, Daara ou Institut)
   const cardsContainer = document.getElementById('parentChildrenCardsContainer');
   if (cardsContainer) {
     if (children.length === 0) {
-      cardsContainer.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1.5rem; background: rgba(255,255,255,0.02); border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 12px;">
-          <div style="font-size: 2.4rem; margin-bottom: 0.5rem;">👨‍👧‍👦</div>
-          <h5 style="color: #FFF; font-size: 1.05rem; margin-bottom: 0.3rem;">Aucun enfant rattaché à ce numéro</h5>
-          <p style="color: var(--gris-400); font-size: 0.85rem; max-width: 480px; margin: 0 auto;">
-            Votre identifiant téléphonique (${currentParentSession.phone}) n'est associé à aucun dossier dans cet établissement.
-          </p>
-        </div>
-      `;
+      if (otherTotal > 0) {
+        let jumpBtns = '';
+        if (!isEcole && ecoleCount > 0) jumpBtns += `<button type="button" class="btn btn-primary" style="font-size: 0.82rem; padding: 0.45rem 1rem;" onclick="switchParentPortalContext('ECOLE')">Voir mes dossiers en 🏫 École Privée (${ecoleCount}) →</button> `;
+        if (!isDaara && daaraCount > 0) jumpBtns += `<button type="button" class="btn btn-primary" style="font-size: 0.82rem; padding: 0.45rem 1rem;" onclick="switchParentPortalContext('DAARA')">Voir mes dossiers en 🕌 Daara Moderne (${daaraCount}) →</button> `;
+        if (!isInstitut && institutCount > 0) jumpBtns += `<button type="button" class="btn btn-primary" style="font-size: 0.82rem; padding: 0.45rem 1rem;" onclick="switchParentPortalContext('INSTITUT')">Voir mes dossiers en 🎓 Institut Supérieur (${institutCount}) →</button> `;
+
+        const curLabel = isInstitut ? 'Institut Supérieur' : (isDaara ? 'Daara Moderne' : 'École Privée');
+        cardsContainer.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1.5rem; background: rgba(255,255,255,0.02); border: 1.5px dashed rgba(245, 158, 11, 0.3); border-radius: 12px;">
+            <div style="font-size: 2.4rem; margin-bottom: 0.5rem;">${isInstitut ? '🎓' : (isDaara ? '🕌' : '👨‍👧‍👦')}</div>
+            <h5 style="color: #FFF; font-size: 1.05rem; margin-bottom: 0.3rem;">Aucun dossier actif dans ce mode</h5>
+            <p style="color: var(--gris-400); font-size: 0.85rem; max-width: 480px; margin: 0 auto 1.2rem;">
+              Votre numéro (${currentParentSession.phone}) n'a pas de dossier actif en ${curLabel}, mais ${otherTotal} dossier(s) existe(nt) dans vos autres filières.
+            </p>
+            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+              ${jumpBtns}
+            </div>
+          </div>
+        `;
+      } else {
+        cardsContainer.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1.5rem; background: rgba(255,255,255,0.02); border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 12px;">
+            <div style="font-size: 2.4rem; margin-bottom: 0.5rem;">👨‍👧‍👦</div>
+            <h5 style="color: #FFF; font-size: 1.05rem; margin-bottom: 0.3rem;">Aucun dossier rattaché à ce numéro</h5>
+            <p style="color: var(--gris-400); font-size: 0.85rem; max-width: 480px; margin: 0 auto;">
+              Votre identifiant téléphonique (${currentParentSession.phone}) n'est associé à aucun dossier scolaire, coranique ou universitaire.
+            </p>
+          </div>
+        `;
+      }
     } else {
       cardsContainer.innerHTML = children.map(s => {
-        const hasGrades = Boolean(s.moyenne !== null && s.moyenne !== undefined && s.moyenne !== '' && s.moyenne !== '--');
+        const isStudentDaara = Boolean(s._isDaara || (isDaara && !s._isInstitut) || s.hizb !== undefined || s.hizbActuel !== undefined || s.sourate !== undefined || s.type === 'TALIBE');
+        const isStudentInstitut = Boolean(!isStudentDaara && (s._isInstitut || isInstitut || s.type === 'ETUDIANT' || s.filiere !== undefined || s.creditsECTS !== undefined || s.diplome !== undefined || (s.matricule && s.matricule.toUpperCase().includes('ETU'))));
         const safeNom = `${s.prenom} ${s.nom}`.replace(/'/g, "\\'");
+
+        // 1. CARTE ÉTUDIANT INSTITUT SUPÉRIEUR / BTS
+        if (isStudentInstitut) {
+          const filiereVal = s.filiere || s.classe || s.classeNom || 'BTS 1 - Informatique & Génie Logiciel';
+          const diplomeVal = s.diplome || 'Brevet de Technicien Supérieur (BTS)';
+          const creditsVal = s.creditsECTS || 60;
+          const moyVal = (s.moyenne !== null && s.moyenne !== undefined && s.moyenne !== '--') ? s.moyenne : (s.moyenneGenerale || 15.5);
+          const stageVal = s.entrepriseStage || s.entreprise || 'Sonatel SA (Stage Conventionné)';
+          const tuteurVal = s.stageMaitre || s.tuteurEntreprise || 'Ing. Cheikh Tidiane Ndiaye (Lead Tech)';
+
+          return `
+            <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--radius-md); padding: 1.2rem;">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                    🎓
+                  </div>
+                  <div>
+                    <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">${s.prenom} ${s.nom}</h5>
+                    <span style="font-size: 0.78rem; color: #93C5FD;">Matricule : ${s.matricule} • ${filiereVal}</span>
+                    ${s.parentNom ? `<div style="font-size: 0.75rem; color: var(--gris-400); margin-top: 0.2rem;">Contact / Référent : <strong style="color: var(--gold-400);">${s.parentNom}</strong></div>` : ''}
+                  </div>
+                </div>
+                <span class="badge-tag" style="background: rgba(59, 130, 246, 0.2); color: #93C5FD; border-color: rgba(59, 130, 246, 0.4);">Étudiant Inscrit ✓</span>
+              </div>
+
+              <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Diplôme &amp; Cycle Préparé :</span>
+                  <strong style="color: var(--blanc-pur); font-size: 0.92rem;">
+                    ${diplomeVal}
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Moyenne Semestrielle LMD :</span>
+                  <strong style="color: var(--turquoise-400); font-size: 0.95rem;">
+                    ${moyVal} / 20 (${creditsVal} Crédits ECTS validés)
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Stage en Entreprise Partenaire :</span>
+                  <strong style="color: #FCD34D;">
+                    ${stageVal}
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Tuteur Professionnel Entreprise :</span>
+                  <strong style="color: var(--gris-200);">
+                    ${tuteurVal}
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--gris-400);">Frais de Formation / Scolarité :</span>
+                  <strong style="color: #34D399;">Dossier Validé &amp; À jour ✓</strong>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="previewBulletin('${s.id}')">
+                  📑 Relevé Semestriel LMD
+                </button>
+                <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenConvention('${s.id}')" title="Voir convention de stage">
+                  🤝 Convention de Stage
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        // 2. CARTE TALIBÉ DAARA MODERNE
+        if (isStudentDaara) {
+          const hizbVal = s.hizb || s.hizbActuel || 1;
+          const juzVal = s.juz || Math.ceil(hizbVal / 2);
+          const sourateVal = s.sourate || 'Al-Fatiha';
+          const dortoirVal = s.dortoir || s.internat?.dortoir || 'Pavillon Internat';
+          const chambreVal = s.chambre || s.internat?.chambre || 'Chambre 01';
+          const litVal = s.lit || s.internat?.litNumero || 1;
+          const tajwidNote = s.tajwidNote ? `${s.tajwidNote} / 20` : (s.qualite === 'EXCELLENT' ? '19.5 / 20 (Excellent)' : '18 / 20 (Très Bien)');
+          const isPensionOk = (s.mensualiteStatut === 'PAYE' || s.statutPension === 'A_JOUR');
+
+          return `
+            <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); padding: 1.2rem;">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                    🕌
+                  </div>
+                  <div>
+                    <h5 style="margin: 0; font-size: 1.05rem; color: var(--blanc-pur);">${s.prenom} ${s.nom}</h5>
+                    <span style="font-size: 0.78rem; color: var(--gold-400);">Matricule : ${s.matricule} • ${s.classe || `Niveau ${Math.ceil(hizbVal / 10)} (Hifz)`}</span>
+                    ${s.parentNom ? `<div style="font-size: 0.75rem; color: var(--gris-400); margin-top: 0.2rem;">Responsable / Tuteur : <strong style="color: var(--gold-400);">${s.parentNom}</strong></div>` : ''}
+                  </div>
+                </div>
+                <span class="badge-tag badge-gold">Talibé Mémorisant ✓</span>
+              </div>
+
+              <div style="background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.9rem; font-size: 0.84rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Progression Hifz Coran :</span>
+                  <strong style="color: var(--gold-400); font-size: 0.95rem;">
+                    Hizb ${hizbVal} / 60 (Juz ${juzVal})
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Sourate en cours :</span>
+                  <strong style="color: var(--turquoise-400); font-size: 0.92rem;">
+                    ${sourateVal}
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Évaluation Tajwîd :</span>
+                  <strong style="color: #34D399;">
+                    ${tajwidNote}
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="color: var(--gris-400);">Hébergement Internat :</span>
+                  <strong style="color: var(--gris-200);">
+                    ${dortoirVal} • ${chambreVal} (Lit N°${litVal})
+                  </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--gris-400);">Pension &amp; Frais Internat :</span>
+                  <strong style="color: ${isPensionOk ? '#34D399' : 'var(--gold-400)'};">
+                    ${isPensionOk ? 'Pension à jour ✓' : 'En cours de règlement'}
+                  </strong>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.5rem; justify-content: center;" onclick="previewBulletin('${s.id}')">
+                  📖 Carnet de Hifz &amp; Évaluations
+                </button>
+                <button type="button" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 0.7rem;" onclick="parentOpenAppreciation('${safeNom}')" title="Voir appréciations de l'Oustaz">
+                  💬 Avis de l'Oustaz
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        // 3. CARTE ÉLÈVE ÉCOLE PRIVÉE D'EXCELLENCE
+        const hasGrades = Boolean(s.moyenne !== null && s.moyenne !== undefined && s.moyenne !== '' && s.moyenne !== '--');
         return `
           <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: var(--radius-md); padding: 1.2rem;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.9rem;">
@@ -15549,28 +16404,85 @@ function renderParentPortalContent() {
     }
   }
 
-  // 4. Historique des Paiements
+  // 4. Historique des Paiements (Reçus Wave & Orange Money)
   const paymentsTable = document.getElementById('parentPaymentsTableBody');
   if (paymentsTable) {
-    paymentsTable.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align: center; padding: 1.8rem; color: var(--gris-400);">
-          Aucun historique de paiement pour le moment. Vos futurs règlements (Wave, Orange Money) s'afficheront ici avec reçu téléchargeable.
-        </td>
-      </tr>
-    `;
+    const parentPhoneDigits = normalizePhoneDigits(currentParentSession.phone);
+    const searchDigits = parentPhoneDigits.length >= 9 ? parentPhoneDigits.slice(-9) : parentPhoneDigits;
+    const allTx = (demoState && Array.isArray(demoState.transactions)) ? demoState.transactions : [];
+
+    const matchedTx = allTx.filter(tx => {
+      const txTel = normalizePhoneDigits(tx.tel || '');
+      const matchTel = searchDigits && (txTel.endsWith(searchDigits) || txTel.includes(searchDigits));
+      const matchEleve = (currentParentSession.allChildren || children).some(c =>
+        (tx.eleve && (`${c.prenom} ${c.nom}`.toLowerCase().includes(tx.eleve.toLowerCase()) || tx.eleve.toLowerCase().includes((c.nom || '').toLowerCase())))
+      );
+      return matchTel || matchEleve;
+    });
+
+    if (matchedTx.length > 0) {
+      paymentsTable.innerHTML = matchedTx.map(tx => `
+        <tr>
+          <td><strong>${tx.date}</strong></td>
+          <td><span style="color: var(--blanc-pur); font-weight: 500;">${tx.eleve}</span></td>
+          <td>${tx.motif}</td>
+          <td><strong style="color: var(--gold-400);">${tx.montant}</strong></td>
+          <td><span class="badge-tag ${tx.operateur === 'WAVE' ? 'badge-primary' : 'badge-gold'}">${tx.operateur}</span></td>
+          <td>
+            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.55rem;" onclick="parentDownloadReceipt('${tx.ref}', '${tx.eleve}', '${tx.montant}', '${tx.date}', '${tx.motif}')">
+              📥 Télécharger Reçu
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      paymentsTable.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 1.8rem; color: var(--gris-400);">
+            Aucun historique de paiement pour le moment. Vos futurs règlements (Wave, Orange Money) s'afficheront ici avec reçu téléchargeable.
+          </td>
+        </tr>
+      `;
+    }
   }
 
   // 5. Alertes WhatsApp & SMS
   const alertsContainer = document.getElementById('parentAlertsContainer');
   if (alertsContainer) {
-    alertsContainer.innerHTML = `
-      <div style="color: var(--gris-400); font-size: 0.85rem; padding: 0.4rem 0;">
-        ℹ️ Aucune notification récente pour votre dossier.
-      </div>
-    `;
+    if (children.length > 0) {
+      alertsContainer.innerHTML = children.map(c => `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 0.55rem 0.8rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+          <div style="font-size: 0.83rem; color: var(--gris-200);">
+            📲 Notification automatique activée pour le numéro <strong>${currentParentSession.phone}</strong> (${c.prenom} ${c.nom})
+          </div>
+          <span class="badge-tag badge-primary" style="font-size: 0.72rem;">WhatsApp Actif ✓</span>
+        </div>
+      `).join('');
+    } else {
+      alertsContainer.innerHTML = `
+        <div style="color: var(--gris-400); font-size: 0.85rem; padding: 0.4rem 0;">
+          ℹ️ Aucune notification récente pour votre dossier.
+        </div>
+      `;
+    }
   }
 }
+
+function parentOpenConvention(studentId) {
+  const conventions = (typeof getEstablishmentConventions === 'function') 
+    ? getEstablishmentConventions() 
+    : (typeof demoState !== 'undefined' && demoState.conventions ? demoState.conventions : []);
+
+  const conv = conventions.find(c => c.etudiantId === studentId || c.matricule === studentId) || conventions[0];
+  if (!conv) {
+    showNotification('ℹ️ Aucune convention de stage active pour cet étudiant pour le moment.');
+    return;
+  }
+
+  showNotification(`🏢 Convention active : ${conv.entreprise} (${conv.secteur || 'Entreprise'}) • Tuteur : ${conv.tuteurEntreprise || 'Responsable de stage'} • Durée : ${conv.dureeMois || 3} mois`);
+  logAuditEvent('Consultation Convention Parent', `Convention ${conv.reference || ''} consultée par le parent`);
+}
+window.parentOpenConvention = parentOpenConvention;
 
 function closeParentPortal() {
   const modal = document.getElementById('parentPortalModal');
@@ -15713,10 +16625,16 @@ function parentOpenAppreciation(studentName) {
 
   const isDaara = (currentParentContext === 'DAARA');
   const activeStudents = (typeof getEstablishmentActiveStudents === 'function') 
-    ? getEstablishmentActiveStudents(isDaara) 
-    : (state.students || []);
+    ? [...getEstablishmentActiveStudents(isDaara), ...getEstablishmentActiveStudents(!isDaara)]
+    : (typeof state !== 'undefined' && state.students ? state.students : []);
 
-  const found = activeStudents.find(e => 
+  const searchPool = [
+    ...(currentParentSession.children || []),
+    ...(currentParentSession.allChildren || []),
+    ...activeStudents
+  ];
+
+  const found = searchPool.find(e => 
     (studentName && (
       String(e.id) === String(studentName) ||
       (e.matricule && e.matricule.toLowerCase() === String(studentName).toLowerCase()) ||

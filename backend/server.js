@@ -33,6 +33,8 @@ if (fs.existsSync(envFile)) {
 }
 
 const supabaseService = require('./supabaseService.js');
+const { verifyMonerizSignature } = require('./moneriz-signature.js');
+const { createMonerizCheckout } = require('./moneriz-checkout.js');
 
 // ==============================================================================
 // CONFIGURATION WEB PUSH NOTIFICATIONS (VAPID)
@@ -122,6 +124,152 @@ app.use((req, res, next) => {
 });
 
 app.use(cors());
+
+// ==============================================================================
+// 💳 WEBHOOK OFFICIEL MONERIZ (Paiement 100% Automatique Wave, OM, Carte)
+// Reçoit le corps brut UTF-8 AVANT express.json() pour contrôle cryptographique HMAC-SHA256
+// ==============================================================================
+app.post('/api/webhooks/moneriz', express.raw({ type: 'application/json', limit: '2mb' }), async (req, res) => {
+  const secret = process.env.MONERIZ_WEBHOOK_SECRET;
+  if (!secret) {
+    console.warn('[MONERIZ WEBHOOK] ⚠️ MONERIZ_WEBHOOK_SECRET non configuré sur le serveur.');
+    return res.status(503).json({ error: 'WEBHOOK_NOT_CONFIGURED' });
+  }
+
+  if (!Buffer.isBuffer(req.body)) {
+    return res.status(400).send('Invalid body format');
+  }
+
+  const rawBody = req.body.toString('utf8');
+  const signature = req.get('X-Moneriz-Signature') || req.get('x-moneriz-signature') || '';
+
+  if (!verifyMonerizSignature(rawBody, secret, signature)) {
+    console.warn('[MONERIZ WEBHOOK] ❌ Rejet : Signature cryptographique X-Moneriz-Signature invalide.');
+    return res.status(401).send('Invalid signature');
+  }
+
+  let event;
+  try {
+    event = JSON.parse(rawBody);
+  } catch (err) {
+    return res.status(400).send('Invalid JSON');
+  }
+
+  if (!event || !event.id || !event.type) {
+    return res.status(400).send('Invalid event envelope');
+  }
+
+  console.log(`[MONERIZ WEBHOOK] ✓ Événement reçu: ID=${event.id}, Type=${event.type}, Mode=${event.mode || 'N/A'}`);
+
+  try {
+    // 1. Déduplication durable de l'événement (Inbox Idempotente)
+    db.monerizEvents = db.monerizEvents || [];
+    if (db.monerizEvents.includes(event.id)) {
+      console.log(`[MONERIZ WEBHOOK] ℹ️ Événement ${event.id} déjà traité (doublon idempotence).`);
+      return res.sendStatus(204);
+    }
+
+    // 2. Traitement selon le type d'événement
+    if (event.type === 'payment.succeeded') {
+      const payment = event.data?.payment;
+      if (payment) {
+        const ref = payment.reference || '';
+        const meta = payment.metadata || {};
+        const etabId = meta.etablissementId || '';
+        const etabCode = meta.code || '';
+        const targetPlan = meta.plan || '';
+
+        // Retrouver l'établissement cible
+        let etab = (db.etablissements || []).find(e => 
+          (etabId && e.id === etabId) ||
+          (etabCode && e.code === etabCode) ||
+          (ref && (e.dernierPaiementRef === ref || e.code === ref)) ||
+          (meta.orderId && e.dernierPaiementRef === meta.orderId)
+        );
+
+        if (etab) {
+          etab.statut = 'ACTIF';
+          etab.statutAbonnement = 'ACTIF';
+          etab.fraisAdhesionPayes = true;
+          etab.dateValidation = new Date().toISOString();
+          etab.echeanceAbonnement = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
+          etab.operateurPaiement = payment.paymentType ? `MONERIZ_${String(payment.paymentType).toUpperCase()}` : 'MONERIZ';
+          etab.monerizPaymentId = payment.id;
+          if (targetPlan && !etab.plan) etab.plan = targetPlan;
+
+          // Enregistrement de l'écriture comptable SYSCOHADA (10 000 FCFA)
+          const txRef = ref || `SSE-ADH-${payment.id}`;
+          const existingTx = (db.transactions || []).find(t => t.id === `tx-moneriz-${payment.id}` || t.reference === txRef);
+          if (!existingTx) {
+            db.transactions = db.transactions || [];
+            db.transactions.unshift({
+              id: `tx-moneriz-${payment.id}`,
+              etablissementId: etab.id,
+              reference: txRef,
+              transactionMarchandId: payment.id,
+              type: "ADHESION_SAAS",
+              motifLabel: `Frais d'Adhésion & Activation Formule ${etab.plan || 'Standard'} (Moneriz ${payment.paymentType || 'Wave'})`,
+              montant: Number(payment.amount) || 10000,
+              devise: "FCFA",
+              operateur: payment.paymentType ? String(payment.paymentType).toUpperCase() : "WAVE",
+              payeurNom: payment.customer?.name || etab.name,
+              payeurTel: payment.customer?.phone || etab.phone,
+              compteSYSCOHADA: "5211 (Trésorerie Wave / Moneriz)",
+              compteCredit: "7061 (Ventes de Services SaaS - Adhésions)",
+              statut: "VALIDE",
+              date: new Date().toISOString()
+            });
+          }
+
+          // Enregistrement dans le journal d'audit
+          db.auditLogs = db.auditLogs || [];
+          db.auditLogs.unshift({
+            id: `log-moneriz-${Date.now()}`,
+            date: new Date().toISOString(),
+            user: etab.email,
+            role: "MONERIZ_GATEWAY",
+            action: "ACTIVATION_AUTOMATIQUE_ADHESION",
+            details: `Établissement ${etab.name} (Code: ${etab.code}) activé automatiquement via Moneriz (${payment.paymentType || 'Wave'} - Réf: ${txRef}).`
+          });
+
+          // Synchronisation Supabase en arrière-plan si disponible
+          try {
+            supabaseService.updateEtablissementInSupabase(etab.id || etab.code, {
+              statut: 'ACTIF',
+              statutAbonnement: 'ACTIF',
+              fraisAdhesionPayes: true,
+              echeanceAbonnement: etab.echeanceAbonnement
+            });
+          } catch (supErr) {
+            console.warn('[SUPABASE Moneriz Sync]', supErr.message);
+          }
+
+          // Notification push immédiate vers le téléphone / PC de l'admin
+          sendPushToAdmins(
+            `🎉 Nouvelle École Activée Auto (Moneriz) — ${etab.name}`,
+            `Montant: ${payment.amount || 10000} FCFA via ${payment.paymentType || 'Wave'}\nÉtablissement activé avec succès ! Code: ${etab.code}\nFormule: ${etab.plan}`,
+            { url: '/admin.html#etablissements', type: 'PAIEMENT_MONERIZ', etabId: etab.id }
+          ).catch(pushErr => console.warn('[PUSH Moneriz]', pushErr.message));
+
+          console.log(`[MONERIZ WEBHOOK] 🚀 Établissement "${etab.name}" ACTIVÉ AUTOMATIQUEMENT avec succès !`);
+        } else {
+          console.warn(`[MONERIZ WEBHOOK] Établissement non trouvé pour la référence: ${ref} (ID: ${etabId})`);
+        }
+      }
+    }
+
+    // Mémoriser l'ID de l'événement traité dans l'inbox (garder 500 max)
+    db.monerizEvents.unshift(event.id);
+    if (db.monerizEvents.length > 500) db.monerizEvents.length = 500;
+    saveDatabase(db);
+
+    return res.sendStatus(204);
+  } catch (procErr) {
+    console.error('[MONERIZ WEBHOOK] Erreur traitement:', procErr);
+    return res.sendStatus(503);
+  }
+});
+
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
@@ -1727,6 +1875,115 @@ app.post('/api/subscriptions/confirm', (req, res) => {
     }
   });
 });
+
+// ==============================================================================
+// 💳 CRÉATION DE SESSION MONERIZ CHECKOUT (Mode Iframe / Liveframe Sécurisé)
+// ==============================================================================
+app.post('/api/subscriptions/moneriz-session', async (req, res) => {
+  const { schoolName, email, phone, city, type, planName, planPrice, id, code } = req.body || {};
+  const montant = Number(req.body?.montant) || 10000;
+
+  const cleanSchool = (schoolName || 'Établissement Privé').trim();
+  const cleanEmail = (email || `direction@${cleanSchool.toLowerCase().replace(/[^a-z0-9]/g, '')}.sn`).trim();
+
+  // Création ou repérage de l'établissement sans doublon
+  const targetSearch = { id, code, schoolName: cleanSchool, email: cleanEmail, phone };
+  const existingIdx = findMatchingBackendEtabIndex(db.etablissements, targetSearch);
+  let etab = existingIdx >= 0 ? db.etablissements[existingIdx] : null;
+
+  const resolved = resolvePlanDetails(planName, type);
+
+  if (!etab) {
+    etab = {
+      id: id || `etab-${cleanSchool.toLowerCase().replace(/[^a-z0-9]/g, '') || Date.now()}`,
+      code: code || `SSE-SN-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: cleanSchool,
+      type: resolved.type,
+      city: city || 'Dakar',
+      phone: phone || '+221 77 123 45 67',
+      email: cleanEmail,
+      plan: planName || resolved.planName,
+      prixMensuel: planPrice || resolved.price,
+      statut: 'EN_ATTENTE_VALIDATION',
+      statutAbonnement: 'EN_ATTENTE_VALIDATION',
+      fraisAdhesionPayes: false,
+      dateDemande: new Date().toISOString(),
+      currency: 'FCFA'
+    };
+    db.etablissements.unshift(etab);
+  } else {
+    if (code) etab.code = code;
+    if (planName) etab.plan = planName;
+  }
+
+  const refTx = `SSE-ADH-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+  etab.dernierPaiementRef = refTx;
+  saveDatabase(db);
+
+  const embedOrigin = process.env.MONERIZ_EMBED_ORIGIN || 'https://sunuschoolexpress.com';
+  const mode = process.env.MONERIZ_MODE || 'test';
+
+  const checkoutAttempt = {
+    mode,
+    idempotencyKey: `idem-sse-${etab.id}-${refTx}`,
+    request: {
+      amount: montant,
+      currency: 'XOF',
+      title: `Adhésion SunuSchool Express - ${cleanSchool}`,
+      country: 'SN',
+      reference: refTx,
+      integrationMode: 'iframe',
+      embedOrigin,
+      successUrl: `${embedOrigin}/?payment_success=true&etab_id=${encodeURIComponent(etab.id)}`,
+      cancelUrl: `${embedOrigin}/?payment_cancelled=true`,
+      metadata: {
+        orderId: refTx,
+        etablissementId: etab.id,
+        code: etab.code,
+        plan: etab.plan
+      }
+    },
+    session: null
+  };
+
+  const monerizResult = await createMonerizCheckout(checkoutAttempt, async (session) => {
+    etab.monerizSessionId = session.id;
+    saveDatabase(db);
+  });
+
+  if (monerizResult.error) {
+    return res.status(monerizResult.status || 500).json({
+      success: false,
+      error: monerizResult.error.code,
+      message: monerizResult.error.message,
+      etablissement: etab,
+      reference: refTx
+    });
+  }
+
+  return res.status(201).json({
+    success: true,
+    session: monerizResult.data,
+    etablissement: etab,
+    reference: refTx
+  });
+});
+
+// Consultation de statut pour synchronisation post-paiement
+app.get('/api/subscriptions/status/:id', (req, res) => {
+  const search = req.params.id;
+  const etab = (db.etablissements || []).find(e => e.id === search || e.code === search || e.dernierPaiementRef === search);
+  if (!etab) return res.status(404).json({ success: false, message: 'Établissement non trouvé' });
+  return res.json({
+    success: true,
+    statut: etab.statut,
+    statutAbonnement: etab.statutAbonnement,
+    fraisAdhesionPayes: etab.fraisAdhesionPayes,
+    isActivated: (etab.statut === 'ACTIF' && etab.fraisAdhesionPayes === true),
+    etablissement: etab
+  });
+});
+
 
 
 app.post('/api/saas/demandes', (req, res) => {
