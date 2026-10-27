@@ -4532,35 +4532,33 @@
              style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; width: 100%; padding: 0.7rem; font-weight: 700; font-size: 0.85rem; background: rgba(37, 211, 102, 0.12); border: 1px solid #25D366; color: #25D366; border-radius: 8px; text-decoration: none; margin-bottom: 0.6rem; transition: transform 0.2s;">
             <span id="btnDirectOpIcon">💬</span>
             <span id="btnDirectOpText">Notifier le paiement sur WhatsApp (+221 76 150 39 38)</span>
-          </a>
-        </div>
-
-        <!-- Saisie Référence Wave de l'utilisateur pour le Reçu -->
-        <div style="max-width: 440px; margin: 0 auto 0.8rem; background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.35); border-radius: 8px; padding: 0.8rem 1rem; text-align: left;">
-          <label for="userWaveTxRef" style="display: block; font-size: 0.78rem; font-weight: 700; color: #00D2B4; margin-bottom: 0.35rem;">
-            📝 Référence Wave reçue par SMS (ou n° téléphone expéditeur) :
-          </label>
-          <input type="text" id="userWaveTxRef" placeholder="Ex: W-849201 ou 77 123 45 67" style="width: 100%; padding: 0.65rem 0.8rem; font-size: 0.88rem; background: #0B132B; border: 1px solid rgba(0, 210, 180, 0.4); border-radius: 6px; color: #FFF; box-sizing: border-box; outline: none;" />
-          <div style="font-size: 0.7rem; color: var(--gris-400); margin-top: 0.3rem;">
-            Cette référence sera inscrite sur votre reçu d'adhésion officiel certifié.
+          <!-- Saisie Référence Wave de l'utilisateur pour le Reçu -->
+          <div style="max-width: 440px; margin: 0 auto 0.8rem; background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.35); border-radius: 8px; padding: 0.8rem 1rem; text-align: left;">
+            <label for="userWaveTxRef" style="display: block; font-size: 0.78rem; font-weight: 700; color: #00D2B4; margin-bottom: 0.35rem;">
+              📝 Référence Wave reçue par SMS (ou n° téléphone expéditeur) :
+            </label>
+            <input type="text" id="userWaveTxRef" placeholder="Ex: W-849201 ou 77 123 45 67" style="width: 100%; padding: 0.65rem 0.8rem; font-size: 0.88rem; background: #0B132B; border: 1px solid rgba(0, 210, 180, 0.4); border-radius: 6px; color: #FFF; box-sizing: border-box; outline: none;" />
+            <div style="font-size: 0.7rem; color: var(--gris-400); margin-top: 0.3rem;">
+              Cette référence sera inscrite sur votre reçu d'adhésion officiel certifié.
+            </div>
           </div>
-        </div>
 
-        <!-- Barre de statut de paiement -->
-        <div style="max-width: 440px; margin: 0 auto 1.2rem; background: rgba(0, 210, 180, 0.05); border: 1px solid rgba(0, 210, 180, 0.2); border-radius: 8px; padding: 0.6rem 0.8rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
-            <span id="gatewayStatusText" style="color: #00D2B4; font-weight: 600;">📡 En attente de votre virement Wave de 10 000 FCFA...</span>
-            <span id="gatewayTimerText" style="color: var(--gris-400); font-size: 0.72rem;">Virement sécurisé direct</span>
+          <!-- Barre de statut de paiement -->
+          <div style="max-width: 440px; margin: 0 auto 1.2rem; background: rgba(0, 210, 180, 0.05); border: 1px solid rgba(0, 210, 180, 0.2); border-radius: 8px; padding: 0.6rem 0.8rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+              <span id="gatewayStatusText" style="color: #00D2B4; font-weight: 600;">📡 En attente de votre virement Wave de 10 000 FCFA...</span>
+              <span id="gatewayTimerText" style="color: var(--gris-400); font-size: 0.72rem;">Virement sécurisé direct</span>
+            </div>
           </div>
-        </div>
 
-        <!-- Boutons d'Action Utilisateur -->
-        <div style="display: flex; flex-direction: column; gap: 0.6rem; max-width: 440px; margin: 0 auto;">
+          <!-- Bouton de Soumission Manuelle -->
           <button type="button" class="btn btn-gold" id="btnConfirmOperatorPaid" onclick="confirmOperatorPaymentSuccess()" style="width: 100%; justify-content: center; font-weight: 800; font-size: 0.95rem; padding: 0.85rem; box-shadow: 0 4px 15px rgba(212,175,55,0.4);">
             📤 J'ai envoyé les 10 000 FCFA (Soumettre pour Validation Administrative)
           </button>
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--gris-400); padding: 0.2rem 0.4rem;">
+        </div>
+
+        <!-- Liens d'action secondaires -->
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 440px; margin: 0.8rem auto 0; font-size: 0.75rem; color: var(--gris-400); padding: 0.2rem 0.4rem;">
             <button type="button" onclick="goToRegStep(2)" style="background: none; border: none; color: var(--gris-400); cursor: pointer; text-decoration: underline;">
               ← Changer d'opérateur
             </button>
