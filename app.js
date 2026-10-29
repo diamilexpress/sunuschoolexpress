@@ -17292,3 +17292,30 @@ window.updateTtModalEstablishmentType = updateTtModalEstablishmentType;
 window.isTimetableTargetInstitut = isTimetableTargetInstitut;
 window.isTimetableTargetDaara = isTimetableTargetDaara;
 window.renameCurrentEstablishment = renameCurrentEstablishment;
+
+// ==================== POLITIQUE DE CONFIDENTIALITÉ & CONFORMITÉ CDP SÉNÉGAL ====================
+function openPrivacyPolicyModal() {
+  const modal = document.getElementById('privacyPolicyModal');
+  if (modal) {
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.pointerEvents = 'all';
+    modal.style.visibility = 'visible';
+    logAuditEvent('Consultation Politique Confidentialité', 'Consultation des mentions légales et protection des données CDP Loi 2008-12.');
+  }
+}
+
+function closePrivacyPolicyModal() {
+  const modal = document.getElementById('privacyPolicyModal');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+    modal.style.opacity = '0';
+    modal.style.pointerEvents = 'none';
+    modal.style.visibility = 'hidden';
+  }
+}
+
+window.openPrivacyPolicyModal = openPrivacyPolicyModal;
+window.closePrivacyPolicyModal = closePrivacyPolicyModal;

@@ -4354,6 +4354,11 @@
         <button class="btn btn-gold" id="regSubmitBtn" style="width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: 800; justify-content: center; box-shadow: 0 0 20px rgba(212,175,55,0.4);" onclick="goToRegStep(2)">
           💳 Passer au Règlement Sécurisé (10 000 FCFA) →
         </button>
+
+        <div style="margin-top: 0.75rem; font-size: 0.75rem; color: #94A3B8; text-align: center; line-height: 1.4;">
+          🔒 Vos données sont protégées conformément à la <strong>Loi n° 2008-12 (CDP Sénégal)</strong>.<br>
+          En continuant, vous acceptez notre <a href="javascript:void(0)" onclick="openPrivacyPolicyModal()" style="color: #00D2B4; text-decoration: underline; font-weight: 600; cursor: pointer;">Politique de Confidentialité</a>.
+        </div>
       </div>
 
       <!-- ÉTAPE 2 : GUICHET AGRÉGATEUR COMPLET (WAVE, ORANGE MONEY, FREE, CB) -->
@@ -6270,7 +6275,7 @@
           <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--dore-400);">Conformité</h4>
           <ul style="list-style: none; font-size: 0.85rem; color: var(--gris-300); line-height: 2;">
             <li>SYSCOHADA Révisé</li>
-            <li>Protection Données CDP</li>
+            <li><a href="javascript:void(0)" onclick="openPrivacyPolicyModal()" style="color: var(--turquoise-400); text-decoration: underline; cursor: pointer; font-weight: 600;">Protection Données CDP (Politique)</a></li>
             <li>Contrat 12 Mois Garanti</li>
             <li>Assistance 24/7 Sénégal</li>
           </ul>
@@ -6292,7 +6297,7 @@
       <!-- Bas de page avec Copyright, Icônes Réseaux Sociaux & Accès Direction -->
       <div class="footer-bottom" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-top: 1.5rem;">
         <div style="font-size: 0.82rem; color: #94A3B8;">
-          &copy; 2026 SunuSchoolExpress. Tous droits réservés. Réalisé par <strong style="color: var(--turquoise-400);">Diamil-Express</strong>, Sénégal.
+          &copy; 2026 SunuSchoolExpress. Tous droits réservés. Réalisé par <strong style="color: var(--turquoise-400);">Diamil-Express</strong>, Sénégal. • <a href="javascript:void(0)" onclick="openPrivacyPolicyModal()" style="color: #00D2B4; text-decoration: underline; margin-left: 0.35rem; cursor: pointer;">Politique de Confidentialité</a>
         </div>
 
         <div>
@@ -6445,6 +6450,181 @@
           <span>💾</span> <span>Pèse moins de 5 Mo</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL OFFICIEL : POLITIQUE DE CONFIDENTIALITÉ & CONFORMITÉ CDP SÉNÉGAL
+       Conforme à la Loi n° 2008-12 du 25 janvier 2008 (CDP)
+       ======================================================================== -->
+  <div id="privacyPolicyModal" class="modal-overlay" style="display: none; z-index: 3500; align-items: center; justify-content: center; backdrop-filter: blur(10px); background: rgba(5, 15, 30, 0.88);">
+    <div class="modal-card" style="max-width: 860px; width: 94%; max-height: 90vh; display: flex; flex-direction: column; text-align: left; background: #07152B; border: 1.5px solid rgba(0, 210, 180, 0.45); border-radius: 18px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 210, 180, 0.2); padding: 0; position: relative; overflow: hidden; font-family: 'Outfit', sans-serif;">
+      
+      <!-- En-tête du Modal -->
+      <div style="padding: 1.4rem 1.8rem; background: linear-gradient(135deg, rgba(0, 210, 180, 0.12), rgba(15, 23, 42, 0.95)); border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.9rem;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0, 210, 180, 0.15); border: 1.5px solid #00D2B4; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,210,180,0.3);">
+            🛡️
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="badge-tag" style="background: rgba(0,210,180,0.2); color: #00D2B4; font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 999px;">
+                ● République du Sénégal • Loi n° 2008-12
+              </span>
+              <span class="badge-tag" style="background: rgba(245,158,11,0.2); color: #F59E0B; font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 999px;">
+                Protection Données CDP
+              </span>
+            </div>
+            <h3 style="margin: 0.25rem 0 0; font-size: 1.3rem; color: #FFFFFF; font-weight: 800;">
+              Politique de Confidentialité &amp; Protection des Données
+            </h3>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closePrivacyPolicyModal()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #FFF; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#EF4444'; this.style.borderColor='#EF4444';" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.15)';" title="Fermer">✕</button>
+      </div>
+
+      <!-- Corps Déroulant avec les Articles Officiels -->
+      <div style="overflow-y: auto; padding: 1.6rem 2rem; flex: 1; font-size: 0.88rem; line-height: 1.7; color: #CBD5E1;">
+        
+        <!-- Alerte Engagement Officiel -->
+        <div style="background: rgba(0, 210, 180, 0.08); border-left: 4px solid #00D2B4; border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: 0.86rem; color: #E2E8F0;">
+          <strong style="color: #00D2B4;">Engagement Solennel :</strong> SunuSchool Express et l'Agence <em>Diamil-Express</em> garantissent que les données scolaires, personnelles et financières des établissements scolaires, des élèves mineurs et des parents <strong>ne sont jamais cédées, louées, ni vendues à des fins publicitaires ou commerciales</strong>.
+        </div>
+
+        <!-- Article 1 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 1 : Préambule &amp; Cadre Légal</h4>
+          <p style="margin: 0;">
+            La présente Politique de Confidentialité régit la collecte, le traitement et la sécurité des données à caractère personnel traitées via la plateforme <strong>SunuSchool Express</strong> (www.sunuschoolexpress.com). Elle est établie en stricte conformité avec la <strong>Loi n° 2008-12 du 25 janvier 2008</strong> portant sur la protection des données à caractère personnel en République du Sénégal, sous la supervision de la <strong>Commission de Protection des Données Personnelles (CDP)</strong>.
+          </p>
+        </div>
+
+        <!-- Article 2 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 2 : Identité du Responsable du Traitement</h4>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.9rem 1.2rem; font-size: 0.84rem;">
+            <div>• <strong>Entité éditrice :</strong> Agence de communication digitale / Diamil-Express</div>
+            <div>• <strong>Représentant légal :</strong> Moustapha Diamil DIOUF</div>
+            <div>• <strong>Siège social :</strong> Tivaouane, Région de Thiès, République du Sénégal</div>
+            <div>• <strong>Téléphones officiels :</strong> +221 77 106 48 77 / +221 76 150 39 38</div>
+            <div>• <strong>Délégué à la Protection des Données (DPO) :</strong> sunuschoolexpress@gmail.com</div>
+          </div>
+        </div>
+
+        <!-- Article 3 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 3 : Catégories de Données Collectées</h4>
+          <p style="margin: 0 0 0.5rem;">
+            Conformément au principe de minimisation, seules les informations strictement nécessaires à la vie scolaire et académique sont traitées :
+          </p>
+          <ul style="margin: 0; padding-left: 1.4rem; line-height: 1.8;">
+            <li><strong>Directeurs &amp; Administration :</strong> Nom, prénom, fonction, téléphone officiel, email professionnel, nom et ville de l'établissement.</li>
+            <li><strong>Élèves, Étudiants &amp; Talibés (Mineurs) :</strong> Nom, prénom, date et lieu de naissance, matricule scolaire unique, classe/filière, notes, moyennes périodiques, appréciations, carnet de Hifz/sourates mémorisées (Daaras), dortoir internat.</li>
+            <li><strong>Parents &amp; Tuteurs :</strong> Nom, numéro de téléphone mobile pour la réception sécurisée des alertes WhatsApp/SMS et reçus officiels.</li>
+            <li><strong>Enseignants &amp; Personnels :</strong> Nom, matricule, matière(s) enseignée(s), émargements pédagogiques.</li>
+            <li><strong>Transactions &amp; Adhésions :</strong> Référence Wave/Moneriz, montant, date et motif SYSCOHADA. <em>(Aucune donnée de carte bancaire sensible n'est enregistrée sur nos serveurs).</em></li>
+          </ul>
+        </div>
+
+        <!-- Article 4 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 4 : Finalités du Traitement</h4>
+          <p style="margin: 0;">
+            Les données sont exclusivement traitées pour : la gestion administrative et pédagogique des écoles et daaras ; l'édition conforme aux barèmes du Ministère de l'Éducation Nationale (MEN) des bulletins scolaires ; le suivi parental transparent ; l'émission des reçus et pièces comptables conformes au référentiel <strong>SYSCOHADA Révisé</strong> ; et l'envoi d'alertes de scolarité par notification.
+          </p>
+        </div>
+
+        <!-- Article 5 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 5 : Base Légale du Traitement</h4>
+          <p style="margin: 0;">
+            Le traitement repose sur l'<strong>exécution du contrat de service</strong> conclu avec les établissements partenaires, le <strong>consentement préalable</strong> des représentants légaux et le respect des <strong>obligations légales et comptables</strong> sénégalaises (SYSCOHADA).
+          </p>
+        </div>
+
+        <!-- Article 6 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 6 : Hébergement, Sous-Traitance &amp; Lieu de Stockage</h4>
+          <p style="margin: 0 0 0.5rem;">
+            Les données sont hébergées sur une infrastructure Cloud certifiée <strong>ISO/IEC 27001</strong> et <strong>SOC 2 Type II</strong> située dans l'Union Européenne (Région Paris, France) chez <em>Supabase Inc. / Amazon Web Services</em>, garantissant un niveau de sécurité conforme et supérieur aux exigences de la Loi 2008-12.
+          </p>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.8rem 1rem; font-size: 0.82rem;">
+            • <strong>Base de Données chiffrée :</strong> Supabase / AWS (Paris, France)<br>
+            • <strong>Serveur Applicatif API :</strong> Render Services Inc. (Serveur sécurisé)<br>
+            • <strong>Passerelle de Paiement agréée :</strong> Moneriz / Bictorys (Dakar, Sénégal)<br>
+            • <strong>Réseau CDN de diffusion :</strong> Netlify Inc. (Chiffrement SSL mondial)
+          </div>
+        </div>
+
+        <!-- Article 7 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 7 : Mesures de Sécurité Techniques</h4>
+          <ul style="margin: 0; padding-left: 1.4rem; line-height: 1.8;">
+            <li><strong>Chiffrement en transit :</strong> Protocole HTTPS / TLS 1.3 avec certificat 256 bits.</li>
+            <li><strong>Chiffrement au repos :</strong> Base de données chiffrée selon le standard bancaire AES-256.</li>
+            <li><strong>Cloisonnement hermétique (RLS) :</strong> Chaque établissement possède un périmètre isolé ; aucun directeur ne peut accéder aux données d'une autre école.</li>
+            <li><strong>Sauvegardes chiffrées :</strong> Backups automatiques géo-répliqués pour prévenir toute perte de données.</li>
+          </ul>
+        </div>
+
+        <!-- Article 8 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 8 : Durée de Conservation des Données</h4>
+          <p style="margin: 0;">
+            Les données scolaires actives sont conservées pendant toute la scolarité de l'élève. Les archives de bulletins et relevés sont conservées 10 ans pour la délivrance des duplicatas officiels. Les pièces comptables sont archivées pendant 10 ans (obligation légale SYSCOHADA). En cas de clôture d'école, les données sont exportées puis définitivement purgées sur demande écrite.
+          </p>
+        </div>
+
+        <!-- Article 9 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 9 : Droits des Utilisateurs (Loi 2008-12)</h4>
+          <p style="margin: 0 0 0.4rem;">
+            Toute personne dispose à tout moment des droits suivants sur ses données :
+          </p>
+          <ul style="margin: 0; padding-left: 1.4rem; line-height: 1.8;">
+            <li><strong>Droit d'accès :</strong> Obtenir une copie complète des données traitées.</li>
+            <li><strong>Droit de rectification :</strong> Corriger immédiatement une information inexacte ou incomplète.</li>
+            <li><strong>Droit de suppression :</strong> Exiger l'effacement des données (dans le respect des obligations légales d'archivage).</li>
+            <li><strong>Droit d'opposition :</strong> S'opposer pour motif légitime au traitement de ses données.</li>
+          </ul>
+        </div>
+
+        <!-- Article 10 -->
+        <div style="margin-bottom: 1.4rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Article 10 : Exercice des Droits &amp; Contact CDP</h4>
+          <p style="margin: 0 0 0.5rem;">
+            Pour exercer vos droits, contactez directement notre Délégué à la Protection des Données :
+          </p>
+          <div style="background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.3); border-radius: 8px; padding: 0.8rem 1rem; font-size: 0.84rem;">
+            📧 <strong>Email :</strong> <a href="mailto:sunuschoolexpress@gmail.com" style="color: #00D2B4;">sunuschoolexpress@gmail.com</a> (Objet : Protection Données CDP)<br>
+            📞 <strong>WhatsApp / Téléphone :</strong> +221 76 150 39 38 / +221 77 106 48 77<br>
+            📍 <strong>Courrier :</strong> Diamil-Express, Tivaouane, Thiès, Sénégal (Réponse garantie sous 15 jours).
+          </div>
+          <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #94A3B8;">
+            En cas de contestation non résolue, vous pouvez saisir l'autorité nationale de régulation : <strong>Commission de Protection des Données Personnelles du Sénégal (CDP)</strong> — 34, Sicap Mermoz VDN Lot B, Dakar (www.cdp.sn).
+          </p>
+        </div>
+
+        <!-- Article 11 & 12 -->
+        <div style="margin-bottom: 0.8rem;">
+          <h4 style="color: #00D2B4; font-size: 1rem; margin: 0 0 0.4rem; font-weight: 800;">Articles 11 &amp; 12 : Cookies &amp; Évolution</h4>
+          <p style="margin: 0;">
+            SunuSchool Express n'utilise aucun cookie publicitaire ou commercial. Seuls des stockages techniques de session et le cache PWA hors-ligne sont utilisés. La présente politique peut être actualisée pour suivre les évolutions légales.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Pied du Modal -->
+      <div style="padding: 1.1rem 1.8rem; background: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
+        <div style="font-size: 0.78rem; color: #94A3B8; display: flex; align-items: center; gap: 0.4rem;">
+          <span>🔒</span> <span>Données hébergées en environnement chiffré certifié ISO 27001.</span>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="closePrivacyPolicyModal()" style="font-weight: 800; font-size: 0.88rem; padding: 0.65rem 1.5rem; background: linear-gradient(135deg, #00D2B4, #059669); color: #051329; border: none; border-radius: 8px; cursor: pointer;">
+          ✓ J'ai lu et compris
+        </button>
+      </div>
+
     </div>
   </div>
 
