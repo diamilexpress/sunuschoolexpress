@@ -11428,7 +11428,7 @@ function submitAuditBooking(e) {
   const date = document.getElementById('auditBookingDate')?.value || 'prochainement';
   const time = document.getElementById('auditBookingTime')?.value || 'matin';
   closeAuditBookingModal();
-  showNotification(`📅 Demande d'intervention sur site confirmée pour le ${date} (${time}). Votre Directeur Général Moustapha Diamil Diouf (Diamil-Express) vous contactera 48h à l'avance pour valider l'horaire.`);
+  showNotification(`📅 Demande d'intervention sur site confirmée pour le ${date} (${time}). Votre Directeur Général Moustapha Diamil Diouf (SunuSchool Express) vous contactera 48h à l'avance pour valider l'horaire.`);
   
   if (demoState && demoState.auditLogs) {
     demoState.auditLogs.unshift({

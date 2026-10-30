@@ -2235,7 +2235,7 @@ function generateReceiptHQ(idOrCode) {
           <div class="logo-area">
             <h1>SUNUSCHOOL-EXPRESS</h1>
             <div class="sub">Plateforme Nationale de Gestion Scolaire • Dakar, Sénégal</div>
-            <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.2rem;">Éditeur : Diamil-Express SASU • RCCM SN.DKR.2024 • NINEA 00984512</div>
+            <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.2rem;">Éditeur : SunuSchool Express • Plateforme SaaS Éducation Sénégal</div>
           </div>
           <div style="text-align: right;">
             <div class="badge-paid">✓ ENCAISSÉ PAR WAVE</div>
@@ -2297,13 +2297,13 @@ function generateReceiptHQ(idOrCode) {
 
         <div class="footer-stamps">
           <div>
-            <div style="font-size: 0.78rem; color: #64748B;">Émis pour le compte de Diamil-Express SASU :</div>
+            <div style="font-size: 0.78rem; color: #64748B;">Émis pour le compte de SunuSchool Express :</div>
             <strong style="font-size: 0.9rem; color: #0F172A;">Direction des Opérations &amp; Trésorerie</strong>
             <div style="font-size: 0.75rem; color: #94A3B8;">Dakar, République du Sénégal</div>
           </div>
 
           <div class="stamp-box">
-            DIAMIL-EXPRESS SASU<br>
+            SUNUSCHOOL EXPRESS<br>
             ★ CACHET NUMÉRIQUE CERTIFIÉ ★<br>
             WAVE ENCAISSÉ ✓
           </div>
@@ -2509,9 +2509,9 @@ function exportISO27001AuditReport() {
   const markdownReport = `# RAPPORT OFFICIEL D'AUDIT DE SÉCURITÉ DE L'INFORMATION (SMSI / ISMS)
 ## Conformité Norme Internationale ISO/IEC 27001:2022 & Commission CDP Sénégal
 --------------------------------------------------------------------------------
-Éditeur SaaS            : Diamil-Express (Dakar, République du Sénégal)
+Éditeur SaaS            : SunuSchool Express (Sénégal)
 Plateforme              : SunuSchoolExpress (Écoles Privées, Collèges, Lycées & Daaras Modernes)
-Responsable SSI / CISO  : Moustapha Diamil Diouf (Directeur Général Diamil-Express)
+Responsable SSI / CISO  : Moustapha Diamil Diouf (Directeur Général SunuSchool Express)
 Date de l'Audit         : ${dateStr} à ${timeStr}
 Score de Conformité     : 100% AUDITÉ & CERTIFIÉ CONFORME (17/17 Contrôles Validés)
 Statut Global           : CERTIFIÉ OPÉRATIONNEL & SÉCURISÉ
@@ -2565,7 +2565,7 @@ d'intégrité et de disponibilité prescrites par la norme ISO/IEC 27001:2022.
 
 Visa & Signature Numérique :
 Moustapha Diamil Diouf
-Directeur Général & Responsable SSI — Diamil-Express
+Directeur Général & Responsable SSI — SunuSchool Express
 `;
 
   // 2. Déclenchement automatique du téléchargement du fichier rapport Markdown
@@ -2625,7 +2625,7 @@ Directeur Général & Responsable SSI — Diamil-Express
         <div class="report-card">
           <div class="header">
             <div>
-              <div style="font-size: 0.75rem; color: #F59E0B; font-weight: 800; text-transform: uppercase;">Diamil-Express • SMSI Sénégal</div>
+              <div style="font-size: 0.75rem; color: #F59E0B; font-weight: 800; text-transform: uppercase;">SunuSchool Express • SMSI Sénégal</div>
               <h1>🛡️ Certificat d'Audit &amp; Conformité ISO/IEC 27001:2022</h1>
               <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 0.3rem;">SunuSchoolExpress SaaS — Plateforme Écoles Privées &amp; Daaras</div>
             </div>
@@ -2710,7 +2710,7 @@ Directeur Général & Responsable SSI — Diamil-Express
             <div>
               <div style="font-size: 0.8rem; color: #94A3B8;">Responsable Sécurité de l'Information (CISO) :</div>
               <strong style="color: #FFF; font-size: 0.95rem;">Moustapha Diamil Diouf</strong>
-              <div style="font-size: 0.75rem; color: #64748B;">Directeur Général — Diamil-Express Dakar</div>
+              <div style="font-size: 0.75rem; color: #64748B;">Directeur Général — SunuSchool Express</div>
             </div>
             <button class="btn-print" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
           </div>

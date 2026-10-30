@@ -1,6 +1,6 @@
 # POLITIQUE GÉNÉRALE DE SÉCURITÉ DE L'INFORMATION (SMSI / ISMS)
 ## Conformité Norme Internationale ISO/IEC 27001:2022
-**Éditeur** : Diamil-Express — Société Digitale au Sénégal  
+**Éditeur** : SunuSchool Express — Plateforme SaaS au Sénégal  
 **Plateforme** : SunuSchoolExpress (Écoles Privées & Daaras Modernes)  
 **Version** : v3.7.0-PROD  
 **Date d'entrée en vigueur** : 22 Septembre 2026  
@@ -71,4 +71,4 @@ Elle s'applique à l'ensemble des modules applicatifs (Écoles Privées, Daaras 
 - Droit d'accès, de rectification et d'effacement garanti pour les parents et directeurs d'établissement sur simple demande.
 
 ---
-*Document Officiel Diamil-Express — SunuSchoolExpress Security Compliance Board*
+*Document Officiel SunuSchool Express — Security & Compliance Board*
