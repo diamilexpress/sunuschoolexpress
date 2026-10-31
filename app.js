@@ -4308,11 +4308,11 @@ async function executeSubscriptionPayment() {
   let opColor = '#00D2B4';
   let btnText = '💬 Notifier le virement Wave (10 000 FCFA) par WhatsApp';
 
-  const whatsappUrl = `https://wa.me/221761503938?text=${encodeURIComponent(`Bonjour SunuSchoolExpress, je confirme le règlement d'adhésion de 10 000 FCFA pour l'établissement "${schoolName}" (${phone ? 'Tél: ' + phone : ''}) vers le compte Wave Marchand Diamil express (77 106 48 77) - Réf: ${refTx}.`)}`;
+  const whatsappUrl = `https://wa.me/221761503938?text=${encodeURIComponent(`Bonjour SunuSchoolExpress, je confirme le règlement d'adhésion de 10 000 FCFA pour l'établissement "${schoolName}" (${phone ? 'Tél: ' + phone : ''}) vers le compte Wave Marchand SunuSchool Express (77 106 48 77) - Réf: ${refTx}.`)}`;
 
   if (selectedPaymentOp === 'WAVE') {
     opIcon = '🌊';
-    opName = 'Wave Marchand : Diamil express (77 106 48 77)';
+    opName = 'Wave Mobile Money Sénégal (77 106 48 77)';
     opColor = '#00D2B4';
     opUrl = whatsappUrl;
     btnText = '💬 Notifier le virement Wave (10 000 FCFA) par WhatsApp';
@@ -4399,6 +4399,10 @@ function getBackendBaseUrl() {
   const manualCard = document.getElementById('manualOperatorCard');
   const monerizTarget = document.getElementById('monerizCheckoutTarget');
 
+  // Affichage exclusif du Guichet Moneriz (le repli manuel reste masqué)
+  if (monerizCard) monerizCard.style.display = 'block';
+  if (manualCard) manualCard.style.display = 'none';
+
   if (backendBaseUrl) {
     try {
       fetch(`${backendBaseUrl}/api/subscriptions/moneriz-session`, {
@@ -4424,11 +4428,6 @@ function getBackendBaseUrl() {
           
           if (monerizCard) monerizCard.style.display = 'block';
           if (manualCard) manualCard.style.display = 'none';
-
-          const guideText = document.getElementById('processingGuideText');
-          if (guideText) {
-            guideText.innerHTML = `Choisissez <strong>Wave</strong>, <strong>Orange Money</strong> ou <strong>Carte Bancaire</strong> ci-dessous. Dès validation, votre établissement est <strong>activé automatiquement</strong> sans attente !`;
-          }
 
           if (window._monerizCleanup) {
             try { window._monerizCleanup(); } catch(e) {}

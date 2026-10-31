@@ -4397,7 +4397,7 @@
         <div id="opInstructionsContainer" style="background: rgba(0, 210, 180, 0.06); border: 1px solid rgba(0, 210, 180, 0.25); border-radius: 8px; padding: 0.9rem; margin-bottom: 1.2rem; font-size: 0.83rem;">
           <div id="instructionWave" class="op-instr-block" style="display: block;">
             <div style="font-weight: 700; color: #00D2B4; margin-bottom: 0.3rem;">📱 Virement Wave Direct (10 000 FCFA) :</div>
-            <div style="color: var(--gris-300);">Un QR Code et le numéro marchand officiel <strong>77 106 48 77</strong> (Diamil express) seront affichés à l'étape suivante. Vous pourrez régler depuis votre smartphone et confirmer avec votre reçu.</div>
+            <div style="color: var(--gris-300);">Un guichet de paiement sécurisé officiel s'affichera à l'étape suivante. Vous pourrez régler en 1 clic par Wave ou Mobile Money avec validation instantanée.</div>
           </div>
           <div id="instructionCB" class="op-instr-block" style="display: none;"></div>
         </div>
@@ -4439,23 +4439,11 @@
         </div>
       </div>
 
-      <!-- ÉTAPE 3 : GUICHET DE PAIEMENT DIRECT OPÉRATEUR & VALIDATION TEMPS RÉEL -->
-      <div id="regStep3Processing" style="display: none; padding: 1.5rem 0.5rem; text-align: center;">
+      <!-- ÉTAPE 3 : GUICHET DE PAIEMENT SÉCURISÉ & VALIDATION TEMPS RÉEL -->
+      <div id="regStep3Processing" style="display: none; padding: 1rem 0.5rem; text-align: center;">
         
-        <!-- Badge Opérateur Actif -->
-        <div id="operatorGatewayHeader" style="display: inline-flex; align-items: center; gap: 0.6rem; background: rgba(0, 210, 180, 0.12); border: 1px solid rgba(0, 210, 180, 0.4); border-radius: 999px; padding: 0.4rem 1.2rem; margin-bottom: 1rem;">
-          <span id="gatewayOpIcon" style="font-size: 1.4rem;">🔵</span>
-          <span id="gatewayOpName" style="font-weight: 800; font-size: 0.95rem; color: #00D2B4;">Passerelle Wave Sénégal</span>
-          <span class="pulse-dot" style="width: 8px; height: 8px; background: #00D2B4; border-radius: 50%; display: inline-block;"></span>
-        </div>
-
-        <h3 style="margin-bottom: 0.4rem; color: var(--blanc-pur); font-size: 1.3rem;">Règlement Direct chez l'Opérateur</h3>
-        <p style="font-size: 0.85rem; color: var(--gris-300); max-width: 480px; margin: 0 auto 1.2rem;" id="processingGuideText">
-          Effectuez votre virement de <strong>10 000 FCFA</strong> vers le compte marchand ci-dessous pour débloquer votre établissement.
-        </p>
-
-        <!-- Guichet Interactif Moneriz Liveframe (Wave & OM Automatique) -->
-        <div id="monerizCheckoutCard" style="display: none; background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 1.2rem; max-width: 620px; margin: 0 auto 1.5rem; text-align: left; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+        <!-- Guichet Interactif Moneriz Liveframe (Wave & OM Automatique) - AFFICHAGE UNIQUE -->
+        <div id="monerizCheckoutCard" style="display: block; background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 1.2rem; max-width: 620px; margin: 0 auto 1.5rem; text-align: left; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="font-size: 1.2rem;">🔒</span>
@@ -4465,11 +4453,27 @@
               ● Activation 100% Automatique
             </span>
           </div>
-          <div id="monerizCheckoutTarget" style="min-height: 480px; width: 100%;"></div>
+          <div id="monerizCheckoutTarget" style="min-height: 480px; width: 100%;">
+            <div id="monerizLoadingIndicator" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 380px; color: #00D2B4; gap: 1rem;">
+              <div style="width: 38px; height: 38px; border: 3px solid rgba(0, 210, 180, 0.2); border-top-color: #00D2B4; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+              <div style="font-size: 0.88rem; font-weight: 600; color: #E2E8F0;">Chargement sécurisé du guichet de paiement...</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Carte Résumé Paiement & QR Code -->
-        <div id="manualOperatorCard" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.2rem; max-width: 440px; margin: 0 auto 1.2rem; text-align: left;">
+        <!-- Section de Repli Manuel (affichée uniquement si le guichet en ligne est indisponible) -->
+        <div id="manualOperatorCard" style="display: none; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.2rem; max-width: 440px; margin: 0 auto 1.2rem; text-align: left;">
+          <!-- Badge Opérateur Actif -->
+          <div id="operatorGatewayHeader" style="display: inline-flex; align-items: center; gap: 0.6rem; background: rgba(0, 210, 180, 0.12); border: 1px solid rgba(0, 210, 180, 0.4); border-radius: 999px; padding: 0.4rem 1.2rem; margin-bottom: 1rem;">
+            <span id="gatewayOpIcon" style="font-size: 1.4rem;">🔵</span>
+            <span id="gatewayOpName" style="font-weight: 800; font-size: 0.95rem; color: #00D2B4;">Passerelle Wave Sénégal</span>
+            <span class="pulse-dot" style="width: 8px; height: 8px; background: #00D2B4; border-radius: 50%; display: inline-block;"></span>
+          </div>
+
+          <h3 style="margin-bottom: 0.4rem; color: var(--blanc-pur); font-size: 1.3rem;">Règlement Direct chez l'Opérateur</h3>
+          <p style="font-size: 0.85rem; color: var(--gris-300); max-width: 480px; margin: 0 auto 1.2rem;" id="processingGuideText">
+            Effectuez votre virement de <strong>10 000 FCFA</strong> vers le compte marchand ci-dessous pour débloquer votre établissement.
+          </p>
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.12); padding-bottom: 0.6rem; margin-bottom: 0.6rem;">
             <span style="font-size: 0.78rem; color: var(--gris-400);">Bénéficiaire Officiel :</span>
             <strong style="font-size: 0.85rem; color: var(--blanc-pur);">SunuSchool Express SARL</strong>
@@ -4491,10 +4495,10 @@
             <div style="font-size: 0.75rem; color: var(--gris-300); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Compte Wave Marchand Officiel</div>
             <div style="font-size: 1.35rem; font-weight: 900; color: #00D2B4; margin: 0.35rem 0; letter-spacing: 1px;">77 106 48 77</div>
             <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(0, 210, 180, 0.15); padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; color: #FFF; margin-bottom: 0.4rem;">
-              <span>🏢</span> <span>Marchand Officiel : <strong>Diamil Express</strong></span>
+              <span>🏢</span> <span>Marchand Officiel : <strong>SunuSchool Express</strong></span>
             </div>
             <div style="font-size: 0.74rem; color: #F59E0B; margin-top: 0.3rem; line-height: 1.4;">
-              💡 <strong>Instructions simples :</strong> Ouvrez votre application Wave ➔ Sélectionnez Transfert / Paiement ➔ Envoyez <strong>10 000 FCFA</strong> au <strong>77 106 48 77</strong> (au nom de <em>Diamil express</em>).
+              💡 <strong>Instructions simples :</strong> Ouvrez votre application Wave ➔ Sélectionnez Transfert / Paiement ➔ Envoyez <strong>10 000 FCFA</strong> au <strong>77 106 48 77</strong>.
             </div>
           </div>
 
@@ -4515,7 +4519,7 @@
             </div>
             
             <div style="font-size: 0.74rem; color: var(--blanc-pur); margin-top: 0.5rem; font-weight: 600;">
-              Wave Marchand : <strong style="color: #00D2B4;">Diamil express (77 106 48 77)</strong>
+              Wave Marchand : <strong style="color: #00D2B4;">SunuSchool Express (77 106 48 77)</strong>
             </div>
 
             <!-- Bouton Direct pour Smartphone (Ouvre l'app Wave directement) -->
@@ -4531,12 +4535,13 @@
 
           <!-- Bouton Secondaire Notification WhatsApp -->
           <a id="btnDirectOperatorUrl" 
-             href="https://wa.me/221761503938?text=Bonjour%20SunuSchoolExpress%2C%20je%20confirme%20mon%20paiement%20Wave%20de%2010%20000%20FCFA%20au%20compte%20Diamil%20express" 
+             href="https://wa.me/221761503938?text=Bonjour%20SunuSchoolExpress%2C%20je%20confirme%20mon%20paiement%20Wave%20de%2010%20000%20FCFA%20au%2077%20106%2048%2077" 
              target="_blank" 
              class="btn" 
              style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; width: 100%; padding: 0.7rem; font-weight: 700; font-size: 0.85rem; background: rgba(37, 211, 102, 0.12); border: 1px solid #25D366; color: #25D366; border-radius: 8px; text-decoration: none; margin-bottom: 0.6rem; transition: transform 0.2s;">
             <span id="btnDirectOpIcon">💬</span>
             <span id="btnDirectOpText">Notifier le paiement sur WhatsApp (+221 76 150 39 38)</span>
+          </a>
           <!-- Saisie Référence Wave de l'utilisateur pour le Reçu -->
           <div style="max-width: 440px; margin: 0 auto 0.8rem; background: rgba(0, 210, 180, 0.08); border: 1px solid rgba(0, 210, 180, 0.35); border-radius: 8px; padding: 0.8rem 1rem; text-align: left;">
             <label for="userWaveTxRef" style="display: block; font-size: 0.78rem; font-weight: 700; color: #00D2B4; margin-bottom: 0.35rem;">
