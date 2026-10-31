@@ -4378,127 +4378,142 @@ async function executeSubscriptionPayment() {
   if (barEl) barEl.style.width = '100%';
   if (statusTextEl) statusTextEl.innerHTML = `📡 En attente de votre règlement de 10 000 FCFA sur votre téléphone...`;
 
-function getBackendBaseUrl() {
-  if (typeof window !== 'undefined') {
-    if (window.location.port === '5000') return '';
-    if (/^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname)) {
-      return `${window.location.protocol}//${window.location.hostname}:5000`;
-    }
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
-      if (typeof isBackendActive !== 'undefined' && isBackendActive) return 'http://localhost:5000';
-      return null;
-    }
-    return window.location.origin;
-  }
-  return null;
-}
-
-  // 5. Initialisation Automatique Moneriz (avec repli Wave Direct)
-  const backendBaseUrl = getBackendBaseUrl();
+  // 5. Initialisation Exclusive du Guichet Sécurisé Moneriz (Live)
   const monerizCard = document.getElementById('monerizCheckoutCard');
   const manualCard = document.getElementById('manualOperatorCard');
   const monerizTarget = document.getElementById('monerizCheckoutTarget');
 
-  // Affichage exclusif du Guichet Moneriz (le repli manuel reste masqué)
   if (monerizCard) monerizCard.style.display = 'block';
   if (manualCard) manualCard.style.display = 'none';
 
-  if (backendBaseUrl) {
-    try {
-      fetch(`${backendBaseUrl}/api/subscriptions/moneriz-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: currentEstablishment.id,
-          code: currentEstablishment.code,
-          schoolName,
-          email,
-          phone,
-          city,
-          type,
-          planName,
-          planPrice,
-          montant: 10000
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.session && data.session.embedUrl && monerizCard && monerizTarget) {
-          console.info('[MONERIZ] Session Liveframe générée avec succès:', data.session.id);
-          
-          if (monerizCard) monerizCard.style.display = 'block';
-          if (manualCard) manualCard.style.display = 'none';
+  if (monerizTarget) {
+    monerizTarget.innerHTML = `
+      <div id="monerizLoadingIndicator" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 420px; color: #00D2B4; gap: 1rem; text-align: center;">
+        <div style="width: 44px; height: 44px; border: 3px solid rgba(0, 210, 180, 0.2); border-top-color: #00D2B4; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <div style="font-size: 0.95rem; font-weight: 700; color: #E2E8F0;">Connexion au Guichet Sécurisé Moneriz...</div>
+        <div style="font-size: 0.78rem; color: #94A3B8;">Préparation de votre session de paiement Wave, OM &amp; Carte</div>
+      </div>
+    `;
+  }
 
-          if (window._monerizCleanup) {
-            try { window._monerizCleanup(); } catch(e) {}
+  // URLs backend : tente d'abord l'origine actuelle, puis bascule automatiquement sur Render Cloud
+  const candidateUrls = [
+    (typeof window !== 'undefined' && window.location.origin && window.location.protocol.startsWith('http'))
+      ? `${window.location.origin}/api/subscriptions/moneriz-session`
+      : null,
+    'https://sunuschoolexpress.onrender.com/api/subscriptions/moneriz-session'
+  ].filter(Boolean);
+
+  const payload = {
+    id: currentEstablishment.id,
+    code: currentEstablishment.code,
+    schoolName,
+    email,
+    phone,
+    city,
+    type,
+    planName,
+    planPrice,
+    montant: 10000
+  };
+
+  async function fetchMonerizSession() {
+    let lastErr = null;
+    for (const url of candidateUrls) {
+      try {
+        console.info('[MONERIZ] Tentative création session via:', url);
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.session && data.session.embedUrl) {
+            return { data, backendUrl: url.replace('/api/subscriptions/moneriz-session', '') };
           }
+        }
+      } catch (err) {
+        lastErr = err;
+        console.warn(`[MONERIZ] Échec sur ${url}:`, err.message);
+      }
+    }
+    throw lastErr || new Error('Impossible de générer la session de paiement');
+  }
 
-          window._monerizCleanup = mountMonerizCheckout(monerizTarget, data.session, (paymentMsg) => {
-            console.log('[MONERIZ EVENT]', paymentMsg);
-            if (paymentMsg.status === 'paid' && paymentMsg.confirmation === 'confirmed') {
-              showNotification('🎉 Paiement de 10 000 FCFA validé par Moneriz ! Activation instantanée...');
+  fetchMonerizSession()
+    .then(({ data, backendUrl }) => {
+      console.info('[MONERIZ] Session Liveframe générée avec succès:', data.session.id);
+      if (monerizCard) monerizCard.style.display = 'block';
+      if (manualCard) manualCard.style.display = 'none';
 
-              // Vérification auprès du serveur backend que le webhook a activé le compte
-              let pollAttempts = 0;
-              const pollInterval = setInterval(async () => {
-                pollAttempts++;
-                try {
-                  const checkRes = await fetch(`${backendBaseUrl}/api/subscriptions/status/${encodeURIComponent(currentEstablishment.id)}`);
-                  if (checkRes.ok) {
-                    const checkData = await checkRes.json();
-                    if (checkData.isActivated) {
-                      clearInterval(pollInterval);
-                      currentEstablishment.statut = 'ACTIF';
-                      currentEstablishment.statutAbonnement = 'ACTIF';
-                      currentEstablishment.fraisAdhesionPayes = true;
-                      try {
-                        localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
-                        localStorage.setItem('sunuschool_active_workspace', JSON.stringify(currentEstablishment));
-                        saveEstablishmentToRegistry(currentEstablishment);
-                      } catch(e) {}
-                      goToRegStep(4);
-                      showNotification(`🚀 Votre établissement ${currentEstablishment.name} est ACTIVÉ avec 30 jours offerts !`);
-                      return;
-                    }
-                  }
-                } catch(err) {}
+      if (window._monerizCleanup) {
+        try { window._monerizCleanup(); } catch(e) {}
+      }
 
-                if (pollAttempts >= 8) {
+      window._monerizCleanup = mountMonerizCheckout(monerizTarget, data.session, (paymentMsg) => {
+        console.log('[MONERIZ EVENT]', paymentMsg);
+        if (paymentMsg.status === 'paid' && paymentMsg.confirmation === 'confirmed') {
+          showNotification('🎉 Paiement de 10 000 FCFA validé par Moneriz ! Activation instantanée...');
+
+          let pollAttempts = 0;
+          const pollInterval = setInterval(async () => {
+            pollAttempts++;
+            try {
+              const checkUrl = `${backendUrl || 'https://sunuschoolexpress.onrender.com'}/api/subscriptions/status/${encodeURIComponent(currentEstablishment.id)}`;
+              const checkRes = await fetch(checkUrl);
+              if (checkRes.ok) {
+                const checkData = await checkRes.json();
+                if (checkData.isActivated) {
                   clearInterval(pollInterval);
                   currentEstablishment.statut = 'ACTIF';
                   currentEstablishment.statutAbonnement = 'ACTIF';
                   currentEstablishment.fraisAdhesionPayes = true;
                   try {
                     localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+                    localStorage.setItem('sunuschool_active_workspace', JSON.stringify(currentEstablishment));
                     saveEstablishmentToRegistry(currentEstablishment);
                   } catch(e) {}
                   goToRegStep(4);
-                  showNotification(`🚀 Votre établissement ${currentEstablishment.name} est ACTIVÉ !`);
+                  showNotification(`🚀 Votre établissement ${currentEstablishment.name} est ACTIVÉ avec 30 jours offerts !`);
+                  return;
                 }
-              }, 1200);
+              }
+            } catch(err) {}
+
+            if (pollAttempts >= 8) {
+              clearInterval(pollInterval);
+              currentEstablishment.statut = 'ACTIF';
+              currentEstablishment.statutAbonnement = 'ACTIF';
+              currentEstablishment.fraisAdhesionPayes = true;
+              try {
+                localStorage.setItem('sunuschool_establishment', JSON.stringify(currentEstablishment));
+                saveEstablishmentToRegistry(currentEstablishment);
+              } catch(e) {}
+              goToRegStep(4);
+              showNotification(`🚀 Votre établissement ${currentEstablishment.name} est ACTIVÉ !`);
             }
-          });
-        } else {
-          // Repli fluide vers le guichet Wave direct officiel (Diamil express)
-          if (monerizCard) monerizCard.style.display = 'none';
-          if (manualCard) manualCard.style.display = 'block';
-          callFallbackCheckoutSync(backendBaseUrl, currentEstablishment, schoolName, email, phone, city, type, planName, planPrice, refTx);
+          }, 1200);
         }
-      })
-      .catch(err => {
-        console.info('[MONERIZ] Mode autonome / repli actif:', err.message);
-        if (monerizCard) monerizCard.style.display = 'none';
-        if (manualCard) manualCard.style.display = 'block';
-        callFallbackCheckoutSync(backendBaseUrl, currentEstablishment, schoolName, email, phone, city, type, planName, planPrice, refTx);
       });
-    } catch(e) {
-      if (monerizCard) monerizCard.style.display = 'none';
-      if (manualCard) manualCard.style.display = 'block';
-    }
-  } else {
-    if (monerizCard) monerizCard.style.display = 'none';
-    if (manualCard) manualCard.style.display = 'block';
-  }
+    })
+    .catch((err) => {
+      console.error('[MONERIZ FATAL]', err);
+      if (monerizTarget) {
+        monerizTarget.innerHTML = `
+          <div style="text-align: center; padding: 2.5rem 1rem; color: #E2E8F0;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🔒</div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: #FFF; margin-bottom: 0.4rem;">Connexion au Guichet Sécurisé</div>
+            <p style="font-size: 0.85rem; color: #94A3B8; max-width: 440px; margin: 0 auto 1.4rem;">
+              Le serveur sécurisé finalise la préparation de votre session. Cliquez ci-dessous pour lancer immédiatement le guichet Wave &amp; Mobile Money.
+            </p>
+            <button type="button" class="btn btn-gold" onclick="executeSubscriptionPayment()" style="padding: 0.75rem 1.8rem; font-weight: 800; font-size: 0.95rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(212,175,55,0.4);">
+              🔄 Lancer le Guichet de Paiement (10 000 FCFA)
+            </button>
+          </div>
+        `;
+      }
+    });
 }
 
 function callFallbackCheckoutSync(backendBaseUrl, etab, schoolName, email, phone, city, type, planName, planPrice, refTx) {
